@@ -14,7 +14,10 @@ SAPI and other screen readers automatically.
 * Placement feedback: sound cues for valid / invalid spots, the reason a spot is invalid and which
   tiles of the footprint are blocked.
 * Kingdom status, the game's detailed resource reports, notifications with location and history,
-  a scanner to jump to buildings, resources and threats, and army control.
+  a scanner to find buildings, resources, fertile land and threats, and army control.
+* **Navigation:** pick a target from the scanner, notifications or bookmarks, then auto-walk there along
+  a route villagers can walk (N), walk in a straight line, jump, or follow a stereo **audio beacon**.
+* **O** surveys the area around the cursor (fertile soil, forest, stone, iron, water) to choose where to build.
 * **F1** on every screen tells you what you can do there.
 * Procedurally generated sound cues (no audio files needed).
 
@@ -107,19 +110,27 @@ mouse drag), Left / Right change how many workers are allowed.
 | Shift+I | Details of the selected building |
 | F5 | Repeat the tile description |
 | G | Cursor coordinates and map size |
+| O | Area survey: land, open, fertile, forest, stone, iron and water tiles within 6 tiles, plus the nearest stone, iron or water when none is close |
+| Shift+C | Chop trees mode on / off (Shift+Enter one corner, Enter the other) |
 | B | Build menu |
 | F6 / Shift+F6 | Move into the open panels: selected building or tile → kingdom overview (population, happiness, tax buttons, resources) → toolbar (speed, chop / demolish / rebuild modes, menu). F6 at the end, or Escape, returns to the map |
 | K | Kingdom status list (Enter on a line reads the game's detailed report) |
 | T | Year, season, weather and game speed |
-| L | Notification history; Enter jumps to where it happened |
+| L | Notification history; Enter jumps to where it happened, Shift+Enter makes it the navigation target |
 | Shift+L | Repeat the last notification |
 | Home | Jump to your keep |
 | End | Jump to the selected building |
 | Ctrl+Shift+1 … 9 | Store a bookmark at the cursor (saved per kingdom) |
 | Ctrl+1 … 9 | Jump to a bookmark |
-| Page Up / Page Down | Choose a scan category: your buildings, construction sites, your soldiers and ships, threats, stone, iron, forests, fresh water, foreign kingdoms, special places |
-| [ and ] | Jump to the previous / next item of that category, nearest first |
-| \ | Rebuild the scan list from the current cursor position |
+| Page Up / Page Down | Choose a scan category: your buildings, construction sites, your soldiers and ships, threats, stone, iron, open fertile land, forests, fresh water, foreign kingdoms, special places |
+| [ and ] | Choose the previous / next item of that category as the navigation target, nearest first (the list refreshes itself) |
+| N | Auto-walk the cursor to the target along a route villagers can walk (ends next to it if the target itself is blocked) |
+| Ctrl+N | Walk to the target in a straight line, over water and buildings |
+| \ | Jump straight to the target |
+| Shift+\ | Say where the target is from the cursor |
+| Shift+N | Target beacon on / off: pings panned to the target's side, higher pitch north, lower south, faster when closer, a chime on arrival |
+| Alt+1 … 9 | Make a bookmark the navigation target |
+| Any arrow / Escape | Stop an auto-walk |
 | V | While placing: why the spot is (in)valid |
 | M | Send the selected soldiers to the cursor |
 
@@ -171,7 +182,23 @@ build roads out from your keep first (I tells you whether a tile is covered).
 3. Map setup: size, type and rivers; New Map generates another map. **Ctrl+M** lets you explore the
    generated map with the arrow keys and the scanner before you start; Ctrl+M again returns.
 4. Accept starts the game. Press B, pick the Keep (first item in Castle), move to clear land near
-   trees, stone and fertile soil, and press Enter. Then build roads, houses and farms.
+   trees, stone and fertile soil (press O to survey the area), and press Enter.
+
+### The first years (tested walkthrough)
+
+1. **Roads:** B, Town, Road. Shift+Enter next to the keep, move, Enter builds the line. Tiles with trees,
+   rock or water are skipped and you are told how many and why.
+2. **Homes:** a Hovel (Town) unlocks the Industry category; homeless visitors are reported as notifications.
+3. **Wood:** villagers chop marked trees. Shift+C turns chop trees mode on: Shift+Enter on one corner,
+   Enter on the other ("12 tiles of trees marked for chopping"). Shift+C again turns it off.
+4. **Food:** Page Down to "Fertile land", ] picks the nearest patch, N walks there. B, Food, Farm,
+   Shift+Enter, move, Enter. Barren tiles and tiles outside road coverage are skipped and reported.
+   A Granary stores the harvest.
+5. **Stone:** Page Down to "Stone", ] and N, then place a Quarry on a free tile next to the stone.
+6. **Gold:** build a Treasure Room (Castle), then F6 to the kingdom overview and raise the tax rate.
+7. Advisors in the keep (select the keep, F6, Advisors) tell you what the kingdom needs; a house panel
+   lists happiness, food, fire risk and its residents (Enter on a resident selects the villager).
+8. Save from the pause menu (Escape, Save, Make New Save); "Game saved" confirms it.
 
 ## Sound cues
 
@@ -189,6 +216,8 @@ build roads out from your keep first (I tells you whether a tile is covered).
 | Glide up / down | Window opened / closed |
 | Two bright notes | Notification |
 | Siren | Danger: raid, dragon, fire, plague |
+| Two-tone ping (panned, pitched) | Navigation beacon: left / right ear = west / east, higher = north, lower = south, faster = closer |
+| Soft footstep | One step of an auto-walk |
 
 ## Settings
 

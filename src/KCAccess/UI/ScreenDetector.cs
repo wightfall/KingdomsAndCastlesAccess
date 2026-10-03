@@ -69,7 +69,7 @@ namespace KCAccess.UI
             var confirm = FindActiveConfirmation(info.Root);
             if (confirm == null && mm.confirm != null && mm.confirm.gameObject.activeInHierarchy) confirm = mm.confirm;
             if (state == MainMenuMode.State.Menu) info.InitialFocus = "New";
-            if (state == MainMenuMode.State.Failure || state == MainMenuMode.State.KeepDestroyed || state == MainMenuMode.State.LoadError) info.ReadAllOnOpen = true;
+            if (state == MainMenuMode.State.Failure || state == MainMenuMode.State.KeepDestroyed || state == MainMenuMode.State.LoadError || state == MainMenuMode.State.ChooseDifficulty || state == MainMenuMode.State.ChooseMode) info.ReadAllOnOpen = true;
             if (confirm != null && confirm.transform != info.Root)
             {
                 info = new ScreenInfo { Id = "Confirm", Title = ConfirmTitle(confirm), Root = confirm.transform, TypeAhead = true };

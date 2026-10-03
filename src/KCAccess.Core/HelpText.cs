@@ -46,10 +46,10 @@ namespace KCAccess.Core
                 "Escape cancels placement." },
             { "Map",
                 "Kingdom map. Arrow keys move the cursor one tile, Shift plus arrows moves 5 tiles, Control plus arrows jumps to where the terrain changes. " +
-                "Enter selects what is under the cursor, like a mouse click. I gives full details of the tile. B opens the build menu. " +
+                "Enter selects what is under the cursor, like a mouse click. I gives full details of the tile. O surveys the area around the cursor: land, fertile soil, forest, stone, iron and water, useful to choose where to build. B opens the build menu. " +
                 "F6 moves focus into the open information panel. K kingdom status, T date and season, G cursor coordinates. " +
-                "Home jumps to your keep. Control Shift 1 to 9 stores a bookmark at the cursor, Control 1 to 9 jumps back to it. Page Up and Page Down choose a scan category, open and close bracket jump to the previous or next thing of that category. " +
-                "L opens the notification history. Delete demolishes the selected building, C orders trees on the selected tile chopped. " +
+                "Home jumps to your keep. Control Shift 1 to 9 stores a bookmark at the cursor, Control 1 to 9 jumps back to it. Page Up and Page Down choose a scan category, open and close bracket choose the previous or next thing of that category as your target, nearest first. N walks the cursor to the target along a route villagers can walk, Control N walks in a straight line, Backslash jumps straight there, Shift Backslash says where the target is. Shift N turns the target beacon on or off: pings come from the target's side, higher pitch means north, lower means south, faster means closer. Any arrow key or Escape stops a walk. Alt 1 to 9 makes a bookmark the target. " +
+                "L opens the notification history. Delete demolishes the selected building, C orders trees on the selected tile chopped, or cancels it. Shift C turns chop trees mode on or off: Shift Enter marks one corner, Enter the other, and every tree in between is marked. " +
                 "M moves selected soldiers to the cursor. With a creative mode brush selected, Enter applies it and Escape turns it off. Space pauses, 1, 2 and 3 set game speed, J opens decrees, Escape opens the pause menu." },
             { "Decrees", "Job priority. Each job row tells its priority, name, filled workers and how many workers are allowed. Space turns a job on or off, Shift Up and Shift Down move it up or down in priority, Left and Right change the allowed workers. " + MenuKeys },
             { "Diplomacy", "Talking with another kingdom. Each line of the conversation is read aloud, then the number of replies. Up and Down choose a reply, Enter answers. Gift, trade and request options appear as buttons. " + MenuKeys },
@@ -62,7 +62,7 @@ namespace KCAccess.Core
             { "SurvivalIntro", "Survival mode introduction. " + MenuKeys },
             { "SurvivalSuccess", "You survived! " + MenuKeys },
             { "General", "General details. " + MenuKeys },
-            { "Log", "Notification history, newest first. Up and Down move through notifications, Enter jumps the map cursor to where it happened, Escape closes." },
+            { "Log", "Notification history, newest first. Up and Down move through notifications, Enter jumps the map cursor to where it happened, Shift Enter makes that place your navigation target, Escape closes." },
             { "Status", "Kingdom status list. Up and Down move through the lines, Escape closes." },
         };
 

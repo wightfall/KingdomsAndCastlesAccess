@@ -5,6 +5,25 @@ namespace KCAccess.Game
     /// <summary>L: browse notification history, Enter jumps the map cursor to where it happened.</summary>
     internal sealed class LogBrowser : ListMenu
     {
+        protected override bool HandleExtraKeys()
+        {
+            if (!KInput.WithShift(UnityEngine.KeyCode.Return) || !List.HasCurrent) return false;
+            int idx = List.Index;
+            if (idx < 0 || idx >= GameEvents.Log.Count) return true;
+            var n = GameEvents.Log.Items[idx];
+            if (!n.Where.HasValue)
+            {
+                A.Cue(Cue.Error);
+                A.Say("This notification has no location");
+                return true;
+            }
+            MapController.Inst.Nav.SetTarget(n.Where.Value, n.Text);
+            Close(announce: false);
+            A.Cue(Cue.Close);
+            A.Say("Target set: " + MapController.Inst.Nav.Describe(MapController.Inst.CursorPos) + ". N walks there, Shift N turns on the beacon.");
+            return true;
+        }
+
         public override string HelpId => "Log";
 
         protected override string Title => "Notifications, " + TextUtil.Plural(GameEvents.Log.Count, "message");

@@ -16,6 +16,7 @@ namespace KCAccess.Game
 
         private readonly GridCursor cursor = new GridCursor(1, 1);
         private readonly Scanner scanner = new Scanner();
+        internal readonly Navigator Nav = new Navigator();
         private bool initialized;
 
         /// <summary>Exploring the generated map from the map setup screen (Ctrl+M).</summary>
@@ -130,9 +131,10 @@ namespace KCAccess.Game
             enteredPlayAt = Time.unscaledTime;
             EnsureInit();
             scanner.Invalidate();
+            Nav.ClearTarget();
             UpdatePointer(follow: Player.inst.keep == null);
             string intro = Player.inst.keep == null
-                ? "Your kingdom begins. Build your keep first: press B, choose the keep in the Castle category, then move to a good spot near fertile land, trees and stone, and press Enter. Press F1 for help."
+                ? "Your kingdom begins. Build your keep first: press B, choose the keep in the Castle category, then move to a good spot near fertile land, trees and stone (O surveys the area around the cursor), and press Enter. Press F1 for help."
                 : "Kingdom loaded. Press F1 for help, K for status.";
             A.Say(intro + " Cursor at " + CellInfo.Brief(CurrentCell, false));
         }
@@ -177,6 +179,13 @@ namespace KCAccess.Game
                 }
             }
 
+            if (Nav.Walking && (KInput.Down(KeyCode.UpArrow) || KInput.Down(KeyCode.DownArrow) || KInput.Down(KeyCode.LeftArrow) || KInput.Down(KeyCode.RightArrow) || KInput.Down(KeyCode.Escape)))
+            {
+                KInput.Consume(KeyCode.Escape);
+                Nav.StopWalk(announce: true);
+                return;
+            }
+            Nav.Tick(this);
             if (HandleMovement()) return;
             if (MenuMapMode)
             {
@@ -285,6 +294,14 @@ namespace KCAccess.Game
             return edit != null && edit.brushMode != MapEdit.BrushMode.None;
         }
 
+        /// <summary>Moves the cursor one step during auto-walk (camera follows, placement re-checked).</summary>
+        internal void StepTo(GridPos p)
+        {
+            cursor.Set(p.X, p.Z);
+            UpdatePointer(follow: true);
+            if (IsPlacing) validityCheckFrame = Time.frameCount + 2;
+        }
+
         internal void PointAtCursor()
         {
             EnsureInit();
@@ -312,6 +329,11 @@ namespace KCAccess.Game
                 A.Say(CellInfo.Full(CurrentCell), force: true);
                 return true;
             }
+            if (KInput.Plain(KeyCode.O))
+            {
+                A.Say(CellInfo.Survey(cursor.Pos, 6).Format(), force: true);
+                return true;
+            }
             if (KInput.Plain(KeyCode.G))
             {
                 A.Say("Cursor at " + cursor.Pos.X + ", " + cursor.Pos.Z + ". Map is " + cursor.Width + " by " + cursor.Height + ".", force: true);
@@ -324,14 +346,42 @@ namespace KCAccess.Game
             }
             if (KInput.Plain(KeyCode.RightBracket) || KInput.Plain(KeyCode.LeftBracket))
             {
-                var p = scanner.Step(KInput.Down(KeyCode.RightBracket) ? 1 : -1, cursor.Pos);
-                if (p.HasValue) JumpTo(p.Value, announce: false);
+                var item = scanner.Step(KInput.Down(KeyCode.RightBracket) ? 1 : -1, cursor.Pos);
+                if (item != null) Nav.SetTarget(item.Pos, item.Label);
                 return true;
             }
             if (KInput.Plain(KeyCode.Backslash))
             {
-                scanner.Invalidate();
-                A.Say(scanner.CategoryName + " list refreshed, nearest first");
+                if (!Nav.Target.HasValue)
+                {
+                    A.Cue(Cue.Error);
+                    A.Say("No target. Choose one with Page Up, Page Down and the bracket keys.");
+                }
+                else
+                {
+                    A.Say(Nav.TargetLabel);
+                    JumpTo(Nav.Target.Value);
+                }
+                return true;
+            }
+            if (KInput.WithShift(KeyCode.Backslash))
+            {
+                A.Say(Nav.Describe(cursor.Pos), force: true);
+                return true;
+            }
+            if (KInput.Plain(KeyCode.N))
+            {
+                Nav.StartWalk(this, straight: false);
+                return true;
+            }
+            if (KInput.WithCtrl(KeyCode.N))
+            {
+                Nav.StartWalk(this, straight: true);
+                return true;
+            }
+            if (KInput.WithShift(KeyCode.N))
+            {
+                Nav.ToggleBeacon(cursor.Pos);
                 return true;
             }
             if (MenuMapMode) return false;
@@ -402,9 +452,43 @@ namespace KCAccess.Game
 
         private static bool MenuMapMode_Static => Inst.MenuMapMode;
 
+        private static void LoadBookmarks()
+        {
+            if (bookmarks != null) return;
+            try
+            {
+                bookmarks = Bookmarks.Parse(System.IO.File.Exists(BookmarkFile) ? System.IO.File.ReadAllText(BookmarkFile) : null);
+            }
+            catch (System.Exception)
+            {
+                bookmarks = new Bookmarks();
+            }
+        }
+
         /// <summary>Ctrl+1..9 jumps to a bookmark, Ctrl+Shift+1..9 stores the cursor position there.</summary>
         private bool HandleBookmarks()
         {
+            if (KInput.Alt && !KInput.Ctrl && !KInput.Shift)
+            {
+                for (int i = 1; i <= Bookmarks.Slots; i++)
+                {
+                    if (!(KInput.Down(KeyCode.Alpha0 + i) || KInput.Down(KeyCode.Keypad0 + i))) continue;
+                    LoadBookmarks();
+                    var bp = bookmarks.Get(KingdomKey, i);
+                    if (!bp.HasValue)
+                    {
+                        A.Cue(Cue.Error);
+                        A.Say("Bookmark " + i + " is empty", force: true);
+                    }
+                    else
+                    {
+                        Nav.SetTarget(bp.Value, "bookmark " + i);
+                        A.Say("Target bookmark " + i + ", " + Directions.Relative(cursor.Pos, bp.Value), force: true);
+                    }
+                    return true;
+                }
+                return false;
+            }
             if (!KInput.Ctrl || KInput.Alt) return false;
             int slot = 0;
             for (int i = 1; i <= Bookmarks.Slots; i++)
@@ -416,17 +500,7 @@ namespace KCAccess.Game
                 }
             }
             if (slot == 0) return false;
-            if (bookmarks == null)
-            {
-                try
-                {
-                    bookmarks = Bookmarks.Parse(System.IO.File.Exists(BookmarkFile) ? System.IO.File.ReadAllText(BookmarkFile) : null);
-                }
-                catch (System.Exception)
-                {
-                    bookmarks = new Bookmarks();
-                }
-            }
+            LoadBookmarks();
             if (KInput.Shift)
             {
                 bookmarks.Set(KingdomKey, slot, cursor.Pos);
@@ -476,6 +550,21 @@ namespace KCAccess.Game
                 KInput.Consume(KeyCode.Escape);
                 ui.brushMode = GameUI.CursorBrushes.None;
                 return;
+            }
+            if (KInput.WithShift(KeyCode.C) && !IsPlacing)
+            {
+                // Shortcut for the toolbar's chop mode: mark whole areas with Shift Enter.
+                KInput.Consume(KeyCode.C);
+                if (ui.currCursorMode == ui.chopCursorMode) ui.ReturnToDefaultCursorMode();
+                else ui.SetCursorModeChop();
+                return;
+            }
+            if (KInput.Plain(KeyCode.C) && !IsPlacing && (ui.currCursorMode == null || ui.currCursorMode == ui.consoleCursorMode))
+            {
+                // The game's chop shortcut works on the selected tile and stays silent when it cannot.
+                var sel = ui.GetCellSelected();
+                if (sel == null) A.Say("Select a forest tile with Enter first, then press C. For a large area use chop trees mode in the toolbar, F6.");
+                else if (sel.TreeAmount == 0) A.Say("No trees on the selected tile");
             }
             if (KInput.Plain(KeyCode.B))
             {
@@ -618,9 +707,24 @@ namespace KCAccess.Game
             maxX = Mathf.Clamp(maxX, 0, World.inst.GridWidth - 1);
             minZ = Mathf.Clamp(minZ, 0, World.inst.GridHeight - 1);
             maxZ = Mathf.Clamp(maxZ, 0, World.inst.GridHeight - 1);
-            ui.currCursorMode.HandleDragPrimaryUp(minX, minZ, maxX, maxZ, returnedToOriginal: false);
+            var mode = ui.currCursorMode;
+            mode.HandleDragPrimaryUp(minX, minZ, maxX, maxZ, returnedToOriginal: false);
             A.Cue(Cue.Activate);
-            A.Say("Applied to " + (maxX - minX) + " by " + (maxZ - minZ) + " tiles");
+            string size = (maxX - minX) + " by " + (maxZ - minZ) + " tiles";
+            if (mode is ChopCursorMode || mode is ChopCancelCursorMode)
+            {
+                int trees = 0;
+                for (int z = minZ; z < maxZ; z++)
+                    for (int x = minX; x < maxX; x++)
+                    {
+                        var c = World.inst.GetCellData(x, z);
+                        if (c != null && c.TreeAmount > 0) trees++;
+                    }
+                A.Say(trees == 0 ? "No trees in this " + size + " area"
+                    : (mode is ChopCursorMode ? TextUtil.Plural(trees, "tile") + " of trees marked for chopping in " : "Chopping cancelled on " + TextUtil.Plural(trees, "tile") + " of trees in ") + size);
+                return;
+            }
+            A.Say("Applied to " + size);
         }
 
         /// <summary>Select the building or tile under the cursor (like a mouse click, but deterministic).</summary>
@@ -714,10 +818,15 @@ namespace KCAccess.Game
             var villagers = World.inst.GetVillagersAt(cell.x, cell.z);
             if (villagers != null && villagers.Count > 0)
             {
+                // Pressing again on the same tile moves to the next villager there.
+                int vi = 0;
+                var current = ui.personUI != null && ui.personUI.Visible ? ui.personUI.villager : null;
+                for (int i = 0; i < villagers.Count; i++) if (villagers.data[i] == current) vi = i + 1;
+                var v = villagers.data[vi % villagers.Count];
                 ui.ClearUIForClick();
-                ui.SelectPerson(villagers.data[0]);
+                ui.SelectPerson(v);
                 A.Cue(Cue.Activate);
-                A.Say("Selected villager. F6 for details.");
+                A.Say("Selected " + CellInfo.VillagerSummary(v) + (villagers.Count > 1 ? ". " + (vi % villagers.Count + 1) + " of " + villagers.Count + " here, Shift Enter for the next" : string.Empty) + ". F6 for details.");
                 return;
             }
             A.Cue(Cue.Error);
@@ -790,6 +899,8 @@ namespace KCAccess.Game
                 if (problems.Count >= 3 || c == null) return;
                 string what = null;
                 if (c.Type != ResourceType.None) what = CellInfo.Terrain(c);
+                else if (c.TreeAmount > 0) what = "trees";
+                else if (TreeSystem.inst != null && TreeSystem.inst.AnimCount(c) > 0) what = "a tree growing or being felled";
                 else if (c.OccupyingStructure.Count > 0 && c.TopMostStructure != null) what = c.TopMostStructure.FriendlyName;
                 if (what == null) return;
                 problems.Add(what + " " + Directions.Offset(x - origin.X, z - origin.Z));
@@ -797,9 +908,37 @@ namespace KCAccess.Game
             return problems.Count == 0 ? string.Empty : "blocked by " + string.Join(", ", problems.ToArray());
         }
 
+        private static GridPos? NearestCoveredFreeTile(GridPos at, int maxRadius)
+        {
+            var w = World.inst;
+            for (int r = 1; r <= maxRadius; r++)
+            {
+                GridPos? best = null;
+                double bestD = double.MaxValue;
+                for (int dz = -r; dz <= r; dz++)
+                    for (int dx = -r; dx <= r; dx++)
+                    {
+                        if (Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dz)) != r) continue;
+                        var c = w.GetCellData(at.X + dx, at.Z + dz);
+                        if (c == null || c.Type != ResourceType.None || c.TreeAmount > 0 || c.OccupyingStructure.Count > 0) continue;
+                        if (c.RoadCoverage <= 0 && c.RoadConnectCoverage <= 0) continue;
+                        var p = new GridPos(c.x, c.z);
+                        double d = Directions.Euclid(at, p);
+                        if (d < bestD) { bestD = d; best = p; }
+                    }
+                if (best.HasValue) return best;
+            }
+            return null;
+        }
+
         private string Explain(PlacementValidationResult r)
         {
             string text = PlacementText.Explain(r.ToString());
+            if (r == PlacementValidationResult.OutsideOfTerritory || r == PlacementValidationResult.RoadCoverage)
+            {
+                var near = NearestCoveredFreeTile(cursor.Pos, 15);
+                if (near.HasValue) text += ". Nearest free tile inside road coverage: " + Directions.Relative(cursor.Pos, near.Value);
+            }
             if (r == PlacementValidationResult.MustBeOnFlatLand || r == PlacementValidationResult.ExistingStructure || r == PlacementValidationResult.RoadNotOnLand)
             {
                 string fp = FootprintProblems();
@@ -807,6 +946,9 @@ namespace KCAccess.Game
             }
             return text;
         }
+
+        private string lastPlacedName;
+        private bool waitingAgainLastFrame;
 
         private void SpeakValidity(bool always)
         {
@@ -826,7 +968,13 @@ namespace KCAccess.Game
                 if (always || changed) A.SayQueued(Explain(r.Value));
             }
             int count = GameUI.inst.CurrPlacementMode.PlacementCount();
-            if (count > 1) A.SayQueued(TextUtil.Plural(count, "piece") + " planned");
+            if (count > 1)
+            {
+                int ok = 0;
+                foreach (var b in GameUI.inst.CurrPlacementMode.buildings)
+                    if (b != null && World.inst.CanPlace(b) == PlacementValidationResult.Valid) ok++;
+                A.SayQueued(TextUtil.Plural(count, "piece") + " planned" + (ok < count ? ", " + ok + " can be built" : string.Empty));
+            }
         }
 
         /// <summary>Keeps announcements running while a panel has the keyboard. Returns true when a cursor mode or placement started.</summary>
@@ -857,7 +1005,9 @@ namespace KCAccess.Game
                     lastHeldName = name;
                     lastValidity = (PlacementValidationResult)(-1);
                     validityCheckFrame = Time.frameCount + 2;
-                    if (!wasPlacing && Time.unscaledTime - placedSayTime > 0.5f)
+                    // "Place another" picks the same building up again: the player already knows, stay quiet.
+                    bool again = name == lastPlacedName && waitingAgainLastFrame;
+                    if (!wasPlacing && !again && Time.unscaledTime - placedSayTime > 0.5f)
                     {
                         UpdatePointer(follow: true);
                         string size = hover != null && (hover.size.x > 1 || hover.size.z > 1) ? " The cursor is the south west corner, the building covers " + (int)hover.size.x + " by " + (int)hover.size.z + " tiles." : string.Empty;
@@ -882,6 +1032,7 @@ namespace KCAccess.Game
                 lastSelected = ui.GetBuildingSelected();
             }
             wasPlacing = placing;
+            waitingAgainLastFrame = ui.WaitingToPlaceAgain();
 
             // Escape (game key) clears the selection: say so, since nothing visible tells a blind player.
             bool hasSelection = ui.GetBuildingSelected() != null || ui.GetCellSelected() != null || ui.IsUnitSelected() || (ui.personUI != null && ui.personUI.Visible);
@@ -906,13 +1057,15 @@ namespace KCAccess.Game
         }
 
         /// <summary>Called by the AcceptPlacement hook.</summary>
-        internal void OnPlacementAccepted(bool success, string name, int pieces)
+        internal void OnPlacementAccepted(bool success, string name, int pieces, string skipped = null)
         {
             placedSayTime = Time.unscaledTime;
             if (success && pieces > 0)
             {
+                lastPlacedName = name;
                 A.Cue(Cue.Placed);
                 string what = pieces > 1 ? name + ", " + pieces + " pieces" : name;
+                if (skipped != null) what += ", " + skipped;
                 bool again = GameUI.inst != null && GameUI.inst.CanPlaceAgain();
                 A.Say("Placed " + what + (again ? ". Move to place another, Escape to stop." : "."));
                 if (name == GameState.inst.GetPlaceableByUniqueName("keep")?.FriendlyName)

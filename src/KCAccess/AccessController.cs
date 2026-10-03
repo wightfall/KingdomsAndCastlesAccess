@@ -66,6 +66,12 @@ namespace KCAccess
 
         private void Tick()
         {
+            if (Special.CapturingKey)
+            {
+                InputGate.BlockGameKeys = true;
+                Special.UpdateCapture();
+                return;
+            }
             if (GlobalKeys()) return;
             if (GameState.inst == null || World.inst == null) return;
 
@@ -117,7 +123,7 @@ namespace KCAccess
                     Game.MapController.Inst.MenuMapMode = true;
                     Game.MapController.Inst.CenterOnStart();
                     A.Cue(Cue.Open);
-                    A.Say("Exploring the map. Arrow keys move, I describes a tile, Page Up and Page Down choose a scan category, brackets jump to items. Control M or Escape returns to the menu.");
+                    A.Say("Exploring the map. Arrow keys move, I describes a tile, Page Up and Page Down choose a scan category, brackets choose a target, N walks to it, Backslash jumps there, Shift N turns on a sound beacon. Control M or Escape returns to the menu.");
                     return;
                 }
                 bool mapInMenu = !playing && Game.MapController.Inst.MenuMapMode;

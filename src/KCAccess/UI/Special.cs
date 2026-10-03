@@ -151,9 +151,80 @@ namespace KCAccess.UI
             return false;
         }
 
+        // ---------------------------------------------------------------- key rebinding (Settings > Keyboard)
+
+        private static KeyButton pendingKeyButton;
+        private static KeyButton capturingKeyButton;
+        private static float captureStarted;
+
+        /// <summary>True while the game is waiting for the new key; the mod must not use any key then.</summary>
+        internal static bool CapturingKey => pendingKeyButton != null || capturingKeyButton != null;
+
+        /// <summary>A real key binding row (the "Restore Defaults" button is a KeyButton too, but has no action text).</summary>
+        private static bool IsKeyRow(KeyButton kb)
+        {
+            if (kb == null) return false;
+            foreach (var t in kb.GetComponentsInChildren<TMPro.TMP_Text>(true))
+                if (t.gameObject.name == "KeyActionText") return true;
+            return false;
+        }
+
+        private static string KeyAction(KeyButton kb)
+        {
+            // The KeyButton sits on the row itself; its texts are the action name and the key.
+            var row = kb.transform;
+            {
+                foreach (var t in row.GetComponentsInChildren<TMPro.TMP_Text>(false))
+                {
+                    if (t.gameObject.name == "KeyActionText") return TextUtil.Clean(UIText.TextOf(t));
+                }
+            }
+            return TextUtil.Humanize(((InputActions)kb.buttonNum).ToString());
+        }
+
+        private static string KeyName(KeyButton kb)
+        {
+            var t = kb.myButton != null ? kb.myButton.GetComponentInChildren<TMPro.TMP_Text>() : null;
+            string k = t != null ? TextUtil.Clean(UIText.TextOf(t)) : string.Empty;
+            return string.IsNullOrEmpty(k) ? "no key" : k.ToLowerInvariant().Replace("alpha", "");
+        }
+
+        /// <summary>Runs every frame before anything else while a key binding is being changed.</summary>
+        internal static void UpdateCapture()
+        {
+            if (pendingKeyButton != null)
+            {
+                // Start listening only after Enter is released, or the game would bind Enter itself.
+                if (Input.anyKey) return;
+                capturingKeyButton = pendingKeyButton;
+                pendingKeyButton = null;
+                capturingKeyButton.SetCurrentButton();
+                captureStarted = Time.unscaledTime;
+                A.Cue(Cue.Open);
+                A.Say("Press the new key for " + KeyAction(capturingKeyButton) + ". You can hold Control, Shift or Alt with it.", force: true);
+                return;
+            }
+            if (capturingKeyButton != null)
+            {
+                var ui = SettingsMenuUI.inst;
+                if (ui == null || !SettingsMenuUI.isListeningToKey || Time.unscaledTime - captureStarted > 15f)
+                {
+                    var kb = capturingKeyButton;
+                    capturingKeyButton = null;
+                    if (SettingsMenuUI.isListeningToKey) SettingsMenuUI.isListeningToKey = false;
+                    A.Cue(Cue.Placed);
+                    A.Say(KeyAction(kb) + " is now " + KeyName(kb), force: true);
+                }
+            }
+        }
+
         /// <summary>Hide parts of composite rows; the row is represented by one control.</summary>
         internal static bool Exclude(GameObject go)
         {
+            // The fire risk bar is a picture with "Low" and "High" at its ends; the title row speaks the risk instead.
+            var fire = go.GetComponentInParent<FireRiskUI>();
+            if (fire != null && go.transform != fire.transform && go.name != "SummaryTitle") return true;
+            if (go.name == "KeyActionText" && go.transform.parent != null && go.transform.parent.GetComponentInChildren<KeyButton>(true) != null) return true;
             var merchantRow = go.GetComponentInParent<ResourceLineItemUI>();
             if (merchantRow != null && merchantRow.orderAmt != null)
             {
@@ -167,6 +238,13 @@ namespace KCAccess.UI
                 if (btn != null) return go.transform != btn.transform && !btn.transform.IsChildOf(go.transform);
                 return go.transform != rrow.GetChild(0);
             }
+            // Villager lists: the camera-only "find everyone" glass, and names already spoken by each row's button.
+            if (go.name == "FindVillagersButton" && go.GetComponentInParent<VillagerListUI>() != null) return true;
+            var person = go.GetComponentInParent<PersonListItemUI>();
+            if (person != null && person.MagGlass != null && go.transform != person.MagGlass.transform && !person.MagGlass.transform.IsChildOf(go.transform)) return true;
+            // Portrait captions duplicate the advisor buttons' names.
+            if (AdvisorUI.inst != null && go.name.StartsWith("Text") && go.GetComponent<TMPro.TMP_Text>() != null && go.transform.parent != null
+                && go.transform.IsChildOf(AdvisorUI.inst.transform) && go.transform.parent.Find("bottomgradient") != null) return true;
             // Each advisor has two overlapping buttons (portrait and speech bubble): keep the first.
             if (AdvisorName(go.transform) != null && go.GetComponent<Button>() != null)
             {
@@ -187,10 +265,25 @@ namespace KCAccess.UI
         internal static string Describe(UIItem item)
         {
             if (item == null || item.Go == null) return null;
+            if (item.IsControl && item.Go.GetComponentInParent<PersonListItemUI>() is PersonListItemUI pli && pli.MagGlass != null && item.Control == pli.MagGlass)
+            {
+                string who = pli.Description != null ? TextUtil.Clean(UIText.TextOf(pli.Description)) : "villager";
+                bool hoh = pli.HeadOfHouseholdIcon != null && pli.HeadOfHouseholdIcon.activeSelf;
+                return who + (hoh ? ", head of household" : string.Empty) + ", button, Enter selects this villager";
+            }
+            if (item.Go.name == "SummaryTitle" && item.Go.transform.parent != null && item.Go.transform.parent.GetComponent<FireRiskUI>() is FireRiskUI fr)
+            {
+                string risk = fr.tooltip != null ? TextUtil.Clean(fr.tooltip.toolTipText ?? string.Empty) : string.Empty;
+                return UIText.TextOf(item.Go.GetComponent<TMPro.TMP_Text>()) + ": " + (risk.Length > 0 ? risk : "unknown");
+            }
             var row = RowFor(item.Go);
             if (row != null && item.Control == row.DisableToggle) return PriorityRow(row);
             if (item.Control is Button && item.Go.GetComponentInParent<PickNameUI>() != null && UIText.LabelOf(item.Control) == "unlabelled")
                 return "Choose banner, button";
+            var kbd = item.IsControl ? item.Go.GetComponentInParent<KeyButton>() : null;
+            if (IsKeyRow(kbd)) return KeyAction(kbd) + ": " + KeyName(kbd) + ", button, Enter to change";
+            if (item.IsControl && item.Go.name == "SeedInput" && !UIText.LabelOf(item.Control).ToLowerInvariant().Contains("seed"))
+                return "Map seed, edit, " + UIText.ValueOf(item.Control);
             var mrow = item.Go.GetComponentInParent<ResourceLineItemUI>();
             if (mrow != null && item.Control != null && item.Control == mrow.orderAmt) return MerchantRow(mrow);
             if (item.IsControl && OrderRow(item.Go, out var orow, out var otype))
@@ -262,7 +355,7 @@ namespace KCAccess.UI
             if (tax != null && item.Control != null)
             {
                 string which = item.Control == tax.increase ? "Increase tax rate" : (item.Control == tax.decrease ? "Decrease tax rate" : null);
-                if (which != null) return TextUtil.Join(", ", which, Game.Status.TaxLine(), item.Control.interactable ? null : "unavailable, build a throne room first");
+                if (which != null) return TextUtil.Join(", ", which, Game.Status.TaxLine(), item.Control.interactable ? null : "unavailable, build a Treasure Room first, Castle category");
             }
             return null;
         }
@@ -297,6 +390,14 @@ namespace KCAccess.UI
         internal static bool HandleKey(UINavigator nav, UIItem item)
         {
             if (item == null || item.Go == null) return false;
+            var keyBtn = item.IsControl ? item.Go.GetComponentInParent<KeyButton>() : null;
+            if (IsKeyRow(keyBtn) && (KInput.Plain(KeyCode.Return) || KInput.Plain(KeyCode.Space) || KInput.Plain(KeyCode.KeypadEnter)))
+            {
+                KInput.Consume(KeyCode.Return);
+                KInput.Consume(KeyCode.Space);
+                pendingKeyButton = keyBtn;
+                return true;
+            }
             if ((KInput.Plain(KeyCode.Return) || KInput.Plain(KeyCode.Space)) && item.IsControl && ResearchRow(item.Go, out _, out var up))
             {
                 var b = GameUI.inst.GetBuildingSelected();

@@ -57,13 +57,19 @@ Status legend: `[x]` done and verified in the running game · `[~]` implemented,
 - [x] Creative mode: options menu, check boxes, brushes applied with Enter, Escape turns brush off; map editor painting from map setup
 - [x] F1 context help for every screen, Shift+F1 all keys
 - [x] Announcements: speed / pause changes, seasons, selection cleared, cursor mode changes, threats (vikings, dragons), merchants, manual saves
+- [x] Navigation (v1.4.0): [ / ] choose a scanner target; N auto-walks along a route villagers can walk (own A* on the game's footpath costs, works before the game starts too, ends next to blocked targets, tells when the target is on another island); Ctrl+N straight walk; \ jump; Shift+\ where is it; Shift+N audio beacon (pan = east/west, pitch = north/south, faster = closer, chime on arrival); Alt+1-9 bookmark as target; Shift+Enter in the notification log sets the target
+- [x] O area survey (land, open, fertile, forest, stone, iron, water within 6 tiles, nearest stone / iron / water when none is close)
+- [x] Scanner category "Fertile land" (open fertile ground for farms); scan list refreshes itself
+- [x] Shift+C chop trees mode; C on a tile says whether chopping was ordered or cancelled; area chop says how many tree tiles were marked
+- [x] Villager selection announced (name, age, job, home, thought), Shift+Enter cycles villagers on a tile, villager panel reachable with F6
 
 ## 4. Quality
-- [x] Unit tests for Core logic (133 tests, xUnit)
+- [x] Unit tests for Core logic (200 tests, xUnit)
 - [x] v1.0.0 released; v1.1.0 with HUD counter fix, kingdom overview descriptions, creative mode support
 - [x] v1.2.0: setup exe in the release, dialog fix, advisors/banners/demolish labels, bookmarks
 - [x] Updater verified end to end: the v1.1.0 updater found 1.2.0 on GitHub, asked, downloaded, installed it and replaced itself
 - [x] v1.3.0: diplomacy, research, merchant trading, defeat screen verified; ships selectable; keep placement no longer blocked when the camera starts over water
+- [x] v1.4.0: full no-cheat playthrough on Sommern (keep → hamlet → small village: roads, hovels, cottages, farms, quarry, granary, wells, Treasure Room and taxes, advisors, chopping, saving / loading); navigation, area survey, settings keyboard tab rebinding
 - [x] Release rule: every release ships KCAccess-Setup-vX.Y.Z.exe, the bundle zip and the mod-only zip (tools/package.ps1 builds all three)
 - [x] Bug fixes in the game discovered during inspection (see below)
 - [x] README (install, keys, cues, settings, troubleshooting, building), third-party notices, MIT license
@@ -92,6 +98,13 @@ Status legend: `[x]` done and verified in the running game · `[~]` implemented,
 - Escape after placing a building did not end the game's "place another" mode → handled by the mod.
 - Read-only bars (opinion, busy timers) were offered as adjustable sliders → shown as progress bars.
 - Foreign kingdoms were missing from the scanner (AI buildings are not in the player's list) → read from the AI kingdom data, including unexplored ones.
+- Key rebinding in Settings → Keyboard pressed the game's capture with the Enter that opened it; now waits until keys are released, then announces "X is now Y". "Restore Defaults" was read as a key row.
+- Tax buttons said "build a throne room first": the game's building is the Treasure Room; disabled tooltips (stale "build a treasure room" text) are no longer read.
+- Line / area placement only said "Placed N pieces": now says how many were skipped and why (barren soil, outside road coverage, trees…), and while dragging how many of the planned pieces can be built.
+- "Outside road coverage" now names the nearest free tile inside coverage; "needs clear land" names trees and growing / falling trees in the footprint.
+- "Placing X…" instructions repeated after every "place another" → said once.
+- Fire risk bar read as "Low High" → reads the risk level; advisor portraits' captions and duplicate resident names removed; camera-only "find villagers" glass hidden.
+- Saving from the save screen is confirmed ("Game saved"); F5 no longer repeats a tooltip equal to the label.
 - Game text bug: some strings show "<!-Missing Translation [text]-!>" (e.g. the demolish warning) → the marker is removed before speaking.
 
 ## Notes / decisions
@@ -105,4 +118,5 @@ Status legend: `[x]` done and verified in the running game · `[~]` implemented,
 
 ## Next ideas
 - Keep playing long games to find windows where the generic reader is weak (e.g. AI negotiation price editor, ship logistics).
+- Late-game threats on harder regions (dragons, siege) with real armies; castle wall stacking by keyboard.
 

@@ -71,30 +71,46 @@ namespace KCAccess
     [HarmonyPatch(typeof(PlacementMode), nameof(PlacementMode.AcceptPlacement))]
     internal static class Patch_AcceptPlacement
     {
-        private static void Prefix(PlacementMode __instance, out KeyValuePair<string, int> __state)
+        internal sealed class State
         {
-            int valid = 0;
-            string name = null;
+            public string Name;
+            public int Valid;
+            public readonly Dictionary<string, int> Skipped = new Dictionary<string, int>();
+        }
+
+        private static void Prefix(PlacementMode __instance, out State __state)
+        {
+            var st = new State();
             try
             {
                 foreach (var b in __instance.buildings)
                 {
                     if (b == null) continue;
-                    name = b.FriendlyName;
-                    if (World.inst.CanPlace(b) == PlacementValidationResult.Valid) valid++;
+                    st.Name = b.FriendlyName;
+                    var r = World.inst.CanPlace(b);
+                    if (r == PlacementValidationResult.Valid) { st.Valid++; continue; }
+                    string why = KCAccess.Core.PlacementText.Explain(r.ToString());
+                    st.Skipped[why] = st.Skipped.TryGetValue(why, out int n) ? n + 1 : 1;
                 }
             }
             catch
             {
                 // Never break placement because of the announcement.
             }
-            __state = new KeyValuePair<string, int>(name, valid);
+            __state = st;
         }
 
-        private static void Postfix(bool __result, KeyValuePair<string, int> __state)
+        private static void Postfix(bool __result, State __state)
         {
-            if (__state.Key == null) return;
-            MapController.Inst.OnPlacementAccepted(__result, __state.Key, __state.Value);
+            if (__state == null || __state.Name == null) return;
+            string skipped = null;
+            if (__state.Valid > 0 && __state.Skipped.Count > 0)
+            {
+                var parts = new List<string>();
+                foreach (var kv in __state.Skipped) parts.Add(kv.Value + " skipped, " + kv.Key);
+                skipped = string.Join("; ", parts.ToArray());
+            }
+            MapController.Inst.OnPlacementAccepted(__result, __state.Name, __state.Valid, skipped);
         }
     }
 
@@ -103,5 +119,67 @@ namespace KCAccess
     internal static class Patch_Save
     {
         private static void Postfix() => GameEvents.OnSaved();
+    }
+}
+
+namespace KCAccess
+{
+    /// <summary>The C key (or the tile panel's chop button) toggles chopping on the selected tile: say which way it went.</summary>
+    [HarmonyPatch(typeof(TileInfoUI), nameof(TileInfoUI.ClickedChop))]
+    internal static class Patch_ClickedChop
+    {
+        private static void Prefix(TileInfoUI __instance, out int __state)
+        {
+            var c = GameUI.inst != null ? GameUI.inst.GetCellSelected() : null;
+            if (c == null || c.TreeAmount == 0) { __state = 0; return; }
+            __instance.UpdateChopStatus();
+            __state = __instance.clearCutter == null ? 1 : 2;
+        }
+
+        private static void Postfix(int __state)
+        {
+            if (__state == 0) return;
+            A.Cue(__state == 1 ? KCAccess.Core.Cue.Activate : KCAccess.Core.Cue.Close);
+            A.Say(__state == 1 ? "Trees marked for chopping. Idle villagers will cut them for wood." : "Chopping cancelled on this tile.", force: true);
+        }
+    }
+}
+
+namespace KCAccess
+{
+    /// <summary>Saving from the save screen gives no visible confirmation either; say it (autosaves stay quiet).</summary>
+    [HarmonyPatch(typeof(LoadSave), nameof(LoadSave.Save))]
+    internal static class Patch_ManualSave
+    {
+        private static void Postfix()
+        {
+            try
+            {
+                if (GameState.inst != null && GameState.inst.IsMainMenuMode() && GameState.inst.mainMenuMode.GetState() == MainMenuMode.State.Save)
+                {
+                    A.Cue(KCAccess.Core.Cue.Placed);
+                    A.SayQueued("Game saved");
+                }
+            }
+            catch
+            {
+                // Announcement only.
+            }
+        }
+    }
+}
+
+namespace KCAccess
+{
+    /// <summary>Villagers picked from a house or workplace list (the magnifying glass) are selected silently by the game.</summary>
+    [HarmonyPatch(typeof(PersonListItemUI), "OnMagClick")]
+    internal static class Patch_PersonListMagClick
+    {
+        private static void Postfix(PersonListItemUI __instance)
+        {
+            if (__instance == null || __instance.Villager == null) return;
+            A.Cue(KCAccess.Core.Cue.Activate);
+            A.Say("Selected " + Game.CellInfo.VillagerSummary(__instance.Villager) + ". Villager details are added at the end of this panel.", force: true);
+        }
     }
 }

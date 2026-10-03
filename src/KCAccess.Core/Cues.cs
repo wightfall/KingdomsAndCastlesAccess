@@ -43,7 +43,11 @@ namespace KCAccess.Core
         /// <summary>Dangerous event: raid, dragon, fire.</summary>
         Alert,
         /// <summary>Slider / value changed (pitch follows value).</summary>
-        Value
+        Value,
+        /// <summary>Navigation beacon ping (panned and pitched towards the target).</summary>
+        Beacon,
+        /// <summary>One step of auto-walk.</summary>
+        Step
     }
 
     /// <summary>Recipes for every cue, rendered by <see cref="ToneSynth"/>.</summary>
@@ -70,6 +74,8 @@ namespace KCAccess.Core
             { Cue.Notify, new[] { new ToneSegment(784, 784, 0.07f, 0.3f), new ToneSegment(1047, 1047, 0.1f, 0.3f) } },
             { Cue.Alert, new[] { new ToneSegment(880, 660, 0.15f, 0.45f, Waveform.Square), new ToneSegment(880, 660, 0.15f, 0.45f, Waveform.Square) } },
             { Cue.Value, new[] { new ToneSegment(600, 600, 0.04f, 0.25f) } },
+            { Cue.Beacon, new[] { new ToneSegment(660, 660, 0.06f, 0.4f, Waveform.Triangle), new ToneSegment(990, 990, 0.04f, 0.25f, Waveform.Triangle) } },
+            { Cue.Step, new[] { new ToneSegment(140, 110, 0.04f, 0.3f, Waveform.Noise) } },
         };
 
         public static IEnumerable<Cue> All => (Cue[])Enum.GetValues(typeof(Cue));

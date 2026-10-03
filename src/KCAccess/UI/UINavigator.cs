@@ -453,7 +453,9 @@ namespace KCAccess.UI
                 return;
             }
             string tip = cur.IsControl ? UIText.TooltipOf(cur.Go) : null;
-            A.Say(TextUtil.Sentences(Describe(cur), tip, list.PositionText), force: true);
+            string desc = Describe(cur);
+            if (tip != null && desc.Contains(tip)) tip = null;
+            A.Say(TextUtil.Sentences(desc, tip, list.PositionText), force: true);
         }
 
         /// <summary>Read every item of the panel in order.</summary>

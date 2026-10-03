@@ -425,7 +425,7 @@ namespace KCAccess.UI
         internal static string TooltipOf(GameObject go)
         {
             var hook = go.GetComponent<TooltipHook>() ?? go.GetComponentInParent<TooltipHook>();
-            if (hook == null) return null;
+            if (hook == null || !hook.enabled) return null; // the game disables hooks whose tip no longer applies
             string tip = hook.toolTipText;
             if (!TextUtil.HasContent(tip) || tip == "missing tip" || tip.StartsWith("<localization")) return null;
             return TextUtil.Clean(tip);

@@ -166,6 +166,16 @@ namespace KCAccess
                             Plugin.Log.LogInfo("[dbg] invoke " + (btn != null ? btn.name + " listeners=" + btn.onClick.GetPersistentEventCount() + " interactable=" + btn.interactable : "no button"));
                             if (btn != null) btn.onClick.Invoke();
                             break;
+                        case "navinfo":
+                            var mc = Game.MapController.Inst;
+                            var tgt = mc.Nav.Target;
+                            if (tgt.HasValue)
+                            {
+                                var bs = Core.BeaconMath.Compute(tgt.Value.X - mc.CursorPos.X, tgt.Value.Z - mc.CursorPos.Z);
+                                Plugin.Log.LogInfo("[navinfo] cursor=" + mc.CursorPos + " target=" + tgt.Value + " (" + mc.Nav.TargetLabel + ") pan=" + bs.Pan.ToString("0.00") + " pitch=" + bs.Pitch.ToString("0.00") + " interval=" + bs.Interval.ToString("0.00") + " dist=" + bs.Distance + " walking=" + mc.Nav.Walking + " beacon=" + mc.Nav.BeaconOn);
+                            }
+                            else Plugin.Log.LogInfo("[navinfo] cursor=" + mc.CursorPos + " no target");
+                            break;
                         case "gold":
                             Player.inst.PlayerLandmassOwner.Gold += 5000;
                             break;

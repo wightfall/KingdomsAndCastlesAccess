@@ -8,7 +8,7 @@ namespace KCAccess.Core
         private static readonly Dictionary<string, string> Reasons = new Dictionary<string, string>
         {
             { "Valid", "can build here" },
-            { "OutsideOfTerritory", "outside your territory, buildings must be within road coverage, so build a road closer first" },
+            { "OutsideOfTerritory", "outside road coverage, build a road closer first" },
             { "ExistingStructure", "something is already built here" },
             { "BridgeNotInWater", "bridges must be over water" },
             { "PierNotInWater", "piers must be on water" },

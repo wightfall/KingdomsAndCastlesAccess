@@ -100,7 +100,7 @@ namespace KCAccess.Game
         internal static string TaxLine()
         {
             if (Landmass < 0) return "Tax rate unknown";
-            int pct = Mathf.RoundToInt(Player.inst.GetTaxRate(Landmass) * 10f);
+            int pct = (int)(Player.inst.GetTaxRate(Landmass) * 10f) * 2; // same formula as the game's tax display (TaxRateUI)
             return "Tax rate " + pct + " percent";
         }
 

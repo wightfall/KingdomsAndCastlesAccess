@@ -85,7 +85,8 @@ namespace KCAccess.Game
             AddIfVisible(selection, ui.workerUI);
             AddIfVisible(selection, ui.constructUI);
             AddIfVisible(selection, ui.tileInfoUI);
-            AddIfVisible(selection, ui.personUI);
+            // The villager panel's root has no size of its own, so the on-screen test cannot be used for it.
+            if (ui.personUI != null && ui.personUI.Visible && ui.personUI.villager != null) selection.Add(ui.personUI.transform);
             AddIfVisible(selection, ui.shipUI);
             AddIfVisible(selection, ui.shipLogisticsUI);
             AddIfVisible(selection, ui.merchantUI);

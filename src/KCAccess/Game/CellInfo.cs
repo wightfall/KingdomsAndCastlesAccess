@@ -44,6 +44,7 @@ namespace KCAccess.Game
                 case ResourceType.WitchHut: return "witch hut";
                 default:
                     if (c.TreeAmount > 0) return "forest";
+                    if (TreeSystem.inst != null && TreeSystem.inst.AnimCount(c) > 0) return "grass, tree growing or falling";
                     return "grass";
             }
         }
@@ -286,6 +287,83 @@ namespace KCAccess.Game
             {
                 return 0;
             }
+        }
+
+        /// <summary>Counts what lies within <paramref name="radius"/> tiles of the cursor (O key).</summary>
+        internal static AreaSurvey Survey(GridPos at, int radius)
+        {
+            var w = World.inst;
+            var s = new AreaSurvey { Radius = radius };
+            for (int z = at.Z - radius; z <= at.Z + radius; z++)
+                for (int x = at.X - radius; x <= at.X + radius; x++)
+                {
+                    if (x < 0 || z < 0 || x >= w.GridWidth || z >= w.GridHeight) continue;
+                    var c = w.GetCellData(x, z);
+                    if (c == null) continue;
+                    if (!Explored(c)) { s.Fog++; continue; }
+                    if (IsWater(c))
+                    {
+                        if (c.deepWater) s.DeepWater++; else s.Water++;
+                        continue;
+                    }
+                    s.Land++;
+                    if (c.Type == ResourceType.Stone) s.Stone++;
+                    else if (c.Type == ResourceType.IronDeposit) s.Iron++;
+                    int fert = c.GetEffectiveFertility();
+                    if (fert >= 2) s.VeryFertile++; else if (fert == 1) s.Fertile++;
+                    if (c.TreeAmount > 0) s.Forest++;
+                    if (c.OccupyingStructure.Count > 0) s.Buildings++;
+                    else if (c.TreeAmount == 0 && c.Type == ResourceType.None) s.Open++;
+                }
+            if (s.Stone == 0) s.NearestStone = Nearest(at, radius, c => c.Type == ResourceType.Stone);
+            if (s.Iron == 0) s.NearestIron = Nearest(at, radius, c => c.Type == ResourceType.IronDeposit);
+            if (s.Water == 0 && s.DeepWater == 0) s.NearestWater = Nearest(at, radius, IsWater);
+            return s;
+        }
+
+        private static string Nearest(GridPos at, int skipRadius, System.Func<Cell, bool> match)
+        {
+            var w = World.inst;
+            for (int r = skipRadius + 1; r <= 40; r++)
+            {
+                GridPos? best = null;
+                double bestD = double.MaxValue;
+                for (int dz = -r; dz <= r; dz++)
+                    for (int dx = -r; dx <= r; dx++)
+                    {
+                        if (System.Math.Max(System.Math.Abs(dx), System.Math.Abs(dz)) != r) continue;
+                        int x = at.X + dx, z = at.Z + dz;
+                        if (x < 0 || z < 0 || x >= w.GridWidth || z >= w.GridHeight) continue;
+                        var c = w.GetCellData(x, z);
+                        if (c == null || !Explored(c) || !match(c)) continue;
+                        var p = new GridPos(x, z);
+                        double d = Directions.Euclid(at, p);
+                        if (d < bestD) { bestD = d; best = p; }
+                    }
+                if (best.HasValue) return Directions.Relative(at, best.Value);
+            }
+            return null;
+        }
+
+        /// <summary>Name, age, job and current thought of a villager (what the villager panel shows).</summary>
+        internal static string VillagerSummary(Villager v)
+        {
+            if (v == null) return "villager";
+            var parts = new List<string> { string.IsNullOrEmpty(v.name) ? "villager" : v.name };
+            try
+            {
+                parts.Add(string.Format(I2.Loc.ScriptLocalization.PersonUIYearsOld, Mathf.FloorToInt(v.timeAlive / Weather.inst.TimeInYear())));
+            }
+            catch (System.Exception)
+            {
+                // age is optional
+            }
+            string job = v.job != null ? TextUtil.Clean(v.job.GetDescription() ?? string.Empty) : string.Empty;
+            parts.Add(job.Length > 0 ? job : "no job");
+            if (v.Residence == null) parts.Add("homeless");
+            string thought = TextUtil.Clean(v.GetThought() ?? string.Empty);
+            if (thought.Length > 0) parts.Add("thinks: " + thought);
+            return string.Join(", ", parts.ToArray());
         }
     }
 }

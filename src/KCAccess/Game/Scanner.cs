@@ -21,13 +21,15 @@ namespace KCAccess.Game
 
         private static readonly string[] Categories =
         {
-            "Your buildings", "Construction sites", "Your soldiers and ships", "Threats", "Stone", "Iron", "Forests", "Fresh water", "Foreign kingdoms", "Special places"
+            "Your buildings", "Construction sites", "Your soldiers and ships", "Threats", "Stone", "Iron", "Fertile land", "Forests", "Fresh water", "Foreign kingdoms", "Special places"
         };
 
         private int category;
         private List<Item> items = new List<Item>();
         private int index = -1;
         private bool stale = true;
+        private GridPos lastOrigin;
+        private float refreshedAt;
 
         internal string CategoryName => Categories[category];
 
@@ -40,10 +42,21 @@ namespace KCAccess.Game
             A.Say(CategoryName + ", " + (items.Count == 0 ? "none found" : TextUtil.Plural(items.Count, "item")));
         }
 
-        /// <summary>Move to the next / previous item. Returns its position, or null when the category is empty.</summary>
-        internal GridPos? Step(int delta, GridPos origin)
+        /// <summary>Move to the next / previous item. Returns it, or null when the category is empty.</summary>
+        internal Item Step(int delta, GridPos origin)
         {
-            if (stale) Refresh(origin);
+            if (stale || origin != lastOrigin)
+            {
+                // The cursor moved: list again nearest first from the new spot.
+                Refresh(origin);
+            }
+            else if (Time.unscaledTime - refreshedAt > 5f)
+            {
+                // Same spot but the kingdom may have changed: rebuild, keep our place in the list.
+                var current = index >= 0 && index < items.Count ? items[index].Pos : (GridPos?)null;
+                Refresh(origin);
+                if (current.HasValue) index = items.FindIndex(i => i.Pos == current.Value);
+            }
             if (items.Count == 0)
             {
                 A.Cue(Cue.Edge);
@@ -63,7 +76,7 @@ namespace KCAccess.Game
             }
             var it = items[index];
             A.Say(it.Label + ", " + Directions.Relative(origin, it.Pos) + ", " + (index + 1) + " of " + items.Count);
-            return it.Pos;
+            return it;
         }
 
         /// <summary>Forget the list so it is rebuilt (nearest first) on the next step.</summary>
@@ -72,6 +85,8 @@ namespace KCAccess.Game
         private void Refresh(GridPos origin)
         {
             stale = false;
+            lastOrigin = origin;
+            refreshedAt = Time.unscaledTime;
             index = -1;
             var found = new List<Item>();
             try
@@ -169,6 +184,11 @@ namespace KCAccess.Game
                     break;
                 case "Iron":
                     AddClusters(found, c => c.Type == ResourceType.IronDeposit && CellInfo.Explored(c), n => "iron deposit, " + TextUtil.Plural(n, "tile"));
+                    break;
+                case "Fertile land":
+                    // Open fertile ground where farms can go (no trees, rock, water or buildings).
+                    AddClusters(found, c => c.Type == ResourceType.None && c.TreeAmount == 0 && c.OccupyingStructure.Count == 0 && c.GetEffectiveFertility() >= 1 && CellInfo.Explored(c),
+                        n => "open fertile land, " + TextUtil.Plural(n, "tile"), minSize: 4);
                     break;
                 case "Forests":
                     AddClusters(found, c => c.TreeAmount > 0 && c.OccupyingStructure.Count == 0 && CellInfo.Explored(c), n => "forest, " + TextUtil.Plural(n, "tile"), minSize: 3);
