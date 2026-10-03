@@ -62,5 +62,10 @@ Copy-Item README.md (Join-Path $bundle "KCAccess-README.md")
 $bundleZip = Join-Path $dist "KCAccess-v$version-with-BepInEx.zip"
 New-Zip $bundle $bundleZip
 
+# Setup / updater program with the bundle built in (works offline, checks GitHub for newer versions).
+dotnet build src/KCAccess.Installer -c Release -nologo "-p:PayloadZip=$bundleZip"
+if ($LASTEXITCODE -ne 0) { throw "Installer build failed" }
+Copy-Item (Join-Path $root 'src/KCAccess.Installer/bin/Release/net472/KCAccessSetup.exe') (Join-Path $dist "KCAccess-Setup-v$version.exe")
+
 Remove-Item -Recurse -Force $stage, $bundle
 Write-Host "Created:" ; Get-ChildItem $dist | ForEach-Object { Write-Host "  $($_.Name)  $([math]::Round($_.Length / 1KB)) KB" }

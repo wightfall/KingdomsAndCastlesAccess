@@ -23,7 +23,23 @@ SAPI and other screen readers automatically.
 Requirements: Windows 10 or newer, the Steam version of Kingdoms and Castles (64-bit), and a screen
 reader (Prism falls back to Windows speech if none is running).
 
-### Easiest: the bundle
+### Easiest: the setup program
+
+1. Download `KCAccess-Setup-vX.Y.Z.exe` from the
+   [releases page](https://github.com/wightfall/KingdomsAndCastlesAccess/releases) and run it.
+   (Windows SmartScreen may warn about an unknown publisher: choose More info, then Run anyway.)
+2. It finds Kingdoms and Castles through Steam (or press **Choose game folder**), shows what is
+   installed, and **Install or update** installs BepInEx (if needed) and the mod. Everything is
+   built into the exe, so it also works offline.
+3. It checks GitHub for a newer version and asks before installing it. It also copies itself into
+   the game folder as **KCAccess-Updater.exe**: run that any time to check for updates. It keeps
+   your settings and any existing BepInEx install.
+
+The window is made of standard Windows controls: the status text box has focus when it opens,
+Tab moves between the buttons, and questions are Yes / No message boxes. Silent install:
+`KCAccess-Setup-vX.Y.Z.exe --quiet` (exit code 0 = installed, 2 = game not found, 3 = game running).
+
+### Alternative: the bundle zip
 
 1. Download `KCAccess-vX.Y.Z-with-BepInEx.zip` from the
    [releases page](https://github.com/wightfall/KingdomsAndCastlesAccess/releases).
@@ -39,7 +55,7 @@ Download `KCAccess-vX.Y.Z.zip` and extract it into the game folder. It only cont
 
 ### Uninstall
 
-Delete `BepInEx\plugins\KCAccess`. To remove BepInEx completely also delete `winhttp.dll`,
+Run KCAccess-Updater.exe and choose **Uninstall**, or delete `BepInEx\plugins\KCAccess`. To remove BepInEx completely also delete `winhttp.dll`,
 `doorstop_config.ini`, `.doorstop_version` and the `BepInEx` folder.
 
 ## Keys
