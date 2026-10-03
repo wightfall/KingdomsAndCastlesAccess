@@ -94,6 +94,16 @@ namespace KCAccess.Installer
         private async Task StartAsync()
         {
             status.Focus();
+            // A previous self-update renames the running updater to *.old; remove it now.
+            try
+            {
+                string old = Application.ExecutablePath + ".old";
+                if (File.Exists(old)) File.Delete(old);
+            }
+            catch
+            {
+                // Still locked; removed next time.
+            }
             gameDir = FindGameFolder();
             ShowStatus();
             if (options.InstallNow)
@@ -192,7 +202,8 @@ namespace KCAccess.Installer
         private static string Shorten(string notes)
         {
             if (string.IsNullOrEmpty(notes)) return string.Empty;
-            notes = notes.Replace("**", "").Replace("\r", "");
+            notes = notes.Replace("**", "").Replace("`", "").Replace("\r", "");
+            notes = System.Text.RegularExpressions.Regex.Replace(notes, @"(?m)^#+\s*", "");
             return notes.Length > 600 ? notes.Substring(0, 600) + "…" : notes;
         }
 
