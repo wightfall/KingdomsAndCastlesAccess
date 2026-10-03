@@ -57,6 +57,9 @@ Status legend: `[x]` done and verified in the running game · `[~]` implemented,
 ## 4. Quality
 - [x] Unit tests for Core logic (133 tests, xUnit)
 - [x] v1.0.0 released; v1.1.0 with HUD counter fix, kingdom overview descriptions, creative mode support
+- [x] v1.2.0: setup exe in the release, dialog fix, advisors/banners/demolish labels, bookmarks
+- [x] Updater verified end to end: the v1.1.0 updater found 1.2.0 on GitHub, asked, downloaded, installed it and replaced itself
+- [x] Release rule: every release ships KCAccess-Setup-vX.Y.Z.exe, the bundle zip and the mod-only zip (tools/package.ps1 builds all three)
 - [x] Bug fixes in the game discovered during inspection (see below)
 - [x] README (install, keys, cues, settings, troubleshooting, building), third-party notices, MIT license
 - [x] `.gitignore`, `tools/fetch-deps.ps1`, `tools/package.ps1` (mod zip + bundle with BepInEx)
