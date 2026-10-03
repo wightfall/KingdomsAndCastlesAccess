@@ -125,6 +125,10 @@ namespace KCAccess
                                 + " cursor=" + Game.MapController.Inst.CursorPos + " vp=" + (vp != null ? vp.KeyboardActive + "@" + vp.Target : "none") + " pointer=" + PointingSystem.GetPointer().GetType().Name
                                 + " valid=" + (hb != null ? World.inst.CanPlace(hb).ToString() : "-"));
                             break;
+                        case "navstate":
+                            var n2 = AccessController.Inst.Nav;
+                            Plugin.Log.LogInfo("[navstate] editing=" + n2.IsEditing + " root=" + (n2.Root != null) + " count=" + n2.Count + " current=" + (n2.Current != null ? n2.Describe(n2.Current) : "null") + " frame=" + Time.frameCount);
+                            break;
                         case "menu":
                             GameState.inst.playingMode.OnClickedMenu();
                             break;

@@ -99,6 +99,13 @@ namespace KCAccess.Game
             if (TownNameUI.inst != null) AddIfVisible(kingdom, TownNameUI.inst);
             if (kingdom.Count > 0) groups.Add(Group("Kingdom", "Kingdom overview", kingdom));
 
+            if (ui.creativeModeOptions != null && Player.inst != null && Player.inst.creativeMode)
+            {
+                var creative = new List<Transform>();
+                AddIfVisible(creative, ui.creativeModeOptions.transform);
+                if (creative.Count > 0) groups.Add(Group("Creative", "Creative mode options", creative));
+            }
+
             var toolbar = new List<Transform>();
             if (SpeedControlUI.inst != null) AddIfVisible(toolbar, SpeedControlUI.inst);
             if (ui.cursorModeButtonContainer != null) AddIfVisible(toolbar, ui.cursorModeButtonContainer);

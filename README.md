@@ -110,6 +110,14 @@ The game's own keys keep working: **Space** pause, **1 2 3** speed, **R** rotate
 **Escape** cancel / close / pause menu, **WASD QE** camera. Avoid **U**: it hides the game interface,
 and hidden panels cannot be read (press U again to bring it back).
 
+### Creative mode
+
+F6 reaches **Creative mode options**: press the Creative Mode button to open the menu with its check
+boxes (Build For Free, Hide Fog of War, Viking Attacks …) and brushes (spawn knights, archers, vikings,
+dragons, resource stacks, fire, trees, removal tool). Picking a brush returns you to the map; **Enter**
+applies it at the cursor, **Escape** turns the brush off. On the map setup screen the map editor
+brushes work the same way: pick a brush, press Ctrl+M, move the cursor and press Enter to paint.
+
 ### Build menu (B)
 
 | Key | Action |

@@ -64,6 +64,21 @@ namespace KCAccess.UI
             if (row != null && item.Control == row.DisableToggle) return PriorityRow(row);
             if (item.Control is Button && item.Go.GetComponentInParent<PickNameUI>() != null && UIText.LabelOf(item.Control) == "unlabelled")
                 return "Choose banner, button";
+            var info = item.Go.GetComponentInParent<InfoBase>();
+            if (info != null && !item.IsControl)
+            {
+                return TextUtil.Join(" ", ResourceName(info), UIText.JoinTexts(item.Texts)) + ", press Enter for the yearly report";
+            }
+            if (item.IsControl)
+            {
+                string n = item.Go.name;
+                string value = UIText.JoinTexts(UIText.VisibleTexts(item.Go.transform));
+                if (n == "HappinessButton") return "Happiness " + value + ", button, shows what affects happiness";
+                if (n == "HealthButton") return "Health " + value + ", button";
+                if (n == "StructuralIntegrityButton") return "Building integrity " + value + ", button";
+            }
+            if (!item.IsControl && item.Go.name == "TotalText" && item.Go.GetComponentInParent<PopulationUI>() != null)
+                return "Population " + UIText.JoinTexts(item.Texts);
             var tax = item.Go.GetComponentInParent<TaxRateUI>();
             if (tax != null && item.Control != null)
             {
@@ -83,10 +98,34 @@ namespace KCAccess.UI
             return TextUtil.Join(", ", prio, name, filled.Length > 0 ? filled + " workers" : null, allowed.Length > 0 ? "allowed " + allowed + " of " + row.MaxAvailableJobs : null);
         }
 
+        private static string ResourceName(InfoBase info)
+        {
+            switch (info)
+            {
+                case WoodInfo _: return "Wood";
+                case StoneInfo _: return "Stone";
+                case CharcoalInfo _: return "Charcoal";
+                case FoodInfo _: return "Food";
+                case IronInfo _: return "Iron";
+                case ToolInfo _: return "Tools";
+                case ArmamentInfo _: return "Armaments";
+                case GoldInfo _: return "Gold";
+                default: return TextUtil.Humanize(info.GetType().Name.Replace("Info", ""));
+            }
+        }
+
         /// <summary>Extra keys for special rows. Returns true when handled.</summary>
         internal static bool HandleKey(UINavigator nav, UIItem item)
         {
             if (item == null || item.Go == null) return false;
+            var info = item.Go.GetComponentInParent<InfoBase>();
+            if (info != null && !item.IsControl && (KInput.Plain(KeyCode.Return) || KInput.Plain(KeyCode.Space)))
+            {
+                KInput.Consume(KeyCode.Space);
+                KInput.Consume(KeyCode.Return);
+                Game.StatusMenu.Examine(info);
+                return true;
+            }
             var row = RowFor(item.Go);
             if (row == null || item.Control != row.DisableToggle) return false;
 

@@ -50,7 +50,7 @@ namespace KCAccess.Core
                 "F6 moves focus into the open information panel. K kingdom status, T date and season, G cursor coordinates. " +
                 "Home jumps to your keep. Page Up and Page Down choose a scan category, open and close bracket jump to the previous or next thing of that category. " +
                 "L opens the notification history. Delete demolishes the selected building, C orders trees on the selected tile chopped. " +
-                "M moves selected soldiers to the cursor. Space pauses, 1, 2 and 3 set game speed, J opens decrees, Escape opens the pause menu." },
+                "M moves selected soldiers to the cursor. With a creative mode brush selected, Enter applies it and Escape turns it off. Space pauses, 1, 2 and 3 set game speed, J opens decrees, Escape opens the pause menu." },
             { "Decrees", "Job priority. Each job row tells its priority, name, filled workers and how many workers are allowed. Space turns a job on or off, Shift Up and Shift Down move it up or down in priority, Left and Right change the allowed workers. " + MenuKeys },
             { "Diplomacy", "Diplomacy with other kingdoms: send gifts, make or break alliances and answer envoys. " + MenuKeys },
             { "LevelUp", "Your town has grown to a new size. Read the message and choose the button to continue. " + MenuKeys },

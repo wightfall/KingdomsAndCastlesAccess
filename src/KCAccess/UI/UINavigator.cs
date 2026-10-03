@@ -469,6 +469,7 @@ namespace KCAccess.UI
             A.Cue(Cue.Activate);
             SnapshotTexts();
             Click(s.gameObject);
+            nextRefresh = 0f; // the click may open or close parts of the panel
         }
 
         private HashSet<string> textSnapshot;

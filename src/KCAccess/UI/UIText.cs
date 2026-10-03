@@ -17,7 +17,26 @@ namespace KCAccess.UI
         /// <summary>Raw string of a Text or TMP_Text component (null for other components).</summary>
         internal static string TextOf(Component c)
         {
-            if (c is TMP_Text tmp) return tmp.text;
+            if (c is TMP_Text tmp)
+            {
+                // SetText(format, number) – used for most counters in this game – does not update .text,
+                // so prefer what is actually rendered unless the text contains inline sprites (lost when parsed).
+                string raw = tmp.text;
+                if (raw == null || raw.IndexOf("<sprite", System.StringComparison.OrdinalIgnoreCase) < 0)
+                {
+                    string parsed = null;
+                    try
+                    {
+                        parsed = tmp.GetParsedText();
+                    }
+                    catch
+                    {
+                        // Not laid out yet.
+                    }
+                    if (!string.IsNullOrEmpty(parsed)) return parsed;
+                }
+                return raw;
+            }
             if (c is Text t) return t.text;
             return null;
         }

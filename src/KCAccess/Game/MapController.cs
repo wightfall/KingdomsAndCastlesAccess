@@ -31,6 +31,7 @@ namespace KCAccess.Game
         private GridPos? areaStart;
         private float placedSayTime;
         private bool hadSelection;
+        private GameUI.CursorBrushes lastBrush;
 
         internal GridPos CursorPos => cursor.Pos;
 
@@ -125,6 +126,13 @@ namespace KCAccess.Game
             if (HandleMovement()) return;
             if (MenuMapMode)
             {
+                if ((KInput.Plain(KeyCode.Return) || KInput.Plain(KeyCode.KeypadEnter)) && MapEditBrushActive())
+                {
+                    VirtualPointer.Inst?.Click();
+                    A.Cue(Cue.Activate);
+                    A.Say("Painted at " + cursor.Pos);
+                    return;
+                }
                 HandleInfoKeys();
                 return;
             }
@@ -183,12 +191,44 @@ namespace KCAccess.Game
             var c = CurrentCell;
             if (c == null) return;
             var vp = VirtualPointer.Inst;
-            if (vp != null && !MenuMapMode)
+            if (vp != null)
             {
                 vp.KeyboardActive = true;
                 vp.Target = c.Center;
             }
             if (follow && Plugin.CfgCameraFollow.Value && Cam.inst != null) Cam.inst.SetDesiredTrackingPos(c.Center);
+        }
+
+        private static string BrushName(GameUI.CursorBrushes b)
+        {
+            switch (b)
+            {
+                case GameUI.CursorBrushes.General: return "Spawn knights";
+                case GameUI.CursorBrushes.ArcherGeneral: return "Spawn archers";
+                case GameUI.CursorBrushes.Settlers: return "Spawn settlers";
+                case GameUI.CursorBrushes.Envoy: return "Spawn envoy";
+                case GameUI.CursorBrushes.Catapult: return "Spawn catapult";
+                case GameUI.CursorBrushes.Viking: return "Spawn vikings";
+                case GameUI.CursorBrushes.EliteViking: return "Spawn stronger vikings";
+                case GameUI.CursorBrushes.Ogre: return "Spawn ogre";
+                case GameUI.CursorBrushes.Villager: return "Spawn peasants";
+                case GameUI.CursorBrushes.SmallDragon: return "Spawn dragon";
+                case GameUI.CursorBrushes.SiegeDragon: return "Spawn siege dragon";
+                case GameUI.CursorBrushes.LargeDragon: return "Spawn momma dragon";
+                case GameUI.CursorBrushes.Delete: return "Removal tool";
+                case GameUI.CursorBrushes.Fire: return "Create fire";
+                case GameUI.CursorBrushes.Trees: return "Create trees";
+                default: return TextUtil.Humanize(b.ToString()) + " stack";
+            }
+        }
+
+        /// <summary>Creative mode map editor (map setup screen) has a brush selected.</summary>
+        private static bool MapEditBrushActive()
+        {
+            var mm = GameState.inst.mainMenuMode;
+            if (mm == null || mm.mapEditUI == null || !mm.mapEditUI.activeInHierarchy) return false;
+            var edit = mm.mapEditUI.GetComponent<MapEdit>();
+            return edit != null && edit.brushMode != MapEdit.BrushMode.None;
         }
 
         internal void PointAtCursor()
@@ -304,6 +344,12 @@ namespace KCAccess.Game
             var ui = GameUI.inst;
             if (ui == null) return;
 
+            if (KInput.Plain(KeyCode.Escape) && ui.brushMode != GameUI.CursorBrushes.None)
+            {
+                KInput.Consume(KeyCode.Escape);
+                ui.brushMode = GameUI.CursorBrushes.None;
+                return;
+            }
             if (KInput.Plain(KeyCode.B))
             {
                 AccessController.Inst.ActiveMenu = new BuildMenu();
@@ -375,6 +421,13 @@ namespace KCAccess.Game
                     return;
                 }
                 vp.Click();
+                return;
+            }
+            if (ui.brushMode != GameUI.CursorBrushes.None)
+            {
+                vp.Click();
+                A.Cue(Cue.Activate);
+                A.Say(BrushName(ui.brushMode) + " at " + cursor.Pos);
                 return;
             }
             if (ui.currCursorMode != null && ui.currCursorMode != ui.consoleCursorMode)
@@ -506,7 +559,7 @@ namespace KCAccess.Game
                     if (ui.DisplayIMovableUI(army)) ui.ClearCellSelected();
                 }
                 A.Cue(Cue.Activate);
-                A.Say("Selected " + CellInfo.Units_ArmyName(army) + ". Move the cursor and press M to send them there. F6 opens the army panel.");
+                A.Say("Selected " + CellInfo.Units_ArmyName(army).Replace(", selected", "") + ". Move the cursor and press M to send them there. F6 opens the army panel.");
                 return;
             }
             var villagers = World.inst.GetVillagersAt(cell.x, cell.z);
@@ -635,8 +688,9 @@ namespace KCAccess.Game
             if (ui == null) return false;
             bool modeBefore = ui.currCursorMode != lastCursorMode;
             bool placingStarted = IsPlacing && !wasPlacing;
+            bool brushStarted = ui.brushMode != lastBrush && ui.brushMode != GameUI.CursorBrushes.None;
             TrackGameState();
-            return modeBefore || placingStarted;
+            return modeBefore || placingStarted || brushStarted;
         }
 
         /// <summary>Announces placement start/end, cursor-mode changes and selection changes made by the game.</summary>
@@ -684,6 +738,13 @@ namespace KCAccess.Game
             bool hasSelection = ui.GetBuildingSelected() != null || ui.GetCellSelected() != null || ui.IsUnitSelected() || (ui.personUI != null && ui.personUI.Visible);
             if (hadSelection && !hasSelection && !placing && Time.unscaledTime - placedSayTime > 0.5f) A.Say("Selection cleared");
             hadSelection = hasSelection;
+
+            if (ui.brushMode != lastBrush)
+            {
+                lastBrush = ui.brushMode;
+                if (ui.brushMode == GameUI.CursorBrushes.None) A.Say("Brush off");
+                else A.Say("Brush: " + BrushName(ui.brushMode) + ". Enter applies it at the cursor, Escape turns the brush off.");
+            }
 
             var mode = ui.currCursorMode;
             if (mode != lastCursorMode)

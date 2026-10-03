@@ -47,12 +47,14 @@ Status legend: `[x]` done and verified in the running game · `[~]` implemented,
 - [x] Notifications spoken with direction + history browser (L) with jump-to-location
 - [x] Scanner: buildings, construction sites, own units, threats, stone, iron, forests, fresh water, foreign kingdoms, special places
 - [x] Map exploration from the map setup screen (Ctrl+M) before starting
-- [~] Armies: select with Shift+Enter, move with M (needs barracks + soldiers to verify)
+- [x] Armies: select with Shift+Enter, move with M (verified with creative-mode knights)
+- [x] Creative mode: options menu, check boxes, brushes applied with Enter, Escape turns brush off; map editor painting from map setup
 - [x] F1 context help for every screen, Shift+F1 all keys
 - [x] Announcements: speed / pause changes, seasons, selection cleared, cursor mode changes, threats (vikings, dragons), merchants, manual saves
 
 ## 4. Quality
 - [x] Unit tests for Core logic (133 tests, xUnit)
+- [x] v1.0.0 released; v1.1.0 with HUD counter fix, kingdom overview descriptions, creative mode support
 - [x] Bug fixes in the game discovered during inspection (see below)
 - [x] README (install, keys, cues, settings, troubleshooting, building), third-party notices, MIT license
 - [x] `.gitignore`, `tools/fetch-deps.ps1`, `tools/package.ps1` (mod zip + bundle with BepInEx)
@@ -71,6 +73,8 @@ Status legend: `[x]` done and verified in the running game · `[~]` implemented,
 - Placement announcements were missed because the game restages the next piece in the same frame → hooked `PlacementMode.AcceptPlacement`.
 - Job priority rows: logic lives on hidden layout objects, visible rows are "followers" → mapped and read in priority order.
 - `TextUtil.Clean` produced ".." (found by unit tests).
+- Counters (population, resources, save list) read stale placeholder values: the game uses TMP `SetText(format, number)`, which does not update `.text` → read the rendered text instead (v1.1.0).
+- Navigator kept a stale item list right after a click that opened part of a panel → refresh immediately after activation.
 - Force-killing the game during development truncated an autosave (dev script now closes the game gracefully).
 
 ## Notes / decisions

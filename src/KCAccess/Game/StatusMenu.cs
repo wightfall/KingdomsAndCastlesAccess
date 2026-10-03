@@ -171,7 +171,7 @@ namespace KCAccess.Game
         }
 
         /// <summary>Opens the game's own resource report (it fills in on the next frame), reads it, then closes it.</summary>
-        private static void Examine(InfoBase info)
+        internal static void Examine(InfoBase info)
         {
             if (info == null)
             {
