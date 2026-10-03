@@ -30,9 +30,11 @@ Status legend: `[x]` done and verified in the running game · `[~]` implemented,
 - [x] Text entry with character echo (kingdom name, seed)
 - [x] Main menu, choose mode, difficulty, name & banner, map setup (dropdowns), start game
 - [x] Pause menu, save, load, settings, quit confirmation, load-error dialog
-- [~] Credits, failure screen, banner select, workshop/mods, kingdom share (generic navigator, not walked through)
+- [x] Credits, banner select (numbered tiles, selected state), mods, kingdom share
+- [~] Failure / keep destroyed screen (generic navigator; only reachable by losing)
 - [x] In-game modal windows: job priority (keyboard reorder replaces drag), confirmations
-- [~] Diplomacy, level-up, advisor, demolish warning, witch, research, merchant (generic navigator; need a long game to reach)
+- [x] Advisors (named advisors, advice read out), witch hut (quests, spells), demolish warning (>25 buildings)
+- [~] Diplomacy, level-up, research, merchant (generic navigator; need AI kingdoms / a long game)
 - [x] F6 / Shift+F6 cycle: selected building/tile → kingdom overview (tax buttons) → toolbar (speed, cursor modes, menu); Ctrl+R read all
 - [x] Escape = back/close (clicks the window's Back/Close/No button, otherwise the game's own Escape)
 
@@ -59,6 +61,7 @@ Status legend: `[x]` done and verified in the running game · `[~]` implemented,
 - [x] README (install, keys, cues, settings, troubleshooting, building), third-party notices, MIT license
 - [x] `.gitignore`, `tools/fetch-deps.ps1`, `tools/package.ps1` (mod zip + bundle with BepInEx)
 - [x] GitHub repo, push, release
+- [x] Setup / updater exe (KCAccess-Setup-vX.Y.Z.exe): finds the game via Steam, offline install, update check with Yes/No prompt, copies itself as KCAccess-Updater.exe; part of every release from v1.1.0
 
 ## Game bugs found & fixed by the mod
 | # | Bug | Fix |
@@ -76,6 +79,8 @@ Status legend: `[x]` done and verified in the running game · `[~]` implemented,
 - Counters (population, resources, save list) read stale placeholder values: the game uses TMP `SetText(format, number)`, which does not update `.text` → read the rendered text instead (v1.1.0).
 - Navigator kept a stale item list right after a click that opened part of a panel → refresh immediately after activation.
 - Force-killing the game during development truncated an autosave (dev script now closes the game gracefully).
+- After closing the Advisors window from a building panel the panel focus cleared the dialog's items → keys were swallowed by an empty dialog. Dialogs now replace panel focus; empty "windows" never capture the keyboard.
+- Game text bug: some strings show "<!-Missing Translation [text]-!>" (e.g. the demolish warning) → the marker is removed before speaking.
 
 ## Notes / decisions
 - Map directions are absolute: North = +Z (top of the map), East = +X. A building's cursor tile is its south west corner.
@@ -83,6 +88,9 @@ Status legend: `[x]` done and verified in the running game · `[~]` implemented,
 - Moving the mouse gives control back to the mouse pointer; any cursor key returns to keyboard control.
 - Non-modal panels are reached with F6 so map keys keep working while a building is selected.
 
+## Extras
+- [x] Map bookmarks: Ctrl+Shift+1-9 store, Ctrl+1-9 jump (saved per kingdom)
+
 ## Next ideas
 - Verify diplomacy, merchant trading, armies and ships in a long game; add special descriptions where the generic reader is weak.
-- Optional spoken coordinates grid / bookmarks for favourite places.
+

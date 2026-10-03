@@ -21,9 +21,10 @@ namespace KCAccess.Game
             if (EffectBanner.inst != null && EffectBanner.inst.Showing() && Is(EffectBanner.inst, out s, "Banner", "Announcement")) return s;
             if (ui.survivalIntro != null && Is(ui.survivalIntro, out s, "SurvivalIntro", "Survival mode")) return s;
             if (ui.survivalSuccess != null && Is(ui.survivalSuccess, out s, "SurvivalSuccess", "Survival success")) return s;
-            if (AdvisorUI.inst != null && AdvisorUI.inst.IsVisible())
+            // AdvisorUI.IsVisible() only checks the outer object, which stays active after Hide(); the real window is containerRect.
+            if (AdvisorUI.inst != null && AdvisorUI.inst.containerRect != null && UIText.IsVisible(AdvisorUI.inst.containerRect.gameObject))
             {
-                return new ScreenInfo { Id = "Advisor", Title = "Advisors", Root = AdvisorUI.inst.transform.GetChild(0), Modal = true };
+                return new ScreenInfo { Id = "Advisor", Title = "Advisors", Root = AdvisorUI.inst.containerRect, Modal = true };
             }
             if (Is(ui.witchUI, out s, "Witch", "Witch hut")) return s;
             if (ui.decreeUI != null && ui.decreeUI.Visible && Is(ui.decreeUI, out s, "Decrees", "Decrees")) return s;
@@ -41,9 +42,22 @@ namespace KCAccess.Game
         private static bool Is(Component c, out ScreenInfo info, string id, string title)
         {
             info = null;
-            if (c == null || !UIText.IsVisible(c.gameObject)) return false;
+            if (c == null || !UIText.IsVisible(c.gameObject) || !HasContent(c.transform)) return false;
             info = new ScreenInfo { Id = id, Title = WindowTitle(c.transform) ?? title, Root = c.transform, Modal = true };
             return true;
+        }
+
+        /// <summary>
+        /// Safety net: a "window" whose object is active but shows nothing (hidden children, closed sub-panel)
+        /// must not capture the keyboard.
+        /// </summary>
+        internal static bool HasContent(Transform root)
+        {
+            foreach (var sel in root.GetComponentsInChildren<UnityEngine.UI.Selectable>(false))
+            {
+                if (sel.enabled && UIText.IsVisible(sel.gameObject)) return true;
+            }
+            return UIText.VisibleTexts(root).Count > 0;
         }
 
         /// <summary>The window's own heading: the first visible text on an object called "Title".</summary>
@@ -51,7 +65,8 @@ namespace KCAccess.Game
         {
             foreach (var t in UIText.VisibleTexts(root))
             {
-                if (t.gameObject.name.IndexOf("title", System.StringComparison.OrdinalIgnoreCase) < 0) continue;
+                string n = t.gameObject.name;
+                if (!n.Equals("Title", System.StringComparison.OrdinalIgnoreCase) && !n.Equals("Header", System.StringComparison.OrdinalIgnoreCase) && !n.Equals("TitleText", System.StringComparison.OrdinalIgnoreCase)) continue;
                 string s = KCAccess.Core.TextUtil.Clean(UIText.TextOf(t));
                 if (s.Length > 0 && s.Length < 60) return s;
             }

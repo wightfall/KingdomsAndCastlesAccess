@@ -334,7 +334,70 @@ namespace KCAccess.Game
                 A.Say(CellInfo.Brief(CurrentCell, true), force: true);
                 return true;
             }
+            if (HandleBookmarks()) return true;
             return false;
+        }
+
+        // ------------------------------------------------------------------ bookmarks
+
+        private static Bookmarks bookmarks;
+
+        private static string BookmarkFile => System.IO.Path.Combine(BepInEx.Paths.ConfigPath, "kcaccess_bookmarks.txt");
+
+        private static string KingdomKey => MenuMapMode_Static ? "map setup" : (TownNameUI.inst != null && !string.IsNullOrEmpty(TownNameUI.inst.townName) ? TownNameUI.inst.townName : "kingdom");
+
+        private static bool MenuMapMode_Static => Inst.MenuMapMode;
+
+        /// <summary>Ctrl+1..9 jumps to a bookmark, Ctrl+Shift+1..9 stores the cursor position there.</summary>
+        private bool HandleBookmarks()
+        {
+            if (!KInput.Ctrl || KInput.Alt) return false;
+            int slot = 0;
+            for (int i = 1; i <= Bookmarks.Slots; i++)
+            {
+                if (KInput.Down(KeyCode.Alpha0 + i) || KInput.Down(KeyCode.Keypad0 + i))
+                {
+                    slot = i;
+                    break;
+                }
+            }
+            if (slot == 0) return false;
+            if (bookmarks == null)
+            {
+                try
+                {
+                    bookmarks = Bookmarks.Parse(System.IO.File.Exists(BookmarkFile) ? System.IO.File.ReadAllText(BookmarkFile) : null);
+                }
+                catch (System.Exception)
+                {
+                    bookmarks = new Bookmarks();
+                }
+            }
+            if (KInput.Shift)
+            {
+                bookmarks.Set(KingdomKey, slot, cursor.Pos);
+                try
+                {
+                    System.IO.File.WriteAllText(BookmarkFile, bookmarks.Serialize());
+                }
+                catch (System.Exception e)
+                {
+                    Plugin.Log.LogWarning("Could not save bookmarks: " + e.Message);
+                }
+                A.Cue(Cue.Placed);
+                A.Say("Bookmark " + slot + " set at " + cursor.Pos, force: true);
+                return true;
+            }
+            var p = bookmarks.Get(KingdomKey, slot);
+            if (!p.HasValue)
+            {
+                A.Cue(Cue.Error);
+                A.Say("Bookmark " + slot + " is empty. Control Shift " + slot + " stores the cursor position.", force: true);
+                return true;
+            }
+            A.Say("Bookmark " + slot);
+            JumpTo(p.Value);
+            return true;
         }
 
         // ------------------------------------------------------------------ actions

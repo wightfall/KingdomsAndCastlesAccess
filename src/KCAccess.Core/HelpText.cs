@@ -48,7 +48,7 @@ namespace KCAccess.Core
                 "Kingdom map. Arrow keys move the cursor one tile, Shift plus arrows moves 5 tiles, Control plus arrows jumps to where the terrain changes. " +
                 "Enter selects what is under the cursor, like a mouse click. I gives full details of the tile. B opens the build menu. " +
                 "F6 moves focus into the open information panel. K kingdom status, T date and season, G cursor coordinates. " +
-                "Home jumps to your keep. Page Up and Page Down choose a scan category, open and close bracket jump to the previous or next thing of that category. " +
+                "Home jumps to your keep. Control Shift 1 to 9 stores a bookmark at the cursor, Control 1 to 9 jumps back to it. Page Up and Page Down choose a scan category, open and close bracket jump to the previous or next thing of that category. " +
                 "L opens the notification history. Delete demolishes the selected building, C orders trees on the selected tile chopped. " +
                 "M moves selected soldiers to the cursor. With a creative mode brush selected, Enter applies it and Escape turns it off. Space pauses, 1, 2 and 3 set game speed, J opens decrees, Escape opens the pause menu." },
             { "Decrees", "Job priority. Each job row tells its priority, name, filled workers and how many workers are allowed. Space turns a job on or off, Shift Up and Shift Down move it up or down in priority, Left and Right change the allowed workers. " + MenuKeys },

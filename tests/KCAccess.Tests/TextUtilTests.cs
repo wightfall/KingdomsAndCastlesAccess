@@ -37,6 +37,13 @@ namespace KCAccess.Tests
         }
 
         [Fact]
+        public void Clean_UnwrapsMissingTranslationMarkers()
+        {
+            Assert.Equal("You are about to demolish 28 buildings. Are you sure?",
+                TextUtil.Clean("<!-Missing Translation [You are about to demolish 28 buildings. Are you sure?]-!>"));
+        }
+
+        [Fact]
         public void Clean_TurnsRulesIntoBreaks()
         {
             Assert.Equal("Report. Total 5", TextUtil.Clean("Report\n--------------------\nTotal 5"));

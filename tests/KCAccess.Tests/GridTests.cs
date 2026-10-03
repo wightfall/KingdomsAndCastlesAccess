@@ -157,3 +157,52 @@ namespace KCAccess.Tests
         }
     }
 }
+
+namespace KCAccess.Tests
+{
+    public class BookmarksTests
+    {
+        [Fact]
+        public void SetGetPerKingdom()
+        {
+            var b = new Bookmarks();
+            b.Set("Castleburg", 1, new GridPos(5, 6));
+            b.Set("Ashton", 1, new GridPos(9, 9));
+            Assert.Equal(new GridPos(5, 6), b.Get("castleburg", 1));
+            Assert.Equal(new GridPos(9, 9), b.Get("Ashton", 1));
+            Assert.Null(b.Get("Castleburg", 2));
+            Assert.Null(b.Get("Nowhere", 1));
+            Assert.Null(b.Get("Castleburg", 0));
+            Assert.Null(b.Get("Castleburg", 10));
+        }
+
+        [Fact]
+        public void RoundTripsThroughText()
+        {
+            var b = new Bookmarks();
+            b.Set("Castle|burg", 3, new GridPos(12, 40));
+            b.Set("Ashton", 9, new GridPos(0, 1));
+            var c = Bookmarks.Parse(b.Serialize());
+            Assert.Equal(new GridPos(12, 40), c.Get("Castle/burg", 3));
+            Assert.Equal(new GridPos(0, 1), c.Get("Ashton", 9));
+        }
+
+        [Fact]
+        public void IgnoresMalformedLines()
+        {
+            var b = Bookmarks.Parse("garbage\nA|x|1|2\nA|12|1|2\nA|2|3|4\r\n");
+            Assert.Equal(new GridPos(3, 4), b.Get("A", 2));
+            Assert.Null(b.Get("A", 1));
+        }
+
+        [Fact]
+        public void ClearRemoves()
+        {
+            var b = new Bookmarks();
+            b.Set("A", 4, new GridPos(1, 1));
+            b.Clear("A", 4);
+            Assert.Null(b.Get("A", 4));
+            Assert.Throws<System.ArgumentOutOfRangeException>(() => b.Set("A", 0, new GridPos(1, 1)));
+        }
+    }
+}

@@ -125,6 +125,13 @@ namespace KCAccess
                                 + " cursor=" + Game.MapController.Inst.CursorPos + " vp=" + (vp != null ? vp.KeyboardActive + "@" + vp.Target : "none") + " pointer=" + PointingSystem.GetPointer().GetType().Name
                                 + " valid=" + (hb != null ? World.inst.CanPlace(hb).ToString() : "-"));
                             break;
+                        case "modal":
+                            var cs = AccessController.Inst.CurrentScreen;
+                            var adv = AdvisorUI.inst;
+                            Plugin.Log.LogInfo("[modal] " + (cs != null ? cs.Id + " root=" + (cs.Root != null ? PathOf(cs.Root) + " active=" + cs.Root.gameObject.activeInHierarchy : "null") : "none")
+                                + " advContainerActive=" + (adv != null && adv.containerRect != null && adv.containerRect.gameObject.activeInHierarchy)
+                                + " detect=" + (Game.GameScreens.Detect() != null ? Game.GameScreens.Detect().Id : "null"));
+                            break;
                         case "navstate":
                             var n2 = AccessController.Inst.Nav;
                             Plugin.Log.LogInfo("[navstate] editing=" + n2.IsEditing + " root=" + (n2.Root != null) + " count=" + n2.Count + " current=" + (n2.Current != null ? n2.Describe(n2.Current) : "null") + " frame=" + Time.frameCount);

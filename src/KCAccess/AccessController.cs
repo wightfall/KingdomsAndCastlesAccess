@@ -193,7 +193,7 @@ namespace KCAccess
 
         private void DetectModal()
         {
-            if (Time.unscaledTime < nextDetect && modal != null && modal.Root != null && modal.Root.gameObject.activeInHierarchy) return;
+            if (Time.unscaledTime < nextDetect && modal != null && modal.Root != null && modal.Root.gameObject.activeInHierarchy && Nav.Count > 0) return;
             nextDetect = Time.unscaledTime + 0.1f;
             ScreenInfo next = ScreenDetector.DetectMainMenu() ?? Game.GameScreens.Detect();
             if (next == null)
@@ -210,8 +210,13 @@ namespace KCAccess
                 }
                 return;
             }
-            if (next.SameAs(modal)) return;
+            if (next.SameAs(modal))
+            {
+                if (Nav.Root == null) Nav.SetRoot(next.Root, next.Title, announce: false); // recover a cleared navigator
+                return;
+            }
             modal = next;
+            panel = null; // a dialog replaces any panel focus (the panel usually closes behind it)
             Nav.TypeAheadEnabled = next.TypeAhead;
             A.Cue(Cue.Open);
             Nav.SetRoot(next.Root, next.Title, announce: true, next.Intro, next.InitialFocus);
@@ -332,6 +337,7 @@ namespace KCAccess
         {
             if (panel == null) return;
             panel = null;
+            if (modal != null) return; // never clear an open dialog's items
             Nav.Clear();
             if (announce)
             {

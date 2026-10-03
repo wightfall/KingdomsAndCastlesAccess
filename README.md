@@ -115,6 +115,8 @@ mouse drag), Left / Right change how many workers are allowed.
 | Shift+L | Repeat the last notification |
 | Home | Jump to your keep |
 | End | Jump to the selected building |
+| Ctrl+Shift+1 … 9 | Store a bookmark at the cursor (saved per kingdom) |
+| Ctrl+1 … 9 | Jump to a bookmark |
 | Page Up / Page Down | Choose a scan category: your buildings, construction sites, your soldiers and ships, threats, stone, iron, forests, fresh water, foreign kingdoms, special places |
 | [ and ] | Jump to the previous / next item of that category, nearest first |
 | \ | Rebuild the scan list from the current cursor position |

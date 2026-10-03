@@ -11,6 +11,8 @@ namespace KCAccess.Core
         private static readonly Regex RichTag = new Regex(@"<\/?[a-zA-Z#][^<>]*>", RegexOptions.Compiled);
         private static readonly Regex Spaces = new Regex(@"[ \t ]+", RegexOptions.Compiled);
         private static readonly Regex Newlines = new Regex(@"\s*[\r\n]+\s*", RegexOptions.Compiled);
+        // The game shows untranslated terms as "<!-Missing Translation [English text]-!>".
+        private static readonly Regex MissingTranslation = new Regex(@"<!-\s*Missing Translation\s*\[(.*?)\]\s*-!>", RegexOptions.Compiled | RegexOptions.Singleline);
         private static readonly Regex RepeatedStops = new Regex(@"\.(\s*\.)+", RegexOptions.Compiled);
         private static readonly Regex Rules = new Regex(@"[-=_]{3,}", RegexOptions.Compiled);
         private static readonly Regex SpriteTag = new Regex(@"<sprite[^>]*name=""?([^"" >]+)""?[^>]*>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -22,7 +24,8 @@ namespace KCAccess.Core
         public static string Clean(string text)
         {
             if (string.IsNullOrEmpty(text)) return string.Empty;
-            string s = SpriteTag.Replace(text, m => " " + SpriteWord(m.Groups[1].Value) + " ");
+            string s = MissingTranslation.Replace(text, "$1");
+            s = SpriteTag.Replace(s, m => " " + SpriteWord(m.Groups[1].Value) + " ");
             s = RichTag.Replace(s, string.Empty);
             s = Rules.Replace(s, ". ");
             s = s.Replace("\\n", "\n");

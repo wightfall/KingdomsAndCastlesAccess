@@ -46,9 +46,31 @@ namespace KCAccess.UI
             return list;
         }
 
+        /// <summary>Advisor portraits live in containers named after their field.</summary>
+        private static string AdvisorName(Transform t)
+        {
+            if (AdvisorUI.inst == null || !t.IsChildOf(AdvisorUI.inst.transform) || t.parent == null) return null;
+            switch (t.parent.name)
+            {
+                case "Food": return "Agriculture advisor";
+                case "City": return "City advisor";
+                case "Military": return "Military advisor";
+                default: return null;
+            }
+        }
+
         /// <summary>Hide parts of composite rows; the row is represented by one control.</summary>
         internal static bool Exclude(GameObject go)
         {
+            // Each advisor has two overlapping buttons (portrait and speech bubble): keep the first.
+            if (AdvisorName(go.transform) != null && go.GetComponent<Button>() != null)
+            {
+                for (int i = 0; i < go.transform.GetSiblingIndex(); i++)
+                {
+                    var sib = go.transform.parent.GetChild(i);
+                    if (sib.gameObject.activeInHierarchy && sib.GetComponent<Button>() != null) return true;
+                }
+            }
             var row = RowFor(go);
             if (row == null) return false;
             var toggle = row.DisableToggle.transform;
@@ -64,6 +86,34 @@ namespace KCAccess.UI
             if (row != null && item.Control == row.DisableToggle) return PriorityRow(row);
             if (item.Control is Button && item.Go.GetComponentInParent<PickNameUI>() != null && UIText.LabelOf(item.Control) == "unlabelled")
                 return "Choose banner, button";
+            if (item.IsControl && item.Go.GetComponentInParent<DemolishWarningUI>() != null)
+            {
+                if (item.Go.name == "Yes") return "Yes, demolish, button";
+                if (item.Go.name == "No") return "No, cancel, button";
+            }
+            var tile = item.Go.GetComponent<BannerTile>();
+            if (tile != null)
+            {
+                var ui = item.Go.GetComponentInParent<ChooseBannerUI>();
+                var parent = tile.transform.parent;
+                int idx = 0, count = 0;
+                for (int i = 0; i < parent.childCount; i++)
+                {
+                    var t = parent.GetChild(i);
+                    if (!t.gameObject.activeInHierarchy || t.GetComponent<BannerTile>() == null) continue;
+                    count++;
+                    if (t == tile.transform) idx = count;
+                }
+                bool selected = ui != null && ui.highlightedTile == tile;
+                string group = ui != null && parent == ui.customBannerContainer ? "Custom banner " : (ui != null && parent == ui.workshopBannerContainer ? "Workshop banner " : "Banner ");
+                return group + idx + " of " + count + (selected ? ", selected" : string.Empty) + ". Enter selects it, then choose Accept";
+            }
+            if (item.IsControl && item.Go.name == "FolderButton" && item.Go.GetComponentInParent<ChooseBannerUI>() != null)
+                return "Open custom banner folder, button";
+            string advisor = item.IsControl ? AdvisorName(item.Go.transform) : null;
+            if (advisor != null) return advisor + ", button, press Enter to hear their advice";
+            if (item.IsControl && AdvisorUI.inst != null && item.Go.transform.IsChildOf(AdvisorUI.inst.transform) && UIText.LabelOf(item.Control) == "unlabelled" || item.IsControl && AdvisorUI.inst != null && item.Go.transform.IsChildOf(AdvisorUI.inst.transform) && UIText.LabelOf(item.Control) == "Button")
+                return "Close, button";
             var info = item.Go.GetComponentInParent<InfoBase>();
             if (info != null && !item.IsControl)
             {
