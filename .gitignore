@@ -1,0 +1,20 @@
+# Build output
+bin/
+obj/
+dist/
+TestResults/
+*.user
+*.suo
+.vs/
+.vscode/
+.idea/
+
+# Downloaded third-party binaries (fetched by tools/fetch-deps.ps1)
+lib/
+
+# Game files, decompiled sources and anything else that is not part of the mod
+*.zip
+*.log
+decomp/
+Managed/
+BepInEx/

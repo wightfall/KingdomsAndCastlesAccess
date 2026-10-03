@@ -1,0 +1,148 @@
+using System.Collections.Generic;
+using KCAccess.Core;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace KCAccess.UI
+{
+    /// <summary>
+    /// Game-specific tweaks to the generic navigator for controls that only work with a mouse
+    /// (drag to reorder job priorities, hover arrows for worker limits, …).
+    /// </summary>
+    internal static class Special
+    {
+        /// <summary>
+        /// Job priority rows: the logic (BuildPriorityItem) lives on hidden layout objects while the visible
+        /// row is a separate "follower" object under DecreeUI.ContentContainer. Map a visible object to its row.
+        /// </summary>
+        internal static BuildPriorityItem RowFor(GameObject go)
+        {
+            var ui = DecreeUI.inst;
+            if (ui == null || ui.ContentContainer == null || ui.prioritized == null || go == null) return null;
+            Transform t = go.transform;
+            if (!t.IsChildOf(ui.ContentContainer) || t == ui.ContentContainer) return null;
+            while (t.parent != null && t.parent != ui.ContentContainer) t = t.parent;
+            foreach (Transform layout in ui.prioritized.transform)
+            {
+                var drag = layout.GetComponent<DragableDecreeItem>();
+                if (drag != null && drag.follower == t.gameObject) return layout.GetComponent<BuildPriorityItem>();
+            }
+            return null;
+        }
+
+        /// <summary>Children of t in the order they should be read, or null for hierarchy order.</summary>
+        internal static List<Transform> OrderedChildren(Transform t)
+        {
+            var ui = DecreeUI.inst;
+            if (ui == null || t != ui.ContentContainer || ui.prioritized == null) return null;
+            var list = new List<Transform>();
+            foreach (Transform layout in ui.prioritized.transform)
+            {
+                var drag = layout.GetComponent<DragableDecreeItem>();
+                if (drag != null && drag.follower != null && drag.follower.transform.parent == t) list.Add(drag.follower.transform);
+            }
+            // Anything not driven by a layout row keeps its place at the end.
+            foreach (Transform c in t) if (!list.Contains(c)) list.Add(c);
+            return list;
+        }
+
+        /// <summary>Hide parts of composite rows; the row is represented by one control.</summary>
+        internal static bool Exclude(GameObject go)
+        {
+            var row = RowFor(go);
+            if (row == null) return false;
+            var toggle = row.DisableToggle.transform;
+            // Keep the toggle and the objects above it (so the walk can reach it); hide the rest of the row.
+            return go.transform != toggle && !toggle.IsChildOf(go.transform);
+        }
+
+        /// <summary>Custom spoken description, or null to use the default.</summary>
+        internal static string Describe(UIItem item)
+        {
+            if (item == null || item.Go == null) return null;
+            var row = RowFor(item.Go);
+            if (row != null && item.Control == row.DisableToggle) return PriorityRow(row);
+            if (item.Control is Button && item.Go.GetComponentInParent<PickNameUI>() != null && UIText.LabelOf(item.Control) == "unlabelled")
+                return "Choose banner, button";
+            var tax = item.Go.GetComponentInParent<TaxRateUI>();
+            if (tax != null && item.Control != null)
+            {
+                string which = item.Control == tax.increase ? "Increase tax rate" : (item.Control == tax.decrease ? "Decrease tax rate" : null);
+                if (which != null) return TextUtil.Join(", ", which, Game.Status.TaxLine(), item.Control.interactable ? null : "unavailable, build a throne room first");
+            }
+            return null;
+        }
+
+        private static string PriorityRow(BuildPriorityItem row)
+        {
+            bool on = row.DisableToggle.isOn;
+            string prio = on && !string.IsNullOrEmpty(row.Priority.text) ? "Priority " + row.Priority.text : "Disabled";
+            string name = TextUtil.Clean(row.Name != null ? row.Name.text : row.Category.ToString());
+            string filled = row.FilledWorkers != null ? TextUtil.Clean(row.FilledWorkers.text) : string.Empty;
+            string allowed = row.AvailableWorkersInput != null ? row.AvailableWorkersInput.text : string.Empty;
+            return TextUtil.Join(", ", prio, name, filled.Length > 0 ? filled + " workers" : null, allowed.Length > 0 ? "allowed " + allowed + " of " + row.MaxAvailableJobs : null);
+        }
+
+        /// <summary>Extra keys for special rows. Returns true when handled.</summary>
+        internal static bool HandleKey(UINavigator nav, UIItem item)
+        {
+            if (item == null || item.Go == null) return false;
+            var row = RowFor(item.Go);
+            if (row == null || item.Control != row.DisableToggle) return false;
+
+            if (KInput.WithShift(KeyCode.UpArrow) || KInput.WithShift(KeyCode.DownArrow))
+            {
+                int dir = KInput.Down(KeyCode.UpArrow) ? -1 : 1;
+                Transform t = row.transform;
+                Transform parent = t.parent;
+                int idx = t.GetSiblingIndex();
+                int target = idx + dir;
+                while (target >= 0 && target < parent.childCount && (parent.GetChild(target).GetComponent<BuildPriorityItem>() == null || !parent.GetChild(target).gameObject.activeSelf)) target += dir;
+                if (target < 0 || target >= parent.childCount)
+                {
+                    A.Cue(Cue.Edge);
+                    A.Say(row.Priority.text.Length > 0 ? "Already priority " + row.Priority.text : "Cannot move further");
+                    return true;
+                }
+                t.SetSiblingIndex(target);
+                var ui = DecreeUI.inst;
+                ui.UpdatePriorityNumbers();
+                ui.SavePriority();
+                ui.ForceItemPositions();
+                A.Cue(Cue.Navigate);
+                nav.Refresh(force: true);
+                A.Say(PriorityRow(row));
+                return true;
+            }
+            if (KInput.Plain(KeyCode.RightArrow) || KInput.Plain(KeyCode.LeftArrow))
+            {
+                int delta = KInput.Down(KeyCode.RightArrow) ? 1 : -1;
+                row.AddToAvailable(delta);
+                A.Cue(Cue.Value);
+                A.Say("allowed " + row.AvailableWorkersInput.text + " of " + row.MaxAvailableJobs);
+                return true;
+            }
+            if (KInput.Plain(KeyCode.Return) || KInput.Plain(KeyCode.Space))
+            {
+                KInput.Consume(KeyCode.Space);
+                KInput.Consume(KeyCode.Return);
+                row.DisableToggle.isOn = !row.DisableToggle.isOn;
+                DecreeUI.inst.UpdatePriorityNumbers();
+                DecreeUI.inst.SavePriority();
+                A.Cue(row.DisableToggle.isOn ? Cue.ToggleOn : Cue.ToggleOff);
+                A.Say(PriorityRow(row));
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>Extra help for a focused special row, appended to F1.</summary>
+        internal static string Help(UIItem item)
+        {
+            if (item == null || item.Go == null) return null;
+            if (RowFor(item.Go) != null)
+                return "On a job row: Space toggles the job on or off, Shift Up and Shift Down change its priority, Left and Right change how many workers are allowed.";
+            return null;
+        }
+    }
+}

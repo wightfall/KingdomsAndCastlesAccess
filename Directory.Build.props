@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <!-- Path to the Kingdoms and Castles install. Override with: dotnet build -p:GameDir="D:\Games\Kingdoms and Castles" -->
+    <GameDir Condition="'$(GameDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Kingdoms and Castles</GameDir>
+    <ManagedDir>$(GameDir)\KingdomsAndCastles_Data\Managed</ManagedDir>
+    <BepInExDir>$(GameDir)\BepInEx</BepInExDir>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <Version>1.0.0</Version>
+    <Authors>KCAccess contributors</Authors>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+</Project>

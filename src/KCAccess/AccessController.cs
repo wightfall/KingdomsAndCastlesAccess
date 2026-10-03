@@ -1,0 +1,396 @@
+using System;
+using System.Collections.Generic;
+using KCAccess.Core;
+using KCAccess.UI;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace KCAccess
+{
+    /// <summary>
+    /// Main loop of the mod. Runs before the game's scripts each frame, works out what is on
+    /// screen and routes keys to: global keys → mod menus → modal windows → focused panel → map.
+    /// </summary>
+    [DefaultExecutionOrder(-30000)]
+    internal sealed class AccessController : MonoBehaviour
+    {
+        internal static AccessController Inst;
+
+        internal readonly UINavigator Nav = new UINavigator();
+
+        /// <summary>Modal screen (menus, dialogs) that owns the keyboard, if any.</summary>
+        private ScreenInfo modal;
+
+        /// <summary>Non-modal panel group the player moved into with F6, if any.</summary>
+        private ScreenInfo panel;
+
+        private string helpId = "Menu";
+        private float nextDetect;
+        private bool wasPlaying;
+
+        /// <summary>A mod-owned modal menu (build menu, log browser, status list).</summary>
+        internal IModalMenu ActiveMenu;
+
+        internal bool PanelFocus => panel != null;
+
+        private void Awake()
+        {
+            Inst = this;
+        }
+
+        private int tickedFrame = -1;
+
+        private void OnApplicationQuit() => Plugin.Shutdown();
+
+        private void Update() => EnsureTick();
+
+        /// <summary>
+        /// Runs the mod once per frame. Also called from a prefix on the game's KeyboardControl.Update so the
+        /// mod always sees (and can consume) keys before the game reacts to them, whatever the script order.
+        /// </summary>
+        internal void EnsureTick()
+        {
+            if (tickedFrame == Time.frameCount) return;
+            tickedFrame = Time.frameCount;
+            KInput.BeginFrame();
+            Diagnostics.PollCommands();
+            try
+            {
+                Tick();
+            }
+            catch (Exception e)
+            {
+                Plugin.Log.LogError("KCAccess update error: " + e);
+            }
+        }
+
+        private void Tick()
+        {
+            if (GlobalKeys()) return;
+            if (GameState.inst == null || World.inst == null) return;
+
+            bool playing = GameState.inst.IsPlayMode();
+            if (playing != wasPlaying)
+            {
+                wasPlaying = playing;
+                if (playing) Game.GameEvents.OnEnterPlayMode();
+                else
+                {
+                    panel = null;
+                    if (ActiveMenu != null) ActiveMenu = null;
+                }
+            }
+            if (playing) Game.GameEvents.Tick();
+
+            if (ActiveMenu != null)
+            {
+                if (!ActiveMenu.IsOpen) ActiveMenu = null;
+                else
+                {
+                    helpId = ActiveMenu.HelpId;
+                    InputGate.BlockGameKeys = true;
+                    InputGate.EscapePassThrough = false;
+                    ActiveMenu.HandleInput();
+                    return;
+                }
+            }
+            InputGate.BlockGameKeys = false;
+            InputGate.EscapePassThrough = false;
+
+            DetectModal();
+            if (modal != null)
+            {
+                helpId = modal.Id;
+                if (playing)
+                {
+                    InputGate.BlockGameKeys = true;
+                    InputGate.EscapePassThrough = true;
+                }
+                if (Nav.IsEditing)
+                {
+                    InputGate.BlockGameKeys = true;
+                    Nav.HandleInput();
+                    return;
+                }
+                if (!playing && modal.Id == "NewMap" && KInput.Down(KeyCode.M) && KInput.Ctrl && !Game.MapController.Inst.MenuMapMode)
+                {
+                    Game.MapController.Inst.MenuMapMode = true;
+                    Game.MapController.Inst.CenterOnStart();
+                    A.Cue(Cue.Open);
+                    A.Say("Exploring the map. Arrow keys move, I describes a tile, Page Up and Page Down choose a scan category, brackets jump to items. Control M or Escape returns to the menu.");
+                    return;
+                }
+                bool mapInMenu = !playing && Game.MapController.Inst.MenuMapMode;
+                if (!mapInMenu)
+                {
+                    HandleNavigatorKeys();
+                    return;
+                }
+            }
+            else if (panel != null)
+            {
+                // A toolbar button started a cursor mode or building placement: hand the keyboard back to the map.
+                if (Game.MapController.Inst.TrackWhileInPanel())
+                {
+                    LeavePanel(announce: false);
+                    A.Cue(Cue.Close);
+                    return;
+                }
+                UpdatePanel();
+                if (panel != null)
+                {
+                    helpId = "Panel";
+                    if (Nav.IsEditing)
+                    {
+                        InputGate.BlockGameKeys = true;
+                        Nav.HandleInput();
+                        return;
+                    }
+                    InputGate.BlockGameKeys = true;
+                    HandleNavigatorKeys();
+                    return;
+                }
+            }
+
+            if (playing || Game.MapController.Inst.MenuMapMode)
+            {
+                Game.MapController.Inst.Tick();
+                helpId = Game.MapController.Inst.HelpId;
+            }
+        }
+
+        private void HandleNavigatorKeys()
+        {
+            if (KInput.Down(KeyCode.R) && KInput.Ctrl && !KInput.Shift)
+            {
+                Nav.ReadAll();
+                return;
+            }
+            if (KInput.Plain(KeyCode.F5))
+            {
+                Nav.SpeakCurrent();
+                return;
+            }
+            if (panel != null && KInput.Down(KeyCode.F6) && !KInput.Ctrl && !KInput.Alt)
+            {
+                CyclePanel(KInput.Shift ? -1 : 1);
+                return;
+            }
+            if (KInput.Plain(KeyCode.Escape))
+            {
+                if (panel != null)
+                {
+                    KInput.Consume(KeyCode.Escape);
+                    LeavePanel(announce: true);
+                    return;
+                }
+                if (TryGoBack()) return;
+            }
+            Nav.HandleInput();
+        }
+
+        // ---------------------------------------------------------------- modal screens
+
+        private void DetectModal()
+        {
+            if (Time.unscaledTime < nextDetect && modal != null && modal.Root != null && modal.Root.gameObject.activeInHierarchy) return;
+            nextDetect = Time.unscaledTime + 0.1f;
+            ScreenInfo next = ScreenDetector.DetectMainMenu() ?? Game.GameScreens.Detect();
+            if (next == null)
+            {
+                if (modal != null)
+                {
+                    modal = null;
+                    Nav.Clear();
+                    if (GameState.inst.IsPlayMode())
+                    {
+                        if (panel != null) RestorePanel();
+                        else Game.MapController.Inst.OnReturnToMap();
+                    }
+                }
+                return;
+            }
+            if (next.SameAs(modal)) return;
+            modal = next;
+            Nav.TypeAheadEnabled = next.TypeAhead;
+            A.Cue(Cue.Open);
+            Nav.SetRoot(next.Root, next.Title, announce: true, next.Intro, next.InitialFocus);
+        }
+
+        /// <summary>Escape on menus without their own Escape handling: press a Back / Close / No button.</summary>
+        private bool TryGoBack()
+        {
+            if (modal == null || modal.Root == null) return false;
+            if (GameState.inst.IsMainMenuMode())
+            {
+                var st = GameState.inst.mainMenuMode.GetState();
+                if (modal.Id != "Confirm" && (st == MainMenuMode.State.PauseMenu || st == MainMenuMode.State.SettingsMenu)) return false; // game handles Escape
+                if (modal.Id == "Menu") return false;
+            }
+            Button best = null;
+            int bestScore = 0;
+            foreach (var b in modal.Root.GetComponentsInChildren<Button>(false))
+            {
+                if (!b.interactable || !UIText.IsVisible(b.gameObject)) continue;
+                int score = BackScore(b);
+                if (score > bestScore)
+                {
+                    best = b;
+                    bestScore = score;
+                }
+            }
+            if (best == null) return false;
+            KInput.Consume(KeyCode.Escape);
+            A.Cue(Cue.Close);
+            UINavigator.Click(best.gameObject);
+            return true;
+        }
+
+        private static int BackScore(Button b)
+        {
+            string name = b.gameObject.name.ToLowerInvariant();
+            string methods = string.Empty;
+            for (int i = 0; i < b.onClick.GetPersistentEventCount(); i++) methods += b.onClick.GetPersistentMethodName(i).ToLowerInvariant() + " ";
+            string label = UIText.LabelOf(b).ToLowerInvariant();
+            int score = 0;
+            if (methods.Contains("back") || methods.Contains("close") || methods.Contains("cancel") || methods.Contains("returntogame") || methods.Contains("hide") || methods.Contains("dismiss")) score += 3;
+            if (name.Contains("back") || name.Contains("close") || name.Contains("cancel") || name == "x" || name.Contains("exit") || name.Contains("dismiss")) score += 2;
+            if (label == "back" || label == "close" || label == "cancel" || label == "no" || label == "x" || label == "resume" || label == "ok") score += 2;
+            var confirm = b.GetComponentInParent<Assets.Code.UI.Confirmation>();
+            if (confirm != null && confirm.noButton == b) score += 4;
+            return score;
+        }
+
+        // ---------------------------------------------------------------- panels (F6)
+
+        /// <summary>F6 from the map: move focus into the first panel group. Returns false when no panel is open.</summary>
+        internal bool FocusPanel(int direction = 1)
+        {
+            var groups = Game.GameScreens.PanelGroups();
+            if (groups.Count == 0) return false;
+            int idx = direction >= 0 ? 0 : groups.Count - 1;
+            EnterPanel(groups[idx]);
+            return true;
+        }
+
+        private void CyclePanel(int direction)
+        {
+            var groups = Game.GameScreens.PanelGroups();
+            int idx = groups.FindIndex(g => g.Key == panel.Key);
+            int next = idx + direction;
+            if (next < 0 || next >= groups.Count)
+            {
+                LeavePanel(announce: true);
+                return;
+            }
+            EnterPanel(groups[next]);
+        }
+
+        private void EnterPanel(ScreenInfo group)
+        {
+            panel = group;
+            A.Cue(Cue.Open);
+            Nav.TypeAheadEnabled = false;
+            Nav.SetRoots(group.Roots, group.Title, announce: true, initialFocus: group.Key == "Selection" ? "" : null);
+        }
+
+        private void RestorePanel()
+        {
+            var groups = Game.GameScreens.PanelGroups();
+            var g = groups.Find(x => x.Key == panel.Key);
+            if (g == null)
+            {
+                LeavePanel(announce: true);
+                return;
+            }
+            EnterPanel(g);
+        }
+
+        /// <summary>Keeps the focused panel group in sync with what the game shows.</summary>
+        private void UpdatePanel()
+        {
+            if (Time.unscaledTime < nextDetect) return;
+            nextDetect = Time.unscaledTime + 0.15f;
+            var groups = Game.GameScreens.PanelGroups();
+            var g = groups.Find(x => x.Key == panel.Key);
+            if (g == null)
+            {
+                LeavePanel(announce: true);
+                return;
+            }
+            bool same = g.Roots.Count == panel.Roots.Count;
+            for (int i = 0; same && i < g.Roots.Count; i++) same = g.Roots[i] == panel.Roots[i];
+            if (!same)
+            {
+                bool titleChanged = g.Title != panel.Title;
+                panel = g;
+                Nav.SetRoots(g.Roots, g.Title, announce: titleChanged);
+            }
+        }
+
+        internal void LeavePanel(bool announce)
+        {
+            if (panel == null) return;
+            panel = null;
+            Nav.Clear();
+            if (announce)
+            {
+                A.Cue(Cue.Close);
+                Game.MapController.Inst.OnReturnToMap();
+            }
+        }
+
+        internal ScreenInfo CurrentScreen => modal ?? panel;
+
+        // ---------------------------------------------------------------- global keys & help
+
+        private bool GlobalKeys()
+        {
+            if (KInput.Down(KeyCode.F12) && KInput.Ctrl && KInput.Shift)
+            {
+                Diagnostics.DumpUI(true);
+                return true;
+            }
+            if (KInput.Down(KeyCode.F1) && !KInput.Ctrl && !KInput.Alt)
+            {
+                KInput.Consume(KeyCode.F1);
+                if (KInput.Shift) A.Say(HelpText.AllKeys(), force: true);
+                else A.Say(ContextHelp(), force: true);
+                return true;
+            }
+            if (KInput.Down(KeyCode.F5) && KInput.Ctrl && KInput.Shift)
+            {
+                bool ok = A.Redetect();
+                A.Say(ok ? "Speech: " + A.BackendName : "No screen reader found, using log only", force: true);
+                return true;
+            }
+            if (KInput.Down(KeyCode.M) && KInput.Ctrl && KInput.Shift)
+            {
+                Plugin.CfgCues.Value = !Plugin.CfgCues.Value;
+                A.Say(Plugin.CfgCues.Value ? "Sound cues on" : "Sound cues off", force: true);
+                return true;
+            }
+            return false;
+        }
+
+        private string ContextHelp()
+        {
+            if (ActiveMenu != null) return HelpText.For(ActiveMenu.HelpId);
+            if (modal != null && !Game.MapController.Inst.MenuMapMode)
+            {
+                string id = HelpText.Has(modal.Id) ? modal.Id : "Dialog";
+                return TextUtil.Sentences(modal.Title, HelpText.For(id), Special.Help(Nav.Current));
+            }
+            if (panel != null) return TextUtil.Sentences(panel.Title, HelpText.For("Panel"), Special.Help(Nav.Current));
+            return HelpText.For(helpId);
+        }
+    }
+
+    /// <summary>A menu owned by the mod that takes all keys while open.</summary>
+    internal interface IModalMenu
+    {
+        bool IsOpen { get; }
+        string HelpId { get; }
+        void HandleInput();
+    }
+}
