@@ -67,6 +67,60 @@ namespace KCAccess.Game
             }
             Vector3 focus = Cam.inst != null ? Cam.inst.DesiredTrackingPos : new Vector3(w.GridWidth / 2f, 0, w.GridHeight / 2f);
             cursor.Set((int)focus.x, (int)focus.z);
+            // No keep yet: start on land where a keep may be built (the game only offers the keep while the camera is over land).
+            if (Player.inst != null && Player.inst.keep == null && !MenuMapMode)
+            {
+                var land = NearestStartLand(cursor.Pos);
+                if (land.HasValue) cursor.Set(land.Value.X, land.Value.Z);
+            }
+        }
+
+        /// <summary>Nearest tile on a landmass that is valid for the keep (searching outward in rings).</summary>
+        internal GridPos? NearestStartLand(GridPos from)
+        {
+            var w = World.inst;
+            bool Good(int x, int z)
+            {
+                var c = w.GetCellData(x, z);
+                if (c == null || c.landMassIdx < 0 || c.Type == ResourceType.Water) return false;
+                try
+                {
+                    return w.IsValidStartLandmass(c.landMassIdx);
+                }
+                catch
+                {
+                    return true;
+                }
+            }
+            if (Good(from.X, from.Z)) return from;
+            int max = Mathf.Max(w.GridWidth, w.GridHeight);
+            for (int r = 1; r < max; r++)
+            {
+                for (int dx = -r; dx <= r; dx++)
+                {
+                    if (Good(from.X + dx, from.Z + r)) return new GridPos(from.X + dx, from.Z + r);
+                    if (Good(from.X + dx, from.Z - r)) return new GridPos(from.X + dx, from.Z - r);
+                }
+                for (int dz = -r + 1; dz < r; dz++)
+                {
+                    if (Good(from.X + r, from.Z + dz)) return new GridPos(from.X + r, from.Z + dz);
+                    if (Good(from.X - r, from.Z + dz)) return new GridPos(from.X - r, from.Z + dz);
+                }
+            }
+            return null;
+        }
+
+        /// <summary>Before the keep exists the game needs the camera over land; jump there if it is not. Returns true when moved.</summary>
+        internal bool EnsureCameraOnStartLand()
+        {
+            if (Player.inst == null || Player.inst.keep != null || Player.inst.FocusedLandMass != -1) return false;
+            var land = NearestStartLand(cursor.Pos);
+            if (!land.HasValue) return false;
+            cursor.Set(land.Value.X, land.Value.Z);
+            UpdatePointer(follow: true);
+            if (Cam.inst != null) Cam.inst.SetTrackingPos(CurrentCell.Center);
+            A.Say("Moved the cursor to the nearest land where you can build your keep: " + CellInfo.Brief(CurrentCell, false));
+            return true;
         }
 
         internal void OnEnterPlayMode()
@@ -76,7 +130,7 @@ namespace KCAccess.Game
             enteredPlayAt = Time.unscaledTime;
             EnsureInit();
             scanner.Invalidate();
-            UpdatePointer(follow: false);
+            UpdatePointer(follow: Player.inst.keep == null);
             string intro = Player.inst.keep == null
                 ? "Your kingdom begins. Build your keep first: press B, choose the keep in the Castle category, then move to a good spot near fertile land, trees and stone, and press Enter. Press F1 for help."
                 : "Kingdom loaded. Press F1 for help, K for status.";
@@ -407,6 +461,16 @@ namespace KCAccess.Game
             var ui = GameUI.inst;
             if (ui == null) return;
 
+            if (KInput.Plain(KeyCode.Escape) && ui.WaitingToPlaceAgain() && !IsPlacing)
+            {
+                // The game only ends "place another" when Escape is pressed while the building is held;
+                // after a placement the building is not held yet, so end it here.
+                KInput.Consume(KeyCode.Escape);
+                ui.CancelWaitToPlace();
+                A.Cue(Cue.Close);
+                A.Say("Placement ended");
+                return;
+            }
             if (KInput.Plain(KeyCode.Escape) && ui.brushMode != GameUI.CursorBrushes.None)
             {
                 KInput.Consume(KeyCode.Escape);
@@ -625,6 +689,28 @@ namespace KCAccess.Game
                 A.Say("Selected " + CellInfo.Units_ArmyName(army).Replace(", selected", "") + ". Move the cursor and press M to send them there. F6 opens the army panel.");
                 return;
             }
+            // Ships: merchants open the trade window, your own ships can then be sent with M.
+            var ships = ShipSystem.inst.ships;
+            var shipsHere = new List<ShipBase>();
+            for (int i = 0; i < ships.Count; i++)
+            {
+                var sh = ships.data[i];
+                if (sh == null || !(sh is ISelectable)) continue;
+                Vector3 p = sh.GetPos();
+                if (Mathf.Abs(p.x - cell.Center.x) <= 1.5f && Mathf.Abs(p.z - cell.Center.z) <= 1.5f) shipsHere.Add(sh);
+            }
+            if (shipsHere.Count > 0)
+            {
+                int idx = 0;
+                for (int i = 0; i < shipsHere.Count; i++) if (ui.IsSelected((ISelectable)shipsHere[i])) idx = i + 1;
+                var ship = shipsHere[idx % shipsHere.Count];
+                ui.ClearSelection();
+                ui.AddToSelection((ISelectable)ship);
+                A.Cue(Cue.Activate);
+                bool merchant = ship.type == ShipBase.ShipType.Merchant || ship.type == ShipBase.ShipType.PlayerMerchant;
+                A.Say("Selected " + CellInfo.ShipName(ship).Replace(", selected", "") + (merchant ? ". F6 opens the trade window." : ship.teamID == 0 ? ". M sends it to the cursor, F6 opens its panel." : "."));
+                return;
+            }
             var villagers = World.inst.GetVillagersAt(cell.x, cell.z);
             if (villagers != null && villagers.Count > 0)
             {
@@ -635,7 +721,7 @@ namespace KCAccess.Game
                 return;
             }
             A.Cue(Cue.Error);
-            A.Say("No soldiers or villagers here");
+            A.Say("No soldiers, ships or villagers here");
         }
 
         private void MoveUnits()

@@ -402,12 +402,16 @@ namespace KCAccess.UI
             return range > 0 ? TextUtil.Percent((sl.value - sl.minValue) / range) : sl.value.ToString("0.##");
         }
 
+        /// <summary>A slider without a visible handle (opinion, health, busy timers) is just a progress bar.</summary>
+        internal static bool IsReadOnlySlider(Slider sl) =>
+            !sl.interactable || sl.handleRect == null || !sl.handleRect.gameObject.activeInHierarchy;
+
         internal static string RoleOf(Selectable s)
         {
             switch (s)
             {
                 case Toggle t: return t.group != null ? "radio button" : "check box";
-                case Slider sl: return sl.interactable ? "slider" : "progress bar";
+                case Slider sl: return IsReadOnlySlider(sl) ? "progress bar" : "slider";
                 case Scrollbar _: return "scroll bar";
                 case Dropdown _: return "combo box";
                 case TMP_Dropdown _: return "combo box";

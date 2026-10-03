@@ -26,6 +26,7 @@ namespace KCAccess.Game
         private int tabIndex;
         private bool open = true;
         private bool started;
+        private int waitFrames;
 
         public BuildMenu()
         {
@@ -81,6 +82,7 @@ namespace KCAccess.Game
             if (lastIndex.TryGetValue(tab.title, out int li)) items.SelectIndex(li);
             string catName = CategoryName(tab);
             bool locked = tab.buildButton != null && !tab.buildButton.unlocked;
+            lockedCategory = locked;
             string text;
             if (locked)
             {
@@ -105,6 +107,16 @@ namespace KCAccess.Game
         {
             if (!started)
             {
+                if (waitFrames == 0 && MapController.Inst.EnsureCameraOnStartLand())
+                {
+                    waitFrames = 3; // let the game notice the new focused land before listing buildings
+                    return;
+                }
+                if (waitFrames > 1)
+                {
+                    waitFrames--;
+                    return;
+                }
                 A.Cue(Cue.Open);
                 Start();
                 return;
@@ -179,6 +191,9 @@ namespace KCAccess.Game
             return tab != null;
         }
 
+        /// <summary>Set while the shown category is locked, so its buildings are not called "available".</summary>
+        private static bool lockedCategory;
+
         /// <summary>"Small House, wood 2, 1 by 1, available" or "…, unavailable: cannot afford".</summary>
         private static string Describe(BuildingCostUpdater b, bool brief)
         {
@@ -191,7 +206,8 @@ namespace KCAccess.Game
             var parts = new List<string> { building.FriendlyName };
             parts.Add(CostText(building, lm));
             parts.Add((int)building.size.x + " by " + (int)building.size.z);
-            if (ok) parts.Add("available");
+            if (lockedCategory) parts.Add("category locked");
+            else if (ok) parts.Add("available");
             else
             {
                 string why;

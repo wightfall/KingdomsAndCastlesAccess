@@ -104,6 +104,7 @@ namespace KCAccess.UI
                     if (firstControl < 0) firstControl = i;
                     string l = UIText.LabelOf(list.Items[i].Control).ToLowerInvariant();
                     if (l == "back" || l == "close" || l == "x" || l == "cancel") continue;
+                    if (list.Items[i].Control is Slider rs && UIText.IsReadOnlySlider(rs)) continue;
                     firstControl = i;
                     break;
                 }
@@ -129,14 +130,40 @@ namespace KCAccess.UI
             A.Say(TextUtil.Sentences(Title, intro, current));
         }
 
+        private Func<GameObject, bool> focusRequest;
+        private float focusRequestUntil;
+
+        /// <summary>Move focus to the first item matching the predicate as soon as it appears (within 3 seconds).</summary>
+        public void RequestFocus(Func<GameObject, bool> match)
+        {
+            focusRequest = match;
+            focusRequestUntil = Time.unscaledTime + 3f;
+            nextRefresh = 0f;
+        }
+
         public void Refresh(bool force = false)
         {
             if (Root == null) return;
+            if (focusRequest != null && Time.unscaledTime > focusRequestUntil) focusRequest = null;
             if (!force && Time.unscaledTime < nextRefresh) return;
-            nextRefresh = Time.unscaledTime + 0.25f;
+            nextRefresh = Time.unscaledTime + (focusRequest != null ? 0.05f : 0.25f);
             var all = new List<UIItem>();
             foreach (var r in Roots) if (r != null && r.gameObject.activeInHierarchy) all.AddRange(Collect(r));
             list.SetItems(all, keepFocus: true);
+            if (focusRequest != null)
+            {
+                for (int i = 0; i < list.Count; i++)
+                {
+                    var go = list.Items[i].Go;
+                    if (go != null && list.Items[i].IsControl && focusRequest(go))
+                    {
+                        list.SelectIndex(i);
+                        focusRequest = null;
+                        SetHover(go);
+                        break;
+                    }
+                }
+            }
         }
 
         private List<UIItem> Collect(Transform root)
@@ -164,12 +191,19 @@ namespace KCAccess.UI
                 var it = merged[i];
                 if (it.IsControl) continue;
                 string txt = UIText.JoinTexts(it.Texts);
-                bool dup = (i > 0 && merged[i - 1].IsControl && UIText.LabelOf(merged[i - 1].Control) == txt)
-                    || (i + 1 < merged.Count && merged[i + 1].IsControl && UIText.LabelOf(merged[i + 1].Control) == txt);
+                bool dup = (i > 0 && merged[i - 1].IsControl && SameLabel(UIText.LabelOf(merged[i - 1].Control), txt))
+                    || (i + 1 < merged.Count && merged[i + 1].IsControl && SameLabel(UIText.LabelOf(merged[i + 1].Control), txt));
                 if (dup) merged.RemoveAt(i);
             }
             AddContextToDuplicates(merged);
             return merged;
+        }
+
+        /// <summary>The text is the control's label, or the first part of it ("Bryce" vs "Bryce, Find Villager").</summary>
+        private static bool SameLabel(string label, string text)
+        {
+            if (string.IsNullOrEmpty(label) || string.IsNullOrEmpty(text)) return false;
+            return label == text || label.StartsWith(text + ",");
         }
 
         private static void AddContextToDuplicates(List<UIItem> items)
@@ -254,18 +288,52 @@ namespace KCAccess.UI
             return true;
         }
 
+        private static bool RecentlySpoken(string text)
+        {
+            if (A.Announcer == null) return false;
+            int n = 0;
+            var hist = new List<string>(A.Announcer.History);
+            for (int i = hist.Count - 1; i >= 0 && n < 6; i--, n++)
+            {
+                if (hist[i] == text || hist[i].EndsWith(": " + text)) return true;
+            }
+            return false;
+        }
+
+        private static bool IsNumberish(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return false;
+            foreach (char c in s) if (!(char.IsDigit(c) || c == ' ' || c == '/' || c == '%' || c == '.' || c == ',' || c == '-' || c == '+')) return false;
+            return true;
+        }
+
         public string Describe(UIItem item)
         {
             if (item == null) return string.Empty;
             string special = Special.Describe(item);
             if (special != null) return special;
-            if (!item.IsControl) return UIText.JoinTexts(item.Texts);
+            if (!item.IsControl)
+            {
+                string t = UIText.JoinTexts(item.Texts);
+                if (IsNumberish(t))
+                {
+                    string res = Special.ResourceIconName(item.Go.transform);
+                    if (res != null) return res + " " + t;
+                }
+                return t;
+            }
             var s = item.Control;
             // Read-only fields and bars are really just text.
             if (!s.interactable && (s is InputField || s is TMP_InputField)) return UIText.ValueOf(s) == "blank" ? UIText.LabelOf(s) : UIText.ValueOf(s);
-            if (!s.interactable && s is Slider ro) return TextUtil.Join(", ", UIText.LabelOf(ro), UIText.ValueOf(ro));
+            if (s is Slider ro && UIText.IsReadOnlySlider(ro)) return TextUtil.Join(", ", UIText.LabelOf(ro), UIText.ValueOf(ro));
             string label = UIText.LabelOf(s);
             if (!string.IsNullOrEmpty(item.Context) && item.Context != label) label = item.Context + ", " + label;
+            // Icon-only rows ("20" next to a wood icon): add the resource name.
+            if (IsNumberish(label) || label == "unlabelled")
+            {
+                string res = Special.ResourceIconName(s.transform);
+                if (res != null) label = res + (label == "unlabelled" ? string.Empty : " " + label);
+            }
             string role = UIText.RoleOf(s);
             string value = UIText.ValueOf(s);
             var parts = new List<string> { label };
@@ -463,7 +531,8 @@ namespace KCAccess.UI
                     A.Say(UIText.LabelOf(td) + ", use left and right arrows to change, " + UIText.ValueOf(td));
                     return;
                 case Slider sl:
-                    A.Say(UIText.LabelOf(sl) + ", use left and right arrows to change, " + UIText.ValueOf(sl));
+                    if (UIText.IsReadOnlySlider(sl)) A.Say(Describe(item), force: true);
+                    else A.Say(UIText.LabelOf(sl) + ", use left and right arrows to change, " + UIText.ValueOf(sl));
                     return;
             }
             A.Cue(Cue.Activate);
@@ -498,6 +567,7 @@ namespace KCAccess.UI
             {
                 if (t.GetComponentInParent<Selectable>() is Selectable sel && sel.gameObject == (list.Current != null ? list.Current.Go : null)) continue;
                 string txt = TextUtil.Clean(UIText.TextOf(t));
+                if (txt == Patch_DialogueSubtitle.LastLine || RecentlySpoken(txt)) continue; // already spoken (dialogue hook etc.)
                 if (!before.Contains(txt) && !changed.Contains(txt)) changed.Add(txt);
                 if (changed.Count >= 4) break;
             }
@@ -528,7 +598,7 @@ namespace KCAccess.UI
             if (!s.interactable) return false;
             switch (s)
             {
-                case Slider sl:
+                case Slider sl when !UIText.IsReadOnlySlider(sl):
                 {
                     float range = sl.maxValue - sl.minValue;
                     float step = sl.wholeNumbers ? Mathf.Max(1f, Mathf.Round(range / 20f)) : range / 20f;

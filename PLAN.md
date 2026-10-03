@@ -31,10 +31,14 @@ Status legend: `[x]` done and verified in the running game · `[~]` implemented,
 - [x] Main menu, choose mode, difficulty, name & banner, map setup (dropdowns), start game
 - [x] Pause menu, save, load, settings, quit confirmation, load-error dialog
 - [x] Credits, banner select (numbered tiles, selected state), mods, kingdom share
-- [~] Failure / keep destroyed screen (generic navigator; only reachable by losing)
+- [x] Failure / keep destroyed screens: whole message read on open (v1.3.0)
 - [x] In-game modal windows: job priority (keyboard reorder replaces drag), confirmations
 - [x] Advisors (named advisors, advice read out), witch hut (quests, spells), demolish warning (>25 buildings)
-- [~] Diplomacy, level-up, research, merchant (generic navigator; need AI kingdoms / a long game)
+- [x] Diplomacy (v1.3.0): Dialogue System hooks speak every line and the number of replies, focus jumps to the first reply / Continue; rival setup slots labelled; envoys sent with M to a keep under the cursor
+- [x] Research (v1.3.0): technologies with effect and gold cost or "already researched", missing gold explained, progress view
+- [x] Merchant trading (v1.3.0): trade lines with resource names, Left/Right/Page Up/Page Down change amounts, cost spoken; merchant ships selectable with Shift+Enter
+- [x] Dock / stockpile desired-resource lines named; icon-only numbers get their resource name
+- [x] Level-up and announcement windows read in full when they open
 - [x] F6 / Shift+F6 cycle: selected building/tile → kingdom overview (tax buttons) → toolbar (speed, cursor modes, menu); Ctrl+R read all
 - [x] Escape = back/close (clicks the window's Back/Close/No button, otherwise the game's own Escape)
 
@@ -59,6 +63,7 @@ Status legend: `[x]` done and verified in the running game · `[~]` implemented,
 - [x] v1.0.0 released; v1.1.0 with HUD counter fix, kingdom overview descriptions, creative mode support
 - [x] v1.2.0: setup exe in the release, dialog fix, advisors/banners/demolish labels, bookmarks
 - [x] Updater verified end to end: the v1.1.0 updater found 1.2.0 on GitHub, asked, downloaded, installed it and replaced itself
+- [x] v1.3.0: diplomacy, research, merchant trading, defeat screen verified; ships selectable; keep placement no longer blocked when the camera starts over water
 - [x] Release rule: every release ships KCAccess-Setup-vX.Y.Z.exe, the bundle zip and the mod-only zip (tools/package.ps1 builds all three)
 - [x] Bug fixes in the game discovered during inspection (see below)
 - [x] README (install, keys, cues, settings, troubleshooting, building), third-party notices, MIT license
@@ -83,6 +88,10 @@ Status legend: `[x]` done and verified in the running game · `[~]` implemented,
 - Navigator kept a stale item list right after a click that opened part of a panel → refresh immediately after activation.
 - Force-killing the game during development truncated an autosave (dev script now closes the game gracefully).
 - After closing the Advisors window from a building panel the panel focus cleared the dialog's items → keys were swallowed by an empty dialog. Dialogs now replace panel focus; empty "windows" never capture the keyboard.
+- Starting camera over water made the keep "unavailable, build your keep first" (the game only offers it while the camera is over land) → the cursor starts on valid land and the build menu moves there if needed.
+- Escape after placing a building did not end the game's "place another" mode → handled by the mod.
+- Read-only bars (opinion, busy timers) were offered as adjustable sliders → shown as progress bars.
+- Foreign kingdoms were missing from the scanner (AI buildings are not in the player's list) → read from the AI kingdom data, including unexplored ones.
 - Game text bug: some strings show "<!-Missing Translation [text]-!>" (e.g. the demolish warning) → the marker is removed before speaking.
 
 ## Notes / decisions
@@ -95,5 +104,5 @@ Status legend: `[x]` done and verified in the running game · `[~]` implemented,
 - [x] Map bookmarks: Ctrl+Shift+1-9 store, Ctrl+1-9 jump (saved per kingdom)
 
 ## Next ideas
-- Verify diplomacy, merchant trading, armies and ships in a long game; add special descriptions where the generic reader is weak.
+- Keep playing long games to find windows where the generic reader is weak (e.g. AI negotiation price editor, ship logistics).
 

@@ -52,11 +52,11 @@ namespace KCAccess.Core
                 "L opens the notification history. Delete demolishes the selected building, C orders trees on the selected tile chopped. " +
                 "M moves selected soldiers to the cursor. With a creative mode brush selected, Enter applies it and Escape turns it off. Space pauses, 1, 2 and 3 set game speed, J opens decrees, Escape opens the pause menu." },
             { "Decrees", "Job priority. Each job row tells its priority, name, filled workers and how many workers are allowed. Space turns a job on or off, Shift Up and Shift Down move it up or down in priority, Left and Right change the allowed workers. " + MenuKeys },
-            { "Diplomacy", "Diplomacy with other kingdoms: send gifts, make or break alliances and answer envoys. " + MenuKeys },
+            { "Diplomacy", "Talking with another kingdom. Each line of the conversation is read aloud, then the number of replies. Up and Down choose a reply, Enter answers. Gift, trade and request options appear as buttons. " + MenuKeys },
             { "LevelUp", "Your town has grown to a new size. Read the message and choose the button to continue. " + MenuKeys },
             { "Advisor", "Your advisors give tips about what your kingdom needs. Choose an advisor to hear their advice. " + MenuKeys },
             { "Witch", "The witch offers powerful services for a price. " + MenuKeys },
-            { "Research", "Research at the great library. Choose a technology to research. " + MenuKeys },
+            { "Research", "Research at the great library. Each technology tells its gold cost or that it is already researched; Enter starts researching it. While research runs, the window shows progress and years remaining. " + MenuKeys },
             { "DemolishWarning", "Demolishing these buildings needs confirmation. Choose to demolish or cancel. " + MenuKeys },
             { "Banner", "An announcement. Read it and choose the button to dismiss it. " + MenuKeys },
             { "SurvivalIntro", "Survival mode introduction. " + MenuKeys },

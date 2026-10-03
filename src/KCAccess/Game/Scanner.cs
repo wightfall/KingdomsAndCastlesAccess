@@ -128,10 +128,11 @@ namespace KCAccess.Game
                         var s = ships.data[i];
                         if (s == null) continue;
                         int team = s.teamID;
-                        bool enemy = team != 0 && w.RelationBetween(0, team) == World.Relations.Enemy;
-                        if (mine ? team != 0 : !enemy) continue;
+                        bool merchant = s.type == ShipBase.ShipType.Merchant || s.type == ShipBase.ShipType.PlayerMerchant;
+                        bool enemy = !merchant && team != 0 && w.RelationBetween(0, team) == World.Relations.Enemy;
+                        if (mine ? (team != 0 && !merchant) : !enemy) continue;
                         Vector3 p = s.GetPos();
-                        found.Add(new Item { Label = (mine ? "your ship" : "enemy ship"), Pos = new GridPos((int)p.x, (int)p.z) });
+                        found.Add(new Item { Label = CellInfo.ShipName(s), Pos = new GridPos((int)p.x, (int)p.z) });
                     }
                     if (!mine)
                     {
@@ -177,15 +178,32 @@ namespace KCAccess.Game
                     break;
                 case "Foreign kingdoms":
                 {
-                    var list = Player.inst.Buildings;
-                    for (int i = 0; i < list.Count; i++)
+                    if (AIBrainsContainer.inst == null) break;
+                    var landmasses = new List<int>();
+                    foreach (var k in AIBrainsContainer.inst.kingdoms)
                     {
-                        var b = list.data[i];
-                        if (b == null || b.TeamID() == 0) continue;
-                        if (b.uniqueNameHash != World.keepHash && b.uniqueNameHash != World.outpostHash) continue;
-                        var c = b.GetCell();
-                        if (c == null || !CellInfo.Explored(c)) continue;
-                        found.Add(new Item { Label = CellInfo.Owner(c) + ", " + b.FriendlyName, Pos = new GridPos(c.x, c.z) });
+                        var lo = k != null ? k.LandmassOwner : null;
+                        if (lo == null || lo.ownedLandMasses == null) continue;
+                        for (int i = 0; i < lo.ownedLandMasses.Count; i++) landmasses.Add(lo.ownedLandMasses.data[i]);
+                    }
+                    // Kingdoms that have not settled yet are still planned on a start landmass.
+                    var start = AIBrainsContainer.inst.aiStartInfo?.startData;
+                    if (start != null) foreach (var sd in start) if (sd != null && !landmasses.Contains(sd.landmass)) landmasses.Add(sd.landmass);
+                    foreach (int lm in landmasses)
+                    {
+                        if (lm < 0) continue;
+                        string name = lm < Player.inst.LandMassNames.Count && !string.IsNullOrEmpty(Player.inst.LandMassNames[lm]) ? Player.inst.LandMassNames[lm] : "foreign kingdom";
+                        var keeps = Player.inst.GetBuildingListForLandMass(lm, World.keepHash);
+                        if (keeps != null && keeps.Count > 0 && keeps.data[0] != null && keeps.data[0].GetCell() != null)
+                        {
+                            var c = keeps.data[0].GetCell();
+                            found.Add(new Item { Label = name + " keep" + (CellInfo.Explored(c) ? string.Empty : ", unexplored"), Pos = new GridPos(c.x, c.z) });
+                        }
+                        else
+                        {
+                            var centre = LandmassCentre(lm);
+                            if (centre.HasValue) found.Add(new Item { Label = name + " island, no keep yet", Pos = centre.Value });
+                        }
                     }
                     break;
                 }
@@ -195,6 +213,33 @@ namespace KCAccess.Game
                     AddClusters(found, c => c.Type == ResourceType.WolfDen && CellInfo.Explored(c), n => "wolf den");
                     break;
             }
+        }
+
+        /// <summary>A land tile near the middle of a landmass.</summary>
+        private static GridPos? LandmassCentre(int lm)
+        {
+            var w = World.inst;
+            long sx = 0, sz = 0, n = 0;
+            for (int z = 0; z < w.GridHeight; z++)
+                for (int x = 0; x < w.GridWidth; x++)
+                {
+                    var c = w.GetCellDataUnsafe(x, z);
+                    if (c != null && c.landMassIdx == lm) { sx += x; sz += z; n++; }
+                }
+            if (n == 0) return null;
+            var mid = new GridPos((int)(sx / n), (int)(sz / n));
+            // The average may fall in a lake: take the nearest tile of the landmass.
+            GridPos best = mid;
+            double bestD = double.MaxValue;
+            for (int z = 0; z < w.GridHeight; z++)
+                for (int x = 0; x < w.GridWidth; x++)
+                {
+                    var c = w.GetCellDataUnsafe(x, z);
+                    if (c == null || c.landMassIdx != lm) continue;
+                    double d = Directions.Euclid(mid, new GridPos(x, z));
+                    if (d < bestD) { bestD = d; best = new GridPos(x, z); }
+                }
+            return best;
         }
 
         private static void AddClusters(List<Item> found, Func<Cell, bool> match, Func<int, string> label, int minSize = 1)

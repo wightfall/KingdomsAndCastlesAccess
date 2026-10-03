@@ -219,7 +219,8 @@ namespace KCAccess
             panel = null; // a dialog replaces any panel focus (the panel usually closes behind it)
             Nav.TypeAheadEnabled = next.TypeAhead;
             A.Cue(Cue.Open);
-            Nav.SetRoot(next.Root, next.Title, announce: true, next.Intro, next.InitialFocus);
+            Nav.SetRoot(next.Root, next.Title, announce: !next.ReadAllOnOpen, next.Intro, next.InitialFocus);
+            if (next.ReadAllOnOpen) Nav.ReadAll();
         }
 
         /// <summary>Escape on menus without their own Escape handling: press a Back / Close / No button.</summary>

@@ -43,7 +43,8 @@ namespace KCAccess.Game
         {
             info = null;
             if (c == null || !UIText.IsVisible(c.gameObject) || !HasContent(c.transform)) return false;
-            info = new ScreenInfo { Id = id, Title = WindowTitle(c.transform) ?? title, Root = c.transform, Modal = true };
+            info = new ScreenInfo { Id = id, Title = WindowTitle(c.transform) ?? title, Root = c.transform, Modal = true,
+                ReadAllOnOpen = id == "LevelUp" || id == "Banner" || id == "SurvivalIntro" || id == "SurvivalSuccess" || id == "DemolishWarning" };
             return true;
         }
 

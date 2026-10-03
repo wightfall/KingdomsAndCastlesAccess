@@ -59,9 +59,114 @@ namespace KCAccess.UI
             }
         }
 
+        /// <summary>Research option row (name, research button, gold cost, "researched" marker) and its upgrade.</summary>
+        private static bool ResearchRow(GameObject go, out Transform row, out Player.UpgradeType upgrade)
+        {
+            row = null;
+            upgrade = Player.UpgradeType.None;
+            var ui = GameUI.inst != null ? GameUI.inst.researchUI : null;
+            if (ui == null || ui.optionContainer == null || !go.transform.IsChildOf(ui.optionContainer) || go.transform == ui.optionContainer) return false;
+            Transform t = go.transform;
+            while (t.parent != null && t.parent != ui.optionContainer) t = t.parent;
+            foreach (var kv in ui.optionMap)
+            {
+                if (kv.Value == t)
+                {
+                    row = t;
+                    upgrade = kv.Key;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static string ResearchDescription(Transform row, Player.UpgradeType upgrade)
+        {
+            string name = TextUtil.Clean(UIText.TextOf(row.GetChild(0).GetComponent<TMPro.TMP_Text>()));
+            if (string.IsNullOrEmpty(name)) name = TextUtil.Humanize(upgrade.ToString());
+            if (row.childCount > 3 && row.GetChild(3).gameObject.activeSelf) return name + ", already researched";
+            var b = GameUI.inst.GetBuildingSelected();
+            var lib = b != null ? b.GetComponent<GreatLibrary>() : null;
+            string cost = lib != null ? ", costs " + lib.GetCost(upgrade) + " gold" : string.Empty;
+            string tip = UIText.TooltipOf(row.gameObject);
+            return TextUtil.Join(", ", name + cost, "button, Enter starts the research", tip);
+        }
+
+        /// <summary>Merchant buy / sell line: the resource is only an icon, so build the description from the row data.</summary>
+        private static string MerchantRow(ResourceLineItemUI row)
+        {
+            string res = ResourceNames.Name(row.rtype.ToString());
+            int order = row.GetOrderAmount();
+            string verb = row.buy ? "buy" : "sell";
+            return res + ": " + row.price + " gold each, " + row.availableAmount + " available, " + verb + " " + order
+                   + (order > 0 ? ", " + (row.buy ? "costs " : "earns ") + row.GetCost() + " gold" : string.Empty)
+                   + ". Left and Right change the amount by 1, Page Up and Page Down by 10";
+        }
+
+        /// <summary>
+        /// Many rows show the resource only as an icon. If a sibling image (one or two levels up) uses one of the
+        /// game's resource icons, return the resource name ("wood"), else null.
+        /// </summary>
+        internal static string ResourceIconName(Transform t)
+        {
+            var textures = Player.inst != null ? Player.inst.resourceTextures : null;
+            if (textures == null || t.parent == null) return null;
+            // Only the item's own row: images that are siblings of the item (or of its parent when the item
+            // sits in a small wrapper). Never look inside buttons or deeper containers.
+            var levels = new System.Collections.Generic.List<Transform> { t.parent };
+            if (t.parent.parent != null && t.parent.childCount <= 3) levels.Add(t.parent.parent);
+            foreach (var level in levels)
+            {
+                if (level.childCount > 8) continue; // a list or panel, not a row
+                for (int c = 0; c < level.childCount; c++)
+                {
+                    var child = level.GetChild(c);
+                    if (!child.gameObject.activeInHierarchy || child.GetComponent<Selectable>() != null) continue;
+                    var img = child.GetComponent<Image>();
+                    if (img == null || img.sprite == null) continue;
+                    for (int i = 0; i < textures.Count; i++)
+                    {
+                        if (textures[i] != null && textures[i] == img.sprite) return ResourceNames.Name(((FreeResourceType)i).ToString());
+                    }
+                }
+            }
+            return null;
+        }
+
+        /// <summary>Dock / stockpile "desired amount" rows: resource icon, desired amount field, stored amount, transport-only toggle.</summary>
+        private static bool OrderRow(GameObject go, out Transform row, out FreeResourceType type)
+        {
+            row = null;
+            type = FreeResourceType.None;
+            var form = go.GetComponentInParent<ResourceOrderFormUI>();
+            if (form == null) return false;
+            for (int k = 0; k < form.resourceOrders.Count; k++)
+            {
+                var o = form.resourceOrders[k];
+                if (o == null || o.parent == null || !go.transform.IsChildOf(o.parent)) continue;
+                row = o.parent;
+                type = (FreeResourceType)(k < 8 ? k : k + 1);
+                return true;
+            }
+            return false;
+        }
+
         /// <summary>Hide parts of composite rows; the row is represented by one control.</summary>
         internal static bool Exclude(GameObject go)
         {
+            var merchantRow = go.GetComponentInParent<ResourceLineItemUI>();
+            if (merchantRow != null && merchantRow.orderAmt != null)
+            {
+                var input = merchantRow.orderAmt.transform;
+                return go.transform != input && !input.IsChildOf(go.transform);
+            }
+            if (ResearchRow(go, out var rrow, out _) && go.transform != rrow)
+            {
+                var btn = rrow.GetComponentInChildren<Button>(false);
+                // Keep the research button; when it is hidden (researched) keep the name text instead.
+                if (btn != null) return go.transform != btn.transform && !btn.transform.IsChildOf(go.transform);
+                return go.transform != rrow.GetChild(0);
+            }
             // Each advisor has two overlapping buttons (portrait and speech bubble): keep the first.
             if (AdvisorName(go.transform) != null && go.GetComponent<Button>() != null)
             {
@@ -86,11 +191,35 @@ namespace KCAccess.UI
             if (row != null && item.Control == row.DisableToggle) return PriorityRow(row);
             if (item.Control is Button && item.Go.GetComponentInParent<PickNameUI>() != null && UIText.LabelOf(item.Control) == "unlabelled")
                 return "Choose banner, button";
+            var mrow = item.Go.GetComponentInParent<ResourceLineItemUI>();
+            if (mrow != null && item.Control != null && item.Control == mrow.orderAmt) return MerchantRow(mrow);
+            if (item.IsControl && OrderRow(item.Go, out var orow, out var otype))
+            {
+                string res = ResourceNames.Name(otype.ToString());
+                string stored = TextUtil.Clean(UIText.TextOf(orow.GetChild(2).GetComponent<TMPro.TMP_Text>()));
+                if (item.Control is TMPro.TMP_InputField f)
+                    return res + ": " + stored + " stored, desired amount " + (string.IsNullOrEmpty(f.text) ? "0" : f.text) + ", edit, Enter to type a new amount";
+                if (item.Control is Toggle tg)
+                    return res + ": keep for transport only, check box, " + (tg.isOn ? "checked" : "not checked") + (UIText.TooltipOf(item.Go) is string tip ? ". " + tip : string.Empty);
+            }
+            if (ResearchRow(item.Go, out var researchRow, out var upgrade)) return ResearchDescription(researchRow, upgrade);
+            if (item.IsControl && item.Go.GetComponentInParent<RivalItemUI>() is RivalItemUI rival)
+            {
+                int slot = 1;
+                var all = RivalKingdomSettingsUI.inst != null ? RivalKingdomSettingsUI.inst.rivalItems : null;
+                if (all != null) for (int i = 0; i < all.Length; i++) if (all[i] == rival) slot = i + 1;
+                string rivalName = rival.rivalName != null ? TextUtil.Clean(UIText.TextOf(rival.rivalName)) : null;
+                if (item.Control == rival.enableButton) return "Add AI kingdom, slot " + slot + ", button";
+                if (item.Control == rival.removeButton) return "Remove AI kingdom " + (rivalName ?? string.Empty) + ", slot " + slot + ", button";
+                if (item.Control == rival.personalityDropdown) return "AI kingdom " + rivalName + " skill level, combo box, " + UIText.ValueOf(rival.personalityDropdown);
+            }
             if (item.IsControl && item.Go.GetComponentInParent<DemolishWarningUI>() != null)
             {
                 if (item.Go.name == "Yes") return "Yes, demolish, button";
                 if (item.Go.name == "No") return "No, cancel, button";
             }
+            if (item.IsControl && item.Go.GetComponent<PixelCrushers.DialogueSystem.StandardUIContinueButtonFastForward>() != null)
+                return "Continue, button";
             var tile = item.Go.GetComponent<BannerTile>();
             if (tile != null)
             {
@@ -168,6 +297,49 @@ namespace KCAccess.UI
         internal static bool HandleKey(UINavigator nav, UIItem item)
         {
             if (item == null || item.Go == null) return false;
+            if ((KInput.Plain(KeyCode.Return) || KInput.Plain(KeyCode.Space)) && item.IsControl && ResearchRow(item.Go, out _, out var up))
+            {
+                var b = GameUI.inst.GetBuildingSelected();
+                var lib = b != null ? b.GetComponent<GreatLibrary>() : null;
+                int gold = Player.inst.PlayerLandmassOwner.Gold;
+                if (lib != null && gold < lib.GetCost(up))
+                {
+                    KInput.Consume(KeyCode.Space);
+                    KInput.Consume(KeyCode.Return);
+                    A.Cue(Cue.Error);
+                    A.Say("Not enough gold: costs " + lib.GetCost(up) + ", you have " + gold, force: true);
+                    return true;
+                }
+                return false; // normal click starts the research; the new state is read automatically
+            }
+            var mrow = item.Go.GetComponentInParent<ResourceLineItemUI>();
+            if (mrow != null && item.Control == mrow.orderAmt && KInput.NoMods)
+            {
+                int delta = 0;
+                if (KInput.Down(KeyCode.RightArrow)) delta = 1;
+                else if (KInput.Down(KeyCode.LeftArrow)) delta = -1;
+                else if (KInput.Down(KeyCode.PageUp)) delta = 10;
+                else if (KInput.Down(KeyCode.PageDown)) delta = -10;
+                if (delta != 0)
+                {
+                    int before = mrow.GetOrderAmount();
+                    mrow.orderAmt.text = Mathf.Max(0, before + delta).ToString();
+                    mrow.ClampOrder();
+                    int after = mrow.GetOrderAmount();
+                    if (after == before)
+                    {
+                        A.Cue(Cue.Edge);
+                        string why = after == 0 ? "none" : (after >= mrow.availableAmount ? "all available" : "not enough gold for more");
+                        A.Say(after + ", " + why);
+                    }
+                    else
+                    {
+                        A.Cue(Cue.Value);
+                        A.Say(after + (after > 0 ? ", " + (mrow.buy ? "costs " : "earns ") + mrow.GetCost() + " gold" : string.Empty));
+                    }
+                    return true;
+                }
+            }
             var info = item.Go.GetComponentInParent<InfoBase>();
             if (info != null && !item.IsControl && (KInput.Plain(KeyCode.Return) || KInput.Plain(KeyCode.Space)))
             {
@@ -229,6 +401,8 @@ namespace KCAccess.UI
         internal static string Help(UIItem item)
         {
             if (item == null || item.Go == null) return null;
+            if (item.Go.GetComponentInParent<ResourceLineItemUI>() != null)
+                return "On a trade line: Left and Right change the amount by 1, Page Up and Page Down by 10, Enter lets you type an amount. Then choose the complete transaction button.";
             if (RowFor(item.Go) != null)
                 return "On a job row: Space toggles the job on or off, Shift Up and Shift Down change its priority, Left and Right change how many workers are allowed.";
             return null;

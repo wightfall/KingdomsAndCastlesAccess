@@ -102,7 +102,7 @@ mouse drag), Left / Right change how many workers are allowed.
 | Shift+Arrows | Move 5 tiles |
 | Ctrl+Arrows | Jump to the next tile that is different (edge of a forest, a building, water …) |
 | Enter | Select the building or tile under the cursor; while placing: build; in chop / demolish mode: apply |
-| Shift+Enter | While placing roads, walls or fields: set the start point, then Enter at the end point builds the whole line or area. In chop / demolish mode: mark one corner of an area. Otherwise: select soldiers or a villager on the tile (press again to cycle) |
+| Shift+Enter | While placing roads, walls or fields: set the start point, then Enter at the end point builds the whole line or area. In chop / demolish mode: mark one corner of an area. Otherwise: select soldiers, a ship (merchant ships open the trade window) or a villager on the tile (press again to cycle) |
 | I | Everything about the tile (terrain, fertility, road coverage, workers …) |
 | Shift+I | Details of the selected building |
 | F5 | Repeat the tile description |
@@ -127,6 +127,19 @@ The game's own keys keep working: **Space** pause, **1 2 3** speed, **R** rotate
 **Delete** demolish the selected building, **C** chop trees on the selected tile, **J** job priority,
 **Escape** cancel / close / pause menu, **WASD QE** camera. Avoid **U**: it hides the game interface,
 and hidden panels cannot be read (press U again to bring it back).
+
+### Trading, diplomacy and research
+
+* **Merchants:** when "A merchant ship has arrived" is announced, find it with the scanner (Your soldiers
+  and ships), press Shift+Enter on it and then F6. Each trade line reads "Wood: 2 gold each, 40 available,
+  buy 5, costs 10 gold"; Left / Right change the amount by 1, Page Up / Page Down by 10, Enter lets you
+  type it. Then choose the complete-transaction button.
+* **Diplomacy:** every line an envoy or ruler says is read aloud, followed by the number of replies;
+  focus jumps to the first reply. Up / Down choose, Enter answers. To visit a kingdom, select your envoy
+  (Shift+Enter), put the cursor on the other kingdom's keep and press M.
+* **Research (Great Library):** select the library, F6, Research. Each technology reads its effect and
+  gold cost, or "already researched"; Enter starts it, or tells you how much gold is missing. While research
+  runs the window reads progress and years remaining.
 
 ### Creative mode
 

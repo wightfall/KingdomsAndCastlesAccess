@@ -136,6 +136,46 @@ namespace KCAccess
                             var n2 = AccessController.Inst.Nav;
                             Plugin.Log.LogInfo("[navstate] editing=" + n2.IsEditing + " root=" + (n2.Root != null) + " count=" + n2.Count + " current=" + (n2.Current != null ? n2.Describe(n2.Current) : "null") + " frame=" + Time.frameCount);
                             break;
+                        case "groups":
+                            var ui2 = GameUI.inst;
+                            Plugin.Log.LogInfo("[groups] " + string.Join(" | ", Game.GameScreens.PanelGroups().ConvertAll(g => g.Key + ":" + g.Title).ToArray())
+                                + " island=" + (ui2.islandInfoUI != null ? ui2.islandInfoUI.gameObject.activeInHierarchy + "/" + UI.UIText.IsVisible(ui2.islandInfoUI.gameObject) + "/" + UI.UIText.IsOnScreen(ui2.islandInfoUI.transform) : "null")
+                                + " creative=" + (ui2.creativeModeOptions != null ? ui2.creativeModeOptions.activeInHierarchy + "/" + UI.UIText.IsVisible(ui2.creativeModeOptions) + "/" + UI.UIText.IsOnScreen(ui2.creativeModeOptions.transform) : "null"));
+                            break;
+                        case "finishbuild":
+                            // Developer only: instantly complete the selected building (to test its panels).
+                            var fb = GameUI.inst.GetBuildingSelected();
+                            if (fb != null && !fb.IsBuilt())
+                            {
+                                fb.constructionProgress = 1f;
+                                fb.CompleteBuild();
+                                Plugin.Log.LogInfo("[dbg] completed " + fb.UniqueName);
+                            }
+                            break;
+                        case "ai":
+                            var abc = AIBrainsContainer.inst;
+                            var sb2 = new StringBuilder("[ai] kingdoms=" + (abc != null ? abc.kingdoms.Count : -1));
+                            if (abc != null) foreach (var k in abc.kingdoms) sb2.Append(" | team=" + k.LandmassOwner?.teamId + " lms=" + (k.LandmassOwner?.ownedLandMasses != null ? k.LandmassOwner.ownedLandMasses.Count : -1));
+                            sb2.Append(" start=" + (abc?.aiStartInfo?.startData != null ? abc.aiStartInfo.startData.Length : -1));
+                            for (int lmi = 0; lmi < World.inst.NumLandMasses; lmi++) sb2.Append(" [" + lmi + ":" + (lmi < Player.inst.LandMassNames.Count ? Player.inst.LandMassNames[lmi] : "?") + " owner=" + (World.GetLandmassOwner(lmi)?.teamId.ToString() ?? "none") + " keeps=" + Player.inst.GetBuildingListForLandMass(lmi, World.keepHash).Count + "]");
+                            Plugin.Log.LogInfo(sb2.ToString());
+                            break;
+                        case "invoke":
+                            var cur = AccessController.Inst.Nav.Current;
+                            var btn = cur != null ? cur.Go.GetComponent<UnityEngine.UI.Button>() : null;
+                            Plugin.Log.LogInfo("[dbg] invoke " + (btn != null ? btn.name + " listeners=" + btn.onClick.GetPersistentEventCount() + " interactable=" + btn.interactable : "no button"));
+                            if (btn != null) btn.onClick.Invoke();
+                            break;
+                        case "gold":
+                            Player.inst.PlayerLandmassOwner.Gold += 5000;
+                            break;
+                        case "fail":
+                            GameState.inst.SetNewMode(GameState.inst.mainMenuMode);
+                            GameState.inst.mainMenuMode.TransitionTo(parts.Length > 1 && parts[1] == "keep" ? MainMenuMode.State.KeepDestroyed : MainMenuMode.State.Failure);
+                            break;
+                        case "merchant":
+                            ShipSystem.inst.merchantSpawnTimer = 0f;
+                            break;
                         case "menu":
                             GameState.inst.playingMode.OnClickedMenu();
                             break;

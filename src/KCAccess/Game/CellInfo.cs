@@ -164,7 +164,7 @@ namespace KCAccess.Game
                 {
                     var s = ships.data[i];
                     if (s == null) continue;
-                    result.Add((s.teamID == 0 ? "your " : (World.inst.RelationBetween(0, s.teamID) == World.Relations.Enemy ? "enemy " : "foreign ")) + "ship");
+                    result.Add(ShipName(s));
                 }
             }
             for (int i = 0; i < SiegeMonster.monsters.Count; i++)
@@ -186,6 +186,26 @@ namespace KCAccess.Game
                 }
             }
             return result;
+        }
+
+        /// <summary>"your transport ship", "merchant ship", "enemy viking ship" …</summary>
+        internal static string ShipName(ShipBase s)
+        {
+            string kind;
+            switch (s.type)
+            {
+                case ShipBase.ShipType.Merchant:
+                case ShipBase.ShipType.PlayerMerchant: kind = "merchant ship"; break;
+                case ShipBase.ShipType.Fishing: kind = "fishing ship"; break;
+                case ShipBase.ShipType.TroopTransport: kind = "troop ship"; break;
+                case ShipBase.ShipType.VikingTroopTransport: kind = "viking ship"; break;
+                case ShipBase.ShipType.OgreTroopTransport: kind = "ogre ship"; break;
+                default: kind = "transport ship"; break;
+            }
+            if (s.type == ShipBase.ShipType.Merchant || s.type == ShipBase.ShipType.PlayerMerchant) return kind;
+            string who = s.teamID == 0 ? "your " : (World.inst.RelationBetween(0, s.teamID) == World.Relations.Enemy ? "enemy " : "foreign ");
+            bool selected = GameUI.inst != null && s is ISelectable sel && GameUI.inst.IsSelected(sel);
+            return who + kind + (selected ? ", selected" : string.Empty);
         }
 
         internal static string Units_ArmyName(UnitSystem.Army a)
