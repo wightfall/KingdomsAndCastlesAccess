@@ -60,7 +60,7 @@ namespace KCAccess
         }
 
         /// <summary>Called once per frame before the mod reads keys.</summary>
-        internal static void Tick(bool typing)
+        internal static void Tick(bool suspended)
         {
             if (!available || Plugin.CfgKeyFallback == null || !Plugin.CfgKeyFallback.Value) return;
             if (forced.Count > 0)
@@ -70,9 +70,14 @@ namespace KCAccess
                 foreach (var kv in forced) if (Time.frameCount - kv.Value > 3) stale.Add(kv.Key);
                 foreach (var a in stale) forced.Remove(a);
             }
-            if (!Application.isFocused)
+            if (!Application.isFocused || suspended)
             {
-                wasDown.Clear();
+                // Not focused, typing, or the Steam overlay is open: keep tracking what is held, so a key still
+                // down when the game gets the keyboard back (Alt+Tab, Shift+Tab) is not taken for a new press.
+                foreach (var w in keys)
+                {
+                    try { wasDown[w.Vk] = (GetAsyncKeyState(w.Vk) & 0x8000) != 0; } catch (Exception) { }
+                }
                 pending.Clear();
                 return;
             }
@@ -84,12 +89,12 @@ namespace KCAccess
             foreach (var w in keys) if (Input.GetKeyDown(w.Key)) seenByUnity.Add(w.Key);
             foreach (var w in keys)
             {
-                bool down, tapped;
+                // Only the "held now" bit: the "pressed since last poll" bit is shared between programs and
+                // produced bursts of phantom letters.
+                bool down;
                 try
                 {
-                    short state = GetAsyncKeyState(w.Vk);
-                    down = (state & 0x8000) != 0;
-                    tapped = (state & 0x0001) != 0; // pressed since the last poll (catches very short taps)
+                    down = (GetAsyncKeyState(w.Vk) & 0x8000) != 0;
                 }
                 catch (Exception)
                 {
@@ -99,7 +104,7 @@ namespace KCAccess
                 wasDown.TryGetValue(w.Vk, out bool before);
                 wasDown[w.Vk] = down;
                 bool unitySees = Input.GetKey(w.Key) || Input.GetKeyDown(w.Key) || Input.GetKeyUp(w.Key);
-                if (((down && !before) || (tapped && !down)) && !unitySees) pending[w.Vk] = Time.frameCount;
+                if (down && !before && !unitySees) pending[w.Vk] = Time.frameCount;
                 if (!pending.TryGetValue(w.Vk, out int since)) continue;
                 if (unitySees || seenByUnity.Contains(w.Key))
                 {
@@ -108,7 +113,9 @@ namespace KCAccess
                 }
                 if (Time.frameCount - since < 2) continue; // give Unity a frame to deliver it
                 pending.Remove(w.Vk);
-                if (typing) continue; // text fields get their characters from Unity only
+                // Shift+Tab is Steam's overlay shortcut: Steam swallows it on purpose and reports the overlay
+                // a few frames later, so it must never be passed to the game.
+                if (w.Key == KeyCode.Tab && Modifiers.Shift) continue;
                 Deliver(w.Key);
             }
         }

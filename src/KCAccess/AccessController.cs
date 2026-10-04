@@ -52,7 +52,8 @@ namespace KCAccess
         {
             if (tickedFrame == Time.frameCount) return;
             tickedFrame = Time.frameCount;
-            OsKeyboard.Tick(Nav.IsEditing);
+            SteamOverlay.Ensure();
+            OsKeyboard.Tick(Nav.IsEditing || SteamOverlay.Active);
             KInput.BeginFrame();
             Diagnostics.PollCommands();
             if (Plugin.CfgLogKeys.Value) Diagnostics.LogKeys();
@@ -68,6 +69,7 @@ namespace KCAccess
 
         private void Tick()
         {
+            if (SteamOverlay.Active) return; // the Steam overlay has the keyboard; keys are not meant for the game
             if (Special.CapturingKey)
             {
                 InputGate.BlockGameKeys = true;

@@ -261,6 +261,12 @@ Cancel; choose "It's toast" to delete. "Save deleted" confirms it.
 
 ### Keyboard problems (keys like Escape, Space, 1 2 3 or L do nothing)
 
+* **Shift+Tab opens the Steam overlay** (Steam's default shortcut), which takes every key away from the game
+  until it is closed. The mod says "Steam overlay opened" and "Back in the game"; press Shift+Tab or Escape
+  to close it. To use Shift+Tab in the mod's menus, turn the overlay off (game Properties, General, "Enable
+  the Steam Overlay while in-game") or change its shortcut in Steam Settings, In Game. Up arrow also moves
+  to the previous item.
+
 * Press **Ctrl+Shift+F11** in the game: it speaks what currently owns the keyboard, which modifier keys
   the game and Windows think are held, and the keyboard layout, and writes it to `BepInEx\LogOutput.log`.
 * For a detailed report set `KeyLog = true` (on by default since 1.4.2) in `BepInEx\config\kcaccess.screenreader.cfg`, reproduce
