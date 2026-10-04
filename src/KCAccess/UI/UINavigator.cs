@@ -503,7 +503,8 @@ namespace KCAccess.UI
         {
             if (!item.IsControl)
             {
-                A.Say(Describe(item), force: true);
+                A.Cue(Cue.Edge);
+                A.Say(Describe(item) + ", text, not a button", force: true);
                 return;
             }
             var s = item.Control;

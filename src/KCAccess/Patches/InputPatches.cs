@@ -44,6 +44,11 @@ namespace KCAccess
     {
         private static bool Prefix(InputActions inputAction, ref bool __result)
         {
+            if (InputGate.Allow(inputAction) && OsKeyboard.Forced(inputAction))
+            {
+                __result = true; // a press Unity missed, delivered from Windows
+                return false;
+            }
             if (InputGate.Allow(inputAction)) return true;
             __result = false;
             return false;

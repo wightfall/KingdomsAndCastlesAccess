@@ -265,6 +265,13 @@ Cancel; choose "It's toast" to delete. "Save deleted" confirms it.
   the game and Windows think are held, and the keyboard layout, and writes it to `BepInEx\LogOutput.log`.
 * For a detailed report set `KeyLog = true` (on by default since 1.4.2) in `BepInEx\config\kcaccess.screenreader.cfg`, reproduce
   the problem, then send `BepInEx\LogOutput.log`.
+* Since 1.4.3 the mod also watches the Windows keyboard itself: when Windows reports a key press the game
+  never received (seen on a Windows 11 laptop, with NVDA Remote), the mod delivers it, including the game's
+  own keys (Escape menu, Space pause, 1 2 3 speed). The log then shows `[fallback]` lines. It is on by
+  default; `WindowsKeyFallback = false` in the `[Keyboard]` section of the config turns it off.
+* If keys still go missing, turn off Steam's input layer for this game, which the mod cannot change itself:
+  in the Steam library, open the game's Properties, Controller, choose "Disable Steam Input", and under
+  General turn off "Enable the Steam Overlay while in-game".
 * Since 1.4.1 the mod ignores Shift / Ctrl / Alt that the game believes are held when Windows says they
   are not (this happened with NVDA Remote and after Alt+Tab), turns the input method editor off while you
   are not typing, and frees text fields that grab the keyboard in the background.

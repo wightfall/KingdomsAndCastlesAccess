@@ -52,6 +52,7 @@ namespace KCAccess
         {
             if (tickedFrame == Time.frameCount) return;
             tickedFrame = Time.frameCount;
+            OsKeyboard.Tick(Nav.IsEditing);
             KInput.BeginFrame();
             Diagnostics.PollCommands();
             if (Plugin.CfgLogKeys.Value) Diagnostics.LogKeys();

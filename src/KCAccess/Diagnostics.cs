@@ -143,6 +143,9 @@ namespace KCAccess
                             bool shift = Array.IndexOf(parts, "shift") > 0, ctrl = Array.IndexOf(parts, "ctrl") > 0, alt = Array.IndexOf(parts, "alt") > 0;
                             KInput.Inject(key, shift, ctrl, alt);
                             break;
+                        case "deliver":
+                            if (parts.Length > 1 && Enum.TryParse(parts[1], true, out KeyCode dk)) OsKeyboard.Deliver(dk);
+                            break;
                         case "logkeys":
                             Plugin.CfgLogKeys.Value = !Plugin.CfgLogKeys.Value;
                             Plugin.Log.LogInfo("[dbg] LogKeys " + Plugin.CfgLogKeys.Value);
