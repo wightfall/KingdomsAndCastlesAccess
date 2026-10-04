@@ -24,6 +24,11 @@ namespace KCAccess
         internal static void LogKeys()
         {
             if (!Input.anyKeyDown) return;
+            // Never record what is typed into a text field.
+            var ac = AccessController.Inst;
+            if (ac != null && ac.Nav.IsEditing) return;
+            var sel = UnityEngine.EventSystems.EventSystem.current != null ? UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject : null;
+            if (sel != null && ((sel.GetComponent<TMP_InputField>() is TMP_InputField t && t.isFocused) || (sel.GetComponent<InputField>() is InputField f && f.isFocused))) return;
             foreach (var k in AllKeys)
             {
                 if (k == KeyCode.None || k >= KeyCode.Mouse0) continue;
