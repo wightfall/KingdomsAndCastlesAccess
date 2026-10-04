@@ -169,6 +169,14 @@ namespace KCAccess.UI
             return false;
         }
 
+        /// <summary>Emergency reset: forget any pending key capture.</summary>
+        internal static void ResetCapture()
+        {
+            pendingKeyButton = null;
+            capturingKeyButton = null;
+            SettingsMenuUI.isListeningToKey = false;
+        }
+
         private static string KeyAction(KeyButton kb)
         {
             // The KeyButton sits on the row itself; its texts are the action name and the key.

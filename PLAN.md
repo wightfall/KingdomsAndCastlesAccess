@@ -69,6 +69,7 @@ Status legend: `[x]` done and verified in the running game · `[~]` implemented,
 - [x] v1.2.0: setup exe in the release, dialog fix, advisors/banners/demolish labels, bookmarks
 - [x] Updater verified end to end: the v1.1.0 updater found 1.2.0 on GitHub, asked, downloaded, installed it and replaced itself
 - [x] v1.3.0: diplomacy, research, merchant trading, defeat screen verified; ships selectable; keep placement no longer blocked when the camera starts over water
+- [x] v1.4.2: Ctrl+Shift+F10 resets the mod (windows, panels, menus, edits, key capture, game hotkeys) without quitting; key log on by default for bug reports. Pause menu "Escape, Enter, arrows silent" not reproducible on the dev PC with real scan-code keys; waiting for the reporter's log
 - [x] v1.4.1 hotfix: delete saved games (Delete key, confirmation starts on Cancel); stuck-modifier protection via the Windows key state (Windows 11 / NVDA Remote report: Escape, Space, 1 2 3 and L dead); keyboard guard (IME off, stray focused text fields released or adopted as edits, game hotkeys re-enabled); Ctrl+Shift+F11 keyboard report and LogKeys option
 - [x] v1.4.0: full no-cheat playthrough on Sommern (keep → hamlet → small village: roads, hovels, cottages, farms, quarry, granary, wells, Treasure Room and taxes, advisors, chopping, saving / loading); navigation, area survey, settings keyboard tab rebinding
 - [x] Release rule: every release ships KCAccess-Setup-vX.Y.Z.exe, the bundle zip and the mod-only zip (tools/package.ps1 builds all three)

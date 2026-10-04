@@ -199,6 +199,35 @@ namespace KCAccess
 
         // ---------------------------------------------------------------- modal screens
 
+        /// <summary>
+        /// Ctrl+Shift+F10: if the mod ever goes silent, forget every window, panel, menu, edit and key capture it
+        /// thinks is open, give the keyboard back to the game and announce the current screen again.
+        /// </summary>
+        private void ResetAccessibility()
+        {
+            Plugin.Log.LogInfo("[reset] before: " + Diagnostics.KeyboardReport());
+            Special.ResetCapture();
+            Nav.EndEdit(false);
+            ActiveMenu = null;
+            panel = null;
+            modal = null;
+            Nav.Clear();
+            nextDetect = 0f;
+            InputGate.BlockGameKeys = false;
+            InputGate.EscapePassThrough = false;
+            if (GameState.inst != null) GameState.inst.AlphaNumericHotkeysEnabled = true;
+            var es = UnityEngine.EventSystems.EventSystem.current;
+            if (es != null) es.SetSelectedGameObject(null);
+            A.Cue(Cue.Open);
+            DetectModal();
+            if (modal == null)
+            {
+                bool play = GameState.inst != null && GameState.inst.IsPlayMode();
+                A.Say(play ? "Accessibility reset. Back on the map." : "Accessibility reset.", force: true);
+                if (play) Game.MapController.Inst.OnReturnToMap();
+            }
+        }
+
         private void DetectModal()
         {
             if (Time.unscaledTime < nextDetect && modal != null && modal.Root != null && modal.Root.gameObject.activeInHierarchy && Nav.Count > 0) return;
@@ -371,6 +400,11 @@ namespace KCAccess
                 KInput.Consume(KeyCode.F1);
                 if (KInput.Shift) A.Say(HelpText.AllKeys(), force: true);
                 else A.Say(ContextHelp(), force: true);
+                return true;
+            }
+            if (KInput.Down(KeyCode.F10) && KInput.Ctrl && KInput.Shift)
+            {
+                ResetAccessibility();
                 return true;
             }
             if (KInput.Down(KeyCode.F11) && KInput.Ctrl && KInput.Shift)

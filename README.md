@@ -72,6 +72,7 @@ Press **F1** at any time for help about the current screen and **Shift+F1** for 
 | F1 | Help for the current screen |
 | Shift+F1 | Every mod key |
 | Ctrl+Shift+F5 | Search for the screen reader again (if you started it after the game) |
+| Ctrl+Shift+F10 | Reset the mod if it ever stops speaking or responding (no need to quit the game) |
 | Ctrl+Shift+F11 | Keyboard report: what owns the keyboard, held modifiers, keyboard layout (also written to the log) |
 | Ctrl+Shift+M | Sound cues on / off |
 
@@ -262,7 +263,7 @@ Cancel; choose "It's toast" to delete. "Save deleted" confirms it.
 
 * Press **Ctrl+Shift+F11** in the game: it speaks what currently owns the keyboard, which modifier keys
   the game and Windows think are held, and the keyboard layout, and writes it to `BepInEx\LogOutput.log`.
-* For a detailed report set `LogKeys = true` in `BepInEx\config\kcaccess.screenreader.cfg`, reproduce
+* For a detailed report set `KeyLog = true` (on by default since 1.4.2) in `BepInEx\config\kcaccess.screenreader.cfg`, reproduce
   the problem, then send `BepInEx\LogOutput.log`.
 * Since 1.4.1 the mod ignores Shift / Ctrl / Alt that the game believes are held when Windows says they
   are not (this happened with NVDA Remote and after Alt+Tab), turns the input method editor off while you

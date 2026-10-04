@@ -15,7 +15,7 @@ namespace KCAccess
     {
         public const string Guid = "kcaccess.screenreader";
         public const string Name = "KCAccess";
-        public const string Version = "1.4.1";
+        public const string Version = "1.4.2";
 
         internal static Plugin Instance;
 
@@ -49,7 +49,7 @@ namespace KCAccess
             CfgCameraFollow = Config.Bind("Map", "CameraFollowsCursor", true, "Move the camera to keep the keyboard cursor in view.");
             CfgAnnounceLog = Config.Bind("Speech", "AnnounceNotifications", true, "Automatically speak kingdom notifications (raids, fires, shortages ...).");
             CfgDebugCommands = Config.Bind("Debug", "CommandFile", false, "Developer option: read test commands from BepInEx/kcaccess_commands.txt.");
-            CfgLogKeys = Config.Bind("Debug", "LogKeys", false, "Write every key press, with the modifier state seen by the game and by Windows, to the BepInEx log (for keyboard bug reports).");
+            CfgLogKeys = Config.Bind("Debug", "KeyLog", true, "Write every key press (key name only), with the modifier state seen by the game and by Windows, to the BepInEx log (for keyboard bug reports).");
             CfgLogSpeech = Config.Bind("Speech", "LogSpeech", true, "Write everything spoken to the BepInEx log (useful for bug reports).");
 
             string pluginDir = Path.GetDirectoryName(Info.Location);
