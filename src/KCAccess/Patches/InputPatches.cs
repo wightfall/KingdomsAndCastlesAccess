@@ -26,6 +26,7 @@ namespace KCAccess
                 return true;
             }
             if (KInput.IsConsumed(chord.key)) return false;
+            if (action == InputActions.ToggleUIDisplay) return false; // hiding the interface makes every panel unreadable
             if (!BlockGameKeys) return true;
             if (EscapePassThrough && action == InputActions.EscapeButtonBehavior) return true;
             // While a mod menu is open only let camera keys and speed keys through.

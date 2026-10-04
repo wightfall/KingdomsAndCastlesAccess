@@ -571,8 +571,20 @@ namespace KCAccess.Game
                 AccessController.Inst.ActiveMenu = new BuildMenu();
                 return;
             }
+            if (KInput.Plain(KeyCode.U))
+            {
+                A.Cue(Cue.Error);
+                A.Say("U would hide the game interface, which makes every panel unreadable, so the mod blocks it.");
+                return;
+            }
             if (KInput.Down(KeyCode.F6) && !KInput.Ctrl && !KInput.Alt)
             {
+                if (GameState.inst.IsPlayMode() && !ui.gameObject.activeSelf)
+                {
+                    // The interface was hidden (by the game's U key or another mod): bring it back first.
+                    ui.gameObject.SetActive(true);
+                    A.Say("The game interface was hidden; shown again.");
+                }
                 if (!AccessController.Inst.FocusPanel(KInput.Shift ? -1 : 1))
                 {
                     A.Cue(Cue.Error);

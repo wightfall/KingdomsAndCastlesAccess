@@ -138,8 +138,8 @@ mouse drag), Left / Right change how many workers are allowed.
 
 The game's own keys keep working: **Space** pause, **1 2 3** speed, **R** rotate while placing,
 **Delete** demolish the selected building, **C** chop trees on the selected tile, **J** job priority,
-**Escape** cancel / close / pause menu, **WASD QE** camera. Avoid **U**: it hides the game interface,
-and hidden panels cannot be read (press U again to bring it back).
+**Escape** cancel / close / pause menu, **WASD QE** camera. **U** (hide the game interface) is
+blocked by the mod, because hidden panels cannot be read; if the interface was hidden anyway, F6 shows it again.
 
 ### Trading, diplomacy and research
 

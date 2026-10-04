@@ -26,6 +26,7 @@ namespace KCAccess
 
         private string helpId = "Menu";
         private float nextDetect;
+        private float nextPanelCheck;
         private bool wasPlaying;
 
         /// <summary>A mod-owned modal menu (build menu, log browser, status list).</summary>
@@ -355,8 +356,10 @@ namespace KCAccess
         /// <summary>Keeps the focused panel group in sync with what the game shows.</summary>
         private void UpdatePanel()
         {
-            if (Time.unscaledTime < nextDetect) return;
-            nextDetect = Time.unscaledTime + 0.15f;
+            // Own timer: DetectModal runs every frame and moves nextDetect forward, so sharing it meant this check
+            // never ran and a panel closed by its Close button kept the keyboard (every key silent).
+            if (Time.unscaledTime < nextPanelCheck) return;
+            nextPanelCheck = Time.unscaledTime + 0.15f;
             var groups = Game.GameScreens.PanelGroups();
             var g = groups.Find(x => x.Key == panel.Key);
             if (g == null)
