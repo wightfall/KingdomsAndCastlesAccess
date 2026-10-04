@@ -243,7 +243,7 @@ namespace KCAccess.Game
             }
             if (structures.Count == 0 || c.Type != ResourceType.None) parts.Add(terrain);
             if (c.TreeAmount > 0 && GameUI.inst != null && GameUI.inst.GetClearCutterJob(c) != null) parts.Add("marked for chopping");
-            if (verbose && !IsWater(c)) parts.Add(Fertility(c));
+            if (verbose && !IsWater(c) && c.Type == ResourceType.None) parts.Add(Fertility(c)); // soil only matters on open ground
             int villagers = VillagerCount(c);
             if (villagers > 0) parts.Add(TextUtil.Plural(villagers, "villager"));
             parts.Add(Owner(c));

@@ -73,7 +73,7 @@ namespace KCAccess.Game
         {
             Log.Add(text, Severity.Danger, Player.inst != null ? Player.inst.CurrYear : 0);
             A.Cue(Cue.Alert);
-            A.Say(text + " Press Page Down to the Threats category and bracket keys to find them.", Priority.High);
+            A.Say(text + " Page Down to the Threats category, then right bracket picks the nearest, Backslash jumps there.", Priority.High);
         }
 
         internal static void OnInfo(string text)

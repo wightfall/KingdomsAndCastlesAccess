@@ -120,8 +120,11 @@ namespace KCAccess.Game
                     A.Cue(Cue.Error);
                     var a = World.inst.GetCellData(from.X, from.Z);
                     var b = World.inst.GetCellData(to.X, to.Z);
-                    bool island = a != null && b != null && a.landMassIdx >= 0 && b.landMassIdx >= 0 && a.landMassIdx != b.landMassIdx;
-                    A.Say("No walkable route to " + TargetLabel + (island ? ". It is on another island, across water." : ". It may be across water or behind walls.") + " Control N walks in a straight line, Backslash jumps there.");
+                    string why;
+                    if (a != null && a.Type == ResourceType.Water) why = ". The cursor is on water; move onto land first.";
+                    else if (a != null && b != null && a.landMassIdx >= 0 && b.landMassIdx >= 0 && a.landMassIdx != b.landMassIdx) why = ". It is on another island, across water.";
+                    else why = ". It may be across water or behind walls.";
+                    A.Say("No walkable route to " + TargetLabel + why + " Control N walks in a straight line, Backslash jumps there.");
                     return;
                 }
             }

@@ -6,7 +6,7 @@
     <BepInExDir>$(GameDir)\BepInEx</BepInExDir>
     <LangVersion>9.0</LangVersion>
     <Nullable>disable</Nullable>
-    <Version>1.4.5</Version>
+    <Version>1.4.6</Version>
     <Authors>KCAccess contributors</Authors>
     <Deterministic>true</Deterministic>
   </PropertyGroup>

@@ -36,3 +36,21 @@ namespace KCAccess.Tests
         }
     }
 }
+
+namespace KCAccess.Tests
+{
+    public class NumberOnlyTests
+    {
+        [Theory]
+        [InlineData("51", true)]
+        [InlineData("273/1000", true)]
+        [InlineData("20%", true)]
+        [InlineData("+15", true)]
+        [InlineData("1,250", true)]
+        [InlineData("Gold 20", false)]
+        [InlineData("x", false)]
+        [InlineData("", false)]
+        [InlineData("/", false)]
+        public void Detects(string text, bool expected) => Xunit.Assert.Equal(expected, KCAccess.Core.TextUtil.IsNumberOnly(text));
+    }
+}

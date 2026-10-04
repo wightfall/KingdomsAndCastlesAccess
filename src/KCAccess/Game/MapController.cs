@@ -69,7 +69,7 @@ namespace KCAccess.Game
             Vector3 focus = Cam.inst != null ? Cam.inst.DesiredTrackingPos : new Vector3(w.GridWidth / 2f, 0, w.GridHeight / 2f);
             cursor.Set((int)focus.x, (int)focus.z);
             // No keep yet: start on land where a keep may be built (the game only offers the keep while the camera is over land).
-            if (Player.inst != null && Player.inst.keep == null && !MenuMapMode)
+            if (Player.inst != null && Player.inst.keep == null)
             {
                 var land = NearestStartLand(cursor.Pos);
                 if (land.HasValue) cursor.Set(land.Value.X, land.Value.Z);
@@ -347,7 +347,16 @@ namespace KCAccess.Game
             if (KInput.Plain(KeyCode.RightBracket) || KInput.Plain(KeyCode.LeftBracket))
             {
                 var item = scanner.Step(KInput.Down(KeyCode.RightBracket) ? 1 : -1, cursor.Pos);
-                if (item != null) Nav.SetTarget(item.Pos, item.Label);
+                if (item != null)
+                {
+                    Nav.SetTarget(item.Pos, item.Label);
+                    // The cursor does not move: say so the first few times, players expected a jump.
+                    if (targetHints < 3)
+                    {
+                        targetHints++;
+                        A.SayQueued("Target set, the cursor stays here. Backslash jumps there, N walks there.");
+                    }
+                }
                 return true;
             }
             if (KInput.Plain(KeyCode.Backslash))
@@ -716,9 +725,9 @@ namespace KCAccess.Game
             int minX = Mathf.Min(a.X, b.X), maxX = Mathf.Max(a.X, b.X) + 1;
             int minZ = Mathf.Min(a.Z, b.Z), maxZ = Mathf.Max(a.Z, b.Z) + 1;
             minX = Mathf.Clamp(minX, 0, World.inst.GridWidth - 1);
-            maxX = Mathf.Clamp(maxX, 0, World.inst.GridWidth - 1);
+            maxX = Mathf.Clamp(maxX, 0, World.inst.GridWidth); // exclusive bound, like the game's drag
             minZ = Mathf.Clamp(minZ, 0, World.inst.GridHeight - 1);
-            maxZ = Mathf.Clamp(maxZ, 0, World.inst.GridHeight - 1);
+            maxZ = Mathf.Clamp(maxZ, 0, World.inst.GridHeight);
             var mode = ui.currCursorMode;
             mode.HandleDragPrimaryUp(minX, minZ, maxX, maxZ, returnedToOriginal: false);
             A.Cue(Cue.Activate);
@@ -960,6 +969,7 @@ namespace KCAccess.Game
         }
 
         private string lastPlacedName;
+        private int targetHints;
         private bool waitingAgainLastFrame;
 
         private void SpeakValidity(bool always)

@@ -95,6 +95,19 @@ namespace KCAccess.Core
             return sb.ToString();
         }
 
+        /// <summary>True for texts that are only a number or counter ("51", "273/1000", "20%", "+15") with no words.</summary>
+        public static bool IsNumberOnly(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return false;
+            bool digit = false;
+            foreach (char ch in s)
+            {
+                if (char.IsDigit(ch)) digit = true;
+                else if (" /%.,+-:".IndexOf(ch) < 0) return false;
+            }
+            return digit;
+        }
+
         /// <summary>"1 tree", "3 trees". Handles simple English plurals.</summary>
         public static string Plural(int count, string singular, string plural = null)
         {

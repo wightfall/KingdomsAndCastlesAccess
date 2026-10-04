@@ -543,11 +543,13 @@ namespace KCAccess.UI
             }
             A.Cue(Cue.Activate);
             SnapshotTexts();
+            lastClickGroup = s.transform.parent;
             Click(s.gameObject);
             nextRefresh = 0f; // the click may open or close parts of the panel
         }
 
         private HashSet<string> textSnapshot;
+        private Transform lastClickGroup;
         private float changeCheckAt;
 
         /// <summary>Remember the panel's texts so that changes caused by a click can be spoken.</summary>
@@ -574,6 +576,9 @@ namespace KCAccess.UI
                 if (t.GetComponentInParent<Selectable>() is Selectable sel && sel.gameObject == (list.Current != null ? list.Current.Go : null)) continue;
                 string txt = TextUtil.Clean(UIText.TextOf(t));
                 if (txt == Patch_DialogueSubtitle.LastLine || RecentlySpoken(txt)) continue; // already spoken (dialogue hook etc.)
+                // Ticking counters elsewhere in the panel ("51", "273/1000") mean nothing alone; a number next to the
+                // pressed control (the tax rate beside its + / - buttons) is the result of the press and is spoken.
+                if (TextUtil.IsNumberOnly(txt) && !(lastClickGroup != null && t.transform.IsChildOf(lastClickGroup))) continue;
                 if (!before.Contains(txt) && !changed.Contains(txt)) changed.Add(txt);
                 if (changed.Count >= 4) break;
             }
