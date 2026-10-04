@@ -72,6 +72,7 @@ Press **F1** at any time for help about the current screen and **Shift+F1** for 
 | F1 | Help for the current screen |
 | Shift+F1 | Every mod key |
 | Ctrl+Shift+F5 | Search for the screen reader again (if you started it after the game) |
+| Ctrl+Shift+F11 | Keyboard report: what owns the keyboard, held modifiers, keyboard layout (also written to the log) |
 | Ctrl+Shift+M | Sound cues on / off |
 
 ### Menus, dialogs and panels
@@ -200,6 +201,11 @@ build roads out from your keep first (I tells you whether a tile is covered).
    lists happiness, food, fire risk and its residents (Enter on a resident selects the villager).
 8. Save from the pause menu (Escape, Save, Make New Save); "Game saved" confirms it.
 
+### Saved games
+
+On the Load and Save screens, **Delete** on a saved game deletes it. The confirmation starts on
+Cancel; choose "It's toast" to delete. "Save deleted" confirms it.
+
 ## Sound cues
 
 | Sound | Meaning |
@@ -251,6 +257,16 @@ build roads out from your keep first (I tells you whether a tile is covered).
 * **The mouse takes over:** moving the mouse gives control back to the mouse pointer; any cursor key
   returns to keyboard control.
 * Please attach `BepInEx\LogOutput.log` to bug reports.
+
+### Keyboard problems (keys like Escape, Space, 1 2 3 or L do nothing)
+
+* Press **Ctrl+Shift+F11** in the game: it speaks what currently owns the keyboard, which modifier keys
+  the game and Windows think are held, and the keyboard layout, and writes it to `BepInEx\LogOutput.log`.
+* For a detailed report set `LogKeys = true` in `BepInEx\config\kcaccess.screenreader.cfg`, reproduce
+  the problem, then send `BepInEx\LogOutput.log`.
+* Since 1.4.1 the mod ignores Shift / Ctrl / Alt that the game believes are held when Windows says they
+  are not (this happened with NVDA Remote and after Alt+Tab), turns the input method editor off while you
+  are not typing, and frees text fields that grab the keyboard in the background.
 
 ## Building from source
 

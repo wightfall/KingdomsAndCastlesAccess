@@ -84,7 +84,10 @@ namespace KCAccess.UI
                 SetHover(null);
                 list.Clear();
             }
+            bool requested = focusRequest != null;
             Refresh(force: true);
+            // A pending focus request (e.g. "start on Cancel") that matched wins over the default first item.
+            if (requested && focusRequest == null) changed = false;
             if (changed && initialFocus == "")
             {
                 int firstText = 0;
@@ -686,7 +689,23 @@ namespace KCAccess.UI
         {
             editSession = new InputEditSession(s);
             A.Cue(Cue.Open);
-            A.Say("Editing " + UIText.LabelOf(s) + ". " + (editSession.Text.Length > 0 ? editSession.Text : "blank") + ". Type, then press Enter to confirm or Escape to cancel.");
+            string label = UIText.LabelOf(s);
+            if (label.IndexOf("Input Field", StringComparison.OrdinalIgnoreCase) >= 0 || label == "unlabelled") label = "text";
+            A.Say("Editing " + label + ". " + (editSession.Text.Length > 0 ? editSession.Text : "blank") + ". Type, then press Enter to confirm or Escape to cancel.");
+        }
+
+        /// <summary>
+        /// A text field of this screen was focused by the game itself (e.g. the kingdom name "Edit" button):
+        /// take it over as a normal edit so typing is echoed and Enter / Escape work. False if it is not ours.
+        /// </summary>
+        internal bool AdoptFocusedField(Selectable s)
+        {
+            if (s == null || editSession != null || Root == null) return false;
+            bool inside = false;
+            foreach (var r in Roots) if (r != null && s.transform.IsChildOf(r)) inside = true;
+            if (!inside) return false;
+            BeginEdit(s);
+            return true;
         }
 
         internal void EndEdit(bool announce)

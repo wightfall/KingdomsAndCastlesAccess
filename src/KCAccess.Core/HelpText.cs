@@ -11,7 +11,7 @@ namespace KCAccess.Core
             "Home and End jump to the first and last item. Escape goes back. Control R reads the whole screen. F5 repeats the current item.";
 
         public const string GlobalKeys =
-            "Global keys: F1 help for the current screen. Shift F1 lists every mod key. Control Shift F5 searches again for your screen reader. Control Shift M mutes or unmutes sound cues.";
+            "Global keys: F1 help for the current screen. Shift F1 lists every mod key. Control Shift F5 searches again for your screen reader. Control Shift M mutes or unmutes sound cues. Control Shift F11 reports the keyboard state for bug reports.";
 
         private static readonly Dictionary<string, string> Screens = new Dictionary<string, string>
         {

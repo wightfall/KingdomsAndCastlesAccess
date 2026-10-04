@@ -77,14 +77,30 @@ namespace KCAccess
 
         internal static bool ModifiersMatch(KeyChord k)
         {
-            bool ctrl = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
-            bool alt = Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt);
-            bool shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+            bool ctrl = Modifiers.Ctrl;
+            bool alt = Modifiers.Alt;
+            bool shift = Modifiers.Shift;
             bool ok = true;
             if (k.key != KeyCode.LeftControl && k.key != KeyCode.RightControl) ok &= ctrl == k.ctrl;
             if (k.key != KeyCode.LeftAlt && k.key != KeyCode.RightAlt) ok &= alt == k.alt;
             if (k.key != KeyCode.LeftShift && k.key != KeyCode.RightShift) ok &= shift == k.shift;
             return ok;
+        }
+    }
+
+    /// <summary>Held bindings (camera keys) use the same modifier check, with the stuck-key protection.</summary>
+    [HarmonyPatch(typeof(KeyChord), nameof(KeyChord.GetKey), new[] { typeof(bool), typeof(bool), typeof(bool) })]
+    internal static class Patch_KeyChordHeld
+    {
+        private static bool Prefix(ref KeyChord __instance, bool ignoreCtrl, bool ignoreAlt, bool ignoreShift, ref bool __result)
+        {
+            var k = __instance;
+            bool ok = Input.GetKey(k.key);
+            if (ok && k.key != KeyCode.LeftControl && k.key != KeyCode.RightControl && !ignoreCtrl) ok = Modifiers.Ctrl == k.ctrl;
+            if (ok && k.key != KeyCode.LeftAlt && k.key != KeyCode.RightAlt && !ignoreAlt) ok = Modifiers.Alt == k.alt;
+            if (ok && k.key != KeyCode.LeftShift && k.key != KeyCode.RightShift && !ignoreShift) ok = Modifiers.Shift == k.shift;
+            __result = ok;
+            return false;
         }
     }
 

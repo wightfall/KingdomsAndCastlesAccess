@@ -54,6 +54,7 @@ namespace KCAccess
             tickedFrame = Time.frameCount;
             KInput.BeginFrame();
             Diagnostics.PollCommands();
+            if (Plugin.CfgLogKeys.Value) Diagnostics.LogKeys();
             try
             {
                 Tick();
@@ -74,6 +75,7 @@ namespace KCAccess
             }
             if (GlobalKeys()) return;
             if (GameState.inst == null || World.inst == null) return;
+            KeyboardGuard.Tick(Nav, modal == null && panel == null && ActiveMenu == null);
 
             bool playing = GameState.inst.IsPlayMode();
             if (playing != wasPlaying)
@@ -369,6 +371,13 @@ namespace KCAccess
                 KInput.Consume(KeyCode.F1);
                 if (KInput.Shift) A.Say(HelpText.AllKeys(), force: true);
                 else A.Say(ContextHelp(), force: true);
+                return true;
+            }
+            if (KInput.Down(KeyCode.F11) && KInput.Ctrl && KInput.Shift)
+            {
+                string report = Diagnostics.KeyboardReport();
+                Plugin.Log.LogInfo("[report] " + report);
+                A.Say(report + ". Written to the BepInEx log.", force: true);
                 return true;
             }
             if (KInput.Down(KeyCode.F5) && KInput.Ctrl && KInput.Shift)

@@ -48,11 +48,11 @@ namespace KCAccess
 
         internal static bool Held(KeyCode key) => Input.GetKey(key);
 
-        internal static bool Shift => Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift) || (current.HasValue && current.Value.Shift);
+        internal static bool Shift => Modifiers.Shift || (current.HasValue && current.Value.Shift);
 
-        internal static bool Ctrl => Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) || (current.HasValue && current.Value.Ctrl);
+        internal static bool Ctrl => Modifiers.Ctrl || (current.HasValue && current.Value.Ctrl);
 
-        internal static bool Alt => Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt) || (current.HasValue && current.Value.Alt);
+        internal static bool Alt => Modifiers.Alt || (current.HasValue && current.Value.Alt);
 
         internal static bool NoMods => !Shift && !Ctrl && !Alt;
 

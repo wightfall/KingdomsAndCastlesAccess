@@ -183,3 +183,17 @@ namespace KCAccess
         }
     }
 }
+
+namespace KCAccess
+{
+    /// <summary>Deleting a save removes its slot silently; confirm it.</summary>
+    [HarmonyPatch(typeof(LoadSave), nameof(LoadSave.Delete))]
+    internal static class Patch_DeleteSave
+    {
+        private static void Postfix()
+        {
+            A.Cue(KCAccess.Core.Cue.Close);
+            A.SayQueued("Save deleted");
+        }
+    }
+}

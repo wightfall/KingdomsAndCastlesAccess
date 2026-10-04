@@ -18,6 +18,40 @@ namespace KCAccess
 
         internal static string CommandPath => Path.Combine(Paths.BepInExRootPath, "kcaccess_commands.txt");
 
+        private static readonly KeyCode[] AllKeys = (KeyCode[])Enum.GetValues(typeof(KeyCode));
+
+        /// <summary>LogKeys option: one log line per key pressed this frame.</summary>
+        internal static void LogKeys()
+        {
+            if (!Input.anyKeyDown) return;
+            foreach (var k in AllKeys)
+            {
+                if (k == KeyCode.None || k >= KeyCode.Mouse0) continue;
+                if (Input.GetKeyDown(k))
+                    Plugin.Log.LogInfo("[key] " + k + " | " + Modifiers.Describe() + " | focused=" + Application.isFocused + " | " + StateLine());
+            }
+        }
+
+        private static string StateLine()
+        {
+            var ac = AccessController.Inst;
+            var gs = GameState.inst;
+            return "mode=" + (gs != null && gs.CurrMode != null ? gs.CurrMode.GetType().Name : "none")
+                + " screen=" + (ac != null && ac.CurrentScreen != null ? ac.CurrentScreen.Id : "none")
+                + " menu=" + (ac != null && ac.ActiveMenu != null ? ac.ActiveMenu.GetType().Name : "none")
+                + " panel=" + (ac != null && ac.PanelFocus)
+                + " blockGameKeys=" + InputGate.BlockGameKeys;
+        }
+
+        /// <summary>Ctrl+Shift+F11: what the mod thinks owns the keyboard, for bug reports.</summary>
+        internal static string KeyboardReport()
+        {
+            var os = Environment.OSVersion.Version;
+            string win = os.Major == 10 && os.Build >= 22000 ? "Windows 11" : "Windows " + os.Major + "." + os.Minor;
+            return "KCAccess " + Plugin.Version + ", " + win + " build " + os.Build + ". " + StateLine() + ". " + Modifiers.Describe()
+                + ". Keyboard layout " + Modifiers.KeyboardLayout() + ", language " + System.Globalization.CultureInfo.CurrentCulture.Name;
+        }
+
         internal static void DumpUI(bool activeOnly)
         {
             var sb = new StringBuilder();
@@ -103,6 +137,10 @@ namespace KCAccess
                             var key = (KeyCode)Enum.Parse(typeof(KeyCode), parts[1], true);
                             bool shift = Array.IndexOf(parts, "shift") > 0, ctrl = Array.IndexOf(parts, "ctrl") > 0, alt = Array.IndexOf(parts, "alt") > 0;
                             KInput.Inject(key, shift, ctrl, alt);
+                            break;
+                        case "logkeys":
+                            Plugin.CfgLogKeys.Value = !Plugin.CfgLogKeys.Value;
+                            Plugin.Log.LogInfo("[dbg] LogKeys " + Plugin.CfgLogKeys.Value);
                             break;
                         case "dump":
                             DumpUI(true);

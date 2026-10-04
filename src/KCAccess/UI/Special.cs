@@ -238,6 +238,9 @@ namespace KCAccess.UI
                 if (btn != null) return go.transform != btn.transform && !btn.transform.IsChildOf(go.transform);
                 return go.transform != rrow.GetChild(0);
             }
+            // Save slots: the small delete button is reached with the Delete key on the slot instead.
+            var saveSlot = go.GetComponentInParent<Assets.Code.UI.SaveLoadOption>();
+            if (saveSlot != null && saveSlot.deleteButton != null && (go.transform == saveSlot.deleteButton.transform || go.transform.IsChildOf(saveSlot.deleteButton.transform))) return true;
             // Villager lists: the camera-only "find everyone" glass, and names already spoken by each row's button.
             if (go.name == "FindVillagersButton" && go.GetComponentInParent<VillagerListUI>() != null) return true;
             var person = go.GetComponentInParent<PersonListItemUI>();
@@ -305,6 +308,14 @@ namespace KCAccess.UI
                 if (item.Control == rival.enableButton) return "Add AI kingdom, slot " + slot + ", button";
                 if (item.Control == rival.removeButton) return "Remove AI kingdom " + (rivalName ?? string.Empty) + ", slot " + slot + ", button";
                 if (item.Control == rival.personalityDropdown) return "AI kingdom " + rivalName + " skill level, combo box, " + UIText.ValueOf(rival.personalityDropdown);
+            }
+            if (item.IsControl && item.Go.GetComponentInParent<Assets.Code.UI.Confirmation>() is Assets.Code.UI.Confirmation conf
+                && conf.GetComponentInParent<Assets.Code.UI.SaveLoadUI>() != null && conf.yesButton != null && item.Control == conf.yesButton)
+            {
+                // Save screen confirmations: say what "yes" does ("It's toast" = delete, or overwrite / load).
+                string yes = UIText.LabelOf(conf.yesButton);
+                string title = TextUtil.Clean(UIText.JoinTexts(UIText.VisibleTexts(conf.transform))).ToLowerInvariant();
+                if (title.Contains("delete")) return yes + ", yes, delete the save, button";
             }
             if (item.IsControl && item.Go.GetComponentInParent<DemolishWarningUI>() != null)
             {
@@ -390,6 +401,32 @@ namespace KCAccess.UI
         internal static bool HandleKey(UINavigator nav, UIItem item)
         {
             if (item == null || item.Go == null) return false;
+            if (KInput.Plain(KeyCode.Delete))
+            {
+                // Save / load slots: Delete removes the save (the game asks for confirmation).
+                var slot = item.Go.GetComponentInParent<Assets.Code.UI.SaveLoadOption>();
+                if (slot != null)
+                {
+                    KInput.Consume(KeyCode.Delete);
+                    if (slot.deleteButton != null && slot.deleteButton.gameObject.activeInHierarchy && slot.deleteButton.interactable)
+                    {
+                        A.Cue(Cue.Activate);
+                        UINavigator.Click(slot.deleteButton.gameObject);
+                        // Start the confirmation on the safe answer.
+                        AccessController.Inst.Nav.RequestFocus(g =>
+                        {
+                            var c = g.GetComponentInParent<Assets.Code.UI.Confirmation>();
+                            return c != null && c.noButton != null && g == c.noButton.gameObject;
+                        });
+                    }
+                    else
+                    {
+                        A.Cue(Cue.Error);
+                        A.Say("This entry cannot be deleted");
+                    }
+                    return true;
+                }
+            }
             var keyBtn = item.IsControl ? item.Go.GetComponentInParent<KeyButton>() : null;
             if (IsKeyRow(keyBtn) && (KInput.Plain(KeyCode.Return) || KInput.Plain(KeyCode.Space) || KInput.Plain(KeyCode.KeypadEnter)))
             {
@@ -504,6 +541,8 @@ namespace KCAccess.UI
             if (item == null || item.Go == null) return null;
             if (item.Go.GetComponentInParent<ResourceLineItemUI>() != null)
                 return "On a trade line: Left and Right change the amount by 1, Page Up and Page Down by 10, Enter lets you type an amount. Then choose the complete transaction button.";
+            if (item.Go.GetComponentInParent<Assets.Code.UI.SaveLoadOption>() != null)
+                return "On a saved game: Enter loads or overwrites it, Delete deletes it after a confirmation.";
             if (RowFor(item.Go) != null)
                 return "On a job row: Space toggles the job on or off, Shift Up and Shift Down change its priority, Left and Right change how many workers are allowed.";
             return null;
