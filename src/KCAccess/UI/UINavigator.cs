@@ -445,6 +445,43 @@ namespace KCAccess.UI
             A.Say(desc);
         }
 
+        /// <summary>What this screen contains, so F1 names only the keys that work here.</summary>
+        internal ScreenFeatures Features(bool inPanel, bool playing)
+        {
+            Refresh(force: true);
+            var f = new ScreenFeatures { Items = list.Count, TypeAhead = TypeAheadEnabled, InPanel = inPanel, Playing = playing };
+            foreach (var item in list.Items)
+            {
+                if (item.Go != null && item.Go.GetComponentInParent<Assets.Code.UI.SaveLoadOption>() != null) f.SaveSlots = true;
+                if (!item.IsControl)
+                {
+                    f.Texts = true;
+                    continue;
+                }
+                f.Controls = true;
+                switch (item.Control)
+                {
+                    case Slider sl when !UIText.IsReadOnlySlider(sl):
+                        f.Adjustables = true;
+                        f.Sliders = true;
+                        break;
+                    case Scrollbar _:
+                    case Dropdown _:
+                    case TMP_Dropdown _:
+                        f.Adjustables = true;
+                        break;
+                    case Toggle t when t.group != null:
+                        f.Adjustables = true;
+                        break;
+                    case InputField _:
+                    case TMP_InputField _:
+                        f.TextFields = true;
+                        break;
+                }
+            }
+            return f;
+        }
+
         /// <summary>Speak the current item again.</summary>
         public void SpeakCurrent()
         {

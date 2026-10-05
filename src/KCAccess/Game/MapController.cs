@@ -38,6 +38,27 @@ namespace KCAccess.Game
 
         internal string HelpId => IsPlacing ? "Placement" : "Map";
 
+        /// <summary>What is going on on the map right now, for F1.</summary>
+        internal MapState State()
+        {
+            var ui = GameUI.inst;
+            var st = new MapState { MenuMap = MenuMapMode, Walking = Nav.Walking, HasTarget = Nav.Target.HasValue };
+            if (ui == null || MenuMapMode) return st;
+            st.HasKeep = Player.inst != null && Player.inst.keep != null;
+            st.Placing = IsPlacing;
+            if (st.Placing)
+            {
+                var hover = ui.CurrPlacementMode.GetHoverBuilding();
+                st.LinePlacement = hover != null && hover.dragPlacementMode != Building.DragPlacementMode.None;
+            }
+            st.CursorMode = ui.currCursorMode != null && ui.currCursorMode != ui.consoleCursorMode;
+            st.Brush = ui.brushMode != GameUI.CursorBrushes.None;
+            st.BuildingSelected = ui.GetBuildingSelected() != null;
+            st.HasSelection = st.BuildingSelected || ui.GetCellSelected() != null;
+            st.SoldiersSelected = ui.IsUnitSelected();
+            return st;
+        }
+
         private static bool IsPlacing => GameUI.inst != null && GameUI.inst.CurrPlacementMode != null && GameUI.inst.CurrPlacementMode.IsPlacing();
 
         internal Cell CurrentCell => World.inst.GetCellData(cursor.Pos.X, cursor.Pos.Z);
@@ -1058,7 +1079,7 @@ namespace KCAccess.Game
 
             // Escape (game key) clears the selection: say so, since nothing visible tells a blind player.
             bool hasSelection = ui.GetBuildingSelected() != null || ui.GetCellSelected() != null || ui.IsUnitSelected() || (ui.personUI != null && ui.personUI.Visible);
-            if (hadSelection && !hasSelection && !placing && Time.unscaledTime - placedSayTime > 0.5f) A.Say("Selection cleared");
+            if (hadSelection && !hasSelection && !placing && Time.unscaledTime - placedSayTime > 0.5f && Time.unscaledTime - Patch_Demolish.LastDemolishTime > 1f) A.Say("Selection cleared");
             hadSelection = hasSelection;
 
             if (ui.brushMode != lastBrush)

@@ -153,3 +153,23 @@ namespace KCAccess
         }
     }
 }
+
+namespace KCAccess
+{
+    /// <summary>
+    /// In the pause and settings menus the game reads Escape straight from Unity (resume / revert settings), so
+    /// an Escape the mod already used (closing the key list, cancelling a text edit) also triggered the game.
+    /// </summary>
+    [HarmonyPatch(typeof(Assets.Code.KeyboardControl), "UpdateMainMenuKeys")]
+    internal static class Patch_MainMenuEscape
+    {
+        private static bool Prefix()
+        {
+            if (!Plugin.Loaded) return true;
+            AccessController.Inst?.EnsureTick();
+            if (KInput.IsConsumed(KeyCode.Escape)) return false;
+            if (AccessController.Inst != null && (AccessController.Inst.ActiveMenu != null || AccessController.Inst.Nav.IsEditing)) return false;
+            return true;
+        }
+    }
+}

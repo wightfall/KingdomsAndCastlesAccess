@@ -63,14 +63,14 @@ Run KCAccess-Updater.exe and choose **Uninstall**, or delete `BepInEx\plugins\KC
 
 ## Keys
 
-Press **F1** at any time for help about the current screen and **Shift+F1** for this whole list.
+Press **F1** at any time for help about the current screen: what it is and only the keys that work there right now (for example, Left and Right are only mentioned when the screen has sliders or option lists, Delete only when a building is selected). **Shift+F1** opens the key list: every key, one line at a time, grouped, with previews of every sound cue at the end.
 
 ### Everywhere
 
 | Key | Action |
 |-----|--------|
-| F1 | Help for the current screen |
-| Shift+F1 | Every mod key |
+| F1 | Help for the current screen, naming only the keys that work there |
+| Shift+F1 | Key list: Up / Down read one key at a time, Page Up / Page Down jump between groups, Enter on a sound plays it, Escape closes |
 | Ctrl+Shift+F5 | Search for the screen reader again (if you started it after the game) |
 | Ctrl+Shift+F10 | Reset the mod if it ever stops speaking or responding (no need to quit the game) |
 | Ctrl+Shift+F11 | Keyboard report: what owns the keyboard, held modifiers, keyboard layout (also written to the log) |
@@ -135,6 +135,11 @@ mouse drag), Left / Right change how many workers are allowed.
 | Any arrow / Escape | Stop an auto-walk |
 | V | While placing: why the spot is (in)valid |
 | M | Send the selected soldiers to the cursor |
+
+**Demolishing:** select a building and press Delete (or the panel's Demolish button), or turn on
+demolish mode in the toolbar (F6) and mark an area with Shift+Enter and Enter. The mod says what was
+demolished ("Demolished Road, 2 pieces"), or that a building such as the keep cannot be demolished.
+More than 25 buildings at once ask for confirmation.
 
 The game's own keys keep working: **Space** pause, **1 2 3** speed, **R** rotate while placing,
 **Delete** demolish the selected building, **C** chop trees on the selected tile, **J** job priority,
@@ -208,6 +213,8 @@ On the Load and Save screens, **Delete** on a saved game deletes it. The confirm
 Cancel; choose "It's toast" to delete. "Save deleted" confirms it.
 
 ## Sound cues
+
+Every sound can be previewed: Shift+F1, End, then Up through the sounds and press Enter.
 
 | Sound | Meaning |
 |-------|---------|

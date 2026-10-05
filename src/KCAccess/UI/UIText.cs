@@ -404,7 +404,8 @@ namespace KCAccess.UI
 
         /// <summary>A slider without a visible handle (opinion, health, busy timers) is just a progress bar.</summary>
         internal static bool IsReadOnlySlider(Slider sl) =>
-            !sl.interactable || sl.handleRect == null || !sl.handleRect.gameObject.activeInHierarchy;
+            !sl.interactable || sl.handleRect == null || !sl.handleRect.gameObject.activeInHierarchy
+            || sl.GetComponentInParent<HealthBarUI>() != null; // building health is shown with a slider but is display only
 
         internal static string RoleOf(Selectable s)
         {

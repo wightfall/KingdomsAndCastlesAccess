@@ -197,3 +197,62 @@ namespace KCAccess
         }
     }
 }
+
+namespace KCAccess
+{
+    /// <summary>Demolishing (Delete key, the panel's Demolish button, demolish mode) happened silently.</summary>
+    [HarmonyPatch(typeof(World), nameof(World.DemolishBuildingByPlayer))]
+    internal static class Patch_Demolish
+    {
+        private static readonly List<string> demolished = new List<string>();
+        private static int frame = -1;
+        internal static float LastDemolishTime = -10f;
+
+        private static void Prefix(Building building, out string __state)
+        {
+            __state = null;
+            if (building == null) return;
+            try
+            {
+                if (!World.inst.CanDemoBuilding(building))
+                {
+                    A.Cue(KCAccess.Core.Cue.Error);
+                    A.Say(building.FriendlyName + " cannot be demolished", force: true);
+                    return;
+                }
+                __state = building.FriendlyName;
+            }
+            catch
+            {
+                // announcement only
+            }
+        }
+
+        private static void Postfix(string __state)
+        {
+            if (__state == null) return;
+            demolished.Add(__state);
+            frame = Time.frameCount;
+            LastDemolishTime = Time.unscaledTime;
+        }
+
+        /// <summary>Called every frame: one announcement for everything demolished together (area demolish).</summary>
+        internal static void Flush()
+        {
+            if (demolished.Count == 0 || Time.frameCount == frame) return;
+            A.Cue(KCAccess.Core.Cue.Close);
+            // "Demolished Road, 2 pieces, Farm"
+            var counts = new Dictionary<string, int>();
+            var order = new List<string>();
+            foreach (var n in demolished)
+            {
+                if (!counts.ContainsKey(n)) { counts[n] = 0; order.Add(n); }
+                counts[n]++;
+            }
+            var parts = new List<string>();
+            foreach (var n in order) parts.Add(counts[n] > 1 ? n + ", " + counts[n] + " pieces" : n);
+            A.Say("Demolished " + string.Join("; ", parts.ToArray()), force: true);
+            demolished.Clear();
+        }
+    }
+}

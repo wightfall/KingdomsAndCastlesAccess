@@ -71,6 +71,7 @@ namespace KCAccess
         private void Tick()
         {
             if (SteamOverlay.Active) return; // the Steam overlay has the keyboard; keys are not meant for the game
+            Patch_Demolish.Flush();
             if (Special.CapturingKey)
             {
                 InputGate.BlockGameKeys = true;
@@ -404,7 +405,14 @@ namespace KCAccess
             if (KInput.Down(KeyCode.F1) && !KInput.Ctrl && !KInput.Alt)
             {
                 KInput.Consume(KeyCode.F1);
-                if (KInput.Shift) A.Say(HelpText.AllKeys(), force: true);
+                if (KInput.Shift)
+                {
+                    if (!(ActiveMenu is Game.KeysMenu))
+                    {
+                        bool onMap = modal == null && panel == null && ActiveMenu == null && GameState.inst != null && GameState.inst.IsPlayMode();
+                        ActiveMenu = new Game.KeysMenu(onMap);
+                    }
+                }
                 else A.Say(ContextHelp(), force: true);
                 return true;
             }
@@ -438,12 +446,18 @@ namespace KCAccess
         private string ContextHelp()
         {
             if (ActiveMenu != null) return HelpText.For(ActiveMenu.HelpId);
+            bool playing = GameState.inst != null && GameState.inst.IsPlayMode();
             if (modal != null && !Game.MapController.Inst.MenuMapMode)
             {
                 string id = HelpText.Has(modal.Id) ? modal.Id : "Dialog";
-                return TextUtil.Sentences(modal.Title, HelpText.For(id), Special.Help(Nav.Current));
+                string desc = HelpText.For(id);
+                string title = desc.StartsWith(modal.Title ?? " ") ? null : modal.Title; // "Settings. Settings." otherwise
+                var features = Nav.Features(false, playing);
+                features.CanGoBack = modal.Id != "Menu";
+                return TextUtil.Sentences(title, desc, Special.Help(Nav.Current), KeyHelp.NavKeys(features));
             }
-            if (panel != null) return TextUtil.Sentences(panel.Title, HelpText.For("Panel"), Special.Help(Nav.Current));
+            if (panel != null) return TextUtil.Sentences(panel.Title, HelpText.For("Panel"), Special.Help(Nav.Current), KeyHelp.NavKeys(Nav.Features(true, playing)));
+            if (playing || Game.MapController.Inst.MenuMapMode) return KeyHelp.MapHelp(Game.MapController.Inst.State());
             return HelpText.For(helpId);
         }
     }

@@ -102,7 +102,7 @@ namespace KCAccess.Tests
         public void KnownScreensHaveHelp(string id)
         {
             Assert.True(HelpText.Has(id));
-            Assert.True(HelpText.For(id).Length > 40);
+            Assert.True(HelpText.For(id).Length > 15);
         }
 
         [Fact]

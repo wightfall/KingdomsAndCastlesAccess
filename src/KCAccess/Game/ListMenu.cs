@@ -65,9 +65,12 @@ namespace KCAccess.Game
             if (announce)
             {
                 A.Cue(Cue.Close);
-                MapController.Inst.OnReturnToMap();
+                OnClosed();
             }
         }
+
+        /// <summary>Spoken after closing; menus opened outside the map override it.</summary>
+        protected virtual void OnClosed() => MapController.Inst.OnReturnToMap();
 
         public void HandleInput()
         {
