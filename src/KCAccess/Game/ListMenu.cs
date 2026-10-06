@@ -129,7 +129,7 @@ namespace KCAccess.Game
                 return;
             }
             A.Cue(r == NavResult.HitEdge ? Cue.Edge : Cue.Navigate);
-            A.Say(List.CurrentLabel);
+            A.Say(List.CurrentLabel + (Plugin.CfgPositions.Value && List.Count > 1 ? ", " + List.PositionText : string.Empty));
         }
     }
 }

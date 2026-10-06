@@ -110,14 +110,33 @@ namespace KCAccess.Game
             var ui = GameUI.inst;
             try
             {
-                if (ui.vikingNotification != null && ui.vikingNotification.Content.activeInHierarchy)
-                    parts.Add("Vikings: " + TextUtil.Join(", ", ui.vikingNotification.vikingCountText.text, ui.vikingNotification.vikingYearCountdownText.text));
                 if (ui.dragonNotification != null && ui.dragonNotification.Content != null && ui.dragonNotification.Content.activeInHierarchy)
                     parts.Add("Dragons active");
             }
             catch
             {
                 // Notification layout differs between versions.
+            }
+            try
+            {
+                // The game shows these as on-screen timers (Settings: Show Viking and Dragon Timers).
+                if (Player.inst.difficulty != 0 && RaiderSystem.inst != null && RaiderSystem.inst.AllowSpawningVikings())
+                {
+                    if (RaiderSystem.inst.IsRaidInProgress())
+                    {
+                        int vikings = 0;
+                        var units = RaiderSystem.inst.unitData;
+                        for (int i = 0; i < units.Count; i++) if (units[i].unit != null && !units[i].unit.IsBeingCarried()) vikings++;
+                        parts.Add("Viking raid in progress, " + TextUtil.Plural(vikings, "viking") + " left");
+                    }
+                    else parts.Add("Next viking raid in " + TextUtil.Plural(RaiderSystem.inst.yearsUntilNextAttack + 1, "year"));
+                }
+                if (Player.inst.difficulty != 0 && DragonSpawn.inst != null && DragonSpawn.inst.AllowSpawning())
+                    parts.Add("Next dragon attack in " + TextUtil.Plural(DragonSpawn.inst.yearsUntilNextAttack + 1, "year"));
+            }
+            catch
+            {
+                // timers are optional
             }
             int enemies = 0;
             var armies = UnitSystem.inst.armies;

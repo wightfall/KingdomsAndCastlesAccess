@@ -19,6 +19,7 @@ namespace KCAccess.Game
             public Action Enter;
             public Action<int> Adjust;
             public Action Delete;
+            public bool IsHeader;
         }
 
         private readonly bool fromMap;
@@ -36,7 +37,7 @@ namespace KCAccess.Game
 
         public override string HelpId => "ModSettings";
 
-        protected override string Title => "Mod settings. Up and Down move, Enter or Space toggles, Left and Right change values, Enter on a key changes it, Escape closes";
+        protected override string Title => "Mod settings. Up and Down move, Page Up and Page Down jump between groups, Enter or Space toggles, Left and Right change values, Enter on a key changes it, Escape closes";
 
         // ------------------------------------------------------------------ building the list
 
@@ -49,6 +50,7 @@ namespace KCAccess.Game
             Toggle("Detailed tile descriptions while moving (fertility and road coverage)", Plugin.CfgVerboseCells);
             Toggle("Speak cursor coordinates after each tile", Plugin.CfgCoordinates);
             Toggle("Hints for new players", Plugin.CfgHints);
+            Toggle("Say the position in menus and lists, for example 3 of 19", Plugin.CfgPositions);
             Header("Sound");
             Toggle("Sound cues", Plugin.CfgCues);
             Number(() => "Sound cue volume: " + Mathf.RoundToInt(Plugin.CfgCueVolume.Value * 100) + " percent",
@@ -87,7 +89,7 @@ namespace KCAccess.Game
             Add(() => st.Label(), st.Enter);
         }
 
-        private void Header(string text) => Add(new Setting { Label = () => text });
+        private void Header(string text) => Add(new Setting { Label = () => text, IsHeader = true });
 
         private void Toggle(string name, ConfigEntry<bool> entry)
         {
@@ -132,6 +134,21 @@ namespace KCAccess.Game
 
         protected override bool HandleExtraKeys()
         {
+            if (KInput.Plain(KeyCode.PageDown) || KInput.Plain(KeyCode.PageUp))
+            {
+                // Jump between the groups (Speech, Sound, Map, Keyboard, Mod keys, Reset), like the Shift+F1 list.
+                int dir = KInput.Down(KeyCode.PageDown) ? 1 : -1;
+                for (int i = List.Index + dir; i >= 0 && i < settings.Count; i += dir)
+                {
+                    if (!settings[i].IsHeader) continue;
+                    List.SelectIndex(i);
+                    Speak(NavResult.Moved);
+                    return true;
+                }
+                A.Cue(Cue.Edge);
+                A.Say(dir > 0 ? "No more groups, this is the last" : "No more groups, this is the first");
+                return true;
+            }
             var cur = Current;
             if (cur == null) return false;
             if (KInput.Plain(KeyCode.Space) && cur.Enter != null && cur.Adjust == null && cur.Delete == null)

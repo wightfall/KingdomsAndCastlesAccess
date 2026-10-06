@@ -442,6 +442,7 @@ namespace KCAccess.UI
             string tip = cur.IsControl ? UIText.TooltipOf(cur.Go) : null;
             string desc = Describe(cur);
             if (tip != null && !desc.Contains(tip)) desc = TextUtil.Sentences(desc, tip);
+            if (Plugin.CfgPositions.Value && list.Count > 1) desc += ", " + list.PositionText;
             A.Say(desc);
         }
 

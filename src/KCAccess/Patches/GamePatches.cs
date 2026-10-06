@@ -315,3 +315,34 @@ namespace KCAccess
         private static void Postfix(Envoy envoy) => EnvoyWatch.OnArrived(envoy);
     }
 }
+
+namespace KCAccess
+{
+    /// <summary>Kingdom share (tourism) messages and share codes pop up over the screen without taking focus.</summary>
+    [HarmonyPatch]
+    internal static class Patch_TourismPopup
+    {
+        private static IEnumerable<System.Reflection.MethodBase> TargetMethods()
+        {
+            foreach (var m in AccessTools.GetDeclaredMethods(typeof(TourismPopup)))
+                if (m.Name == nameof(TourismPopup.Show)) yield return m;
+        }
+
+        private static void Postfix(TourismPopup __instance)
+        {
+            try
+            {
+                string msg = KCAccess.Core.TextUtil.Clean(__instance.msgText != null ? __instance.msgText.text : string.Empty);
+                string code = __instance.codeObj != null && __instance.codeObj.activeSelf && __instance.codeText != null ? __instance.codeText.text : null;
+                A.Cue(KCAccess.Core.Cue.Open);
+                A.Say(msg + (string.IsNullOrEmpty(code) ? string.Empty : ". Code: " + code), force: true);
+                var ok = __instance.okayButton;
+                if (ok != null) AccessController.Inst.Nav.RequestFocus(g => g == ok.gameObject);
+            }
+            catch
+            {
+                // announcement only
+            }
+        }
+    }
+}

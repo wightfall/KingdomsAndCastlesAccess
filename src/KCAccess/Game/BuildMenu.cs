@@ -179,7 +179,7 @@ namespace KCAccess.Game
             }
             A.Cue(r == NavResult.HitEdge ? Cue.Edge : Cue.Navigate);
             lastIndex[CurrentTab.title] = items.Index;
-            A.Say(Describe(items.Current, brief: true));
+            A.Say(Describe(items.Current, brief: true) + (Plugin.CfgPositions.Value && items.Count > 1 ? ", " + items.PositionText : string.Empty));
         }
 
         private static bool IsSubMenuEntry(BuildingCostUpdater b, out string tab)

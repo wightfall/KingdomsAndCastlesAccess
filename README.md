@@ -117,7 +117,7 @@ mouse drag), Left / Right change how many workers are allowed.
 | Shift+C | Chop trees mode on / off (Shift+Enter one corner, Enter the other) |
 | B | Build menu |
 | F6 / Shift+F6 | Move into the open panels: selected building or tile → kingdom overview (population, happiness, tax buttons, resources) → toolbar (speed, chop / demolish / rebuild modes, menu). F6 at the end, or Escape, returns to the map |
-| K | Kingdom status list (Enter on a line reads the game's detailed report) |
+| K | Kingdom status list, including years until the next viking raid and dragon attack (Enter on a line reads the game's detailed report) |
 | T | Year, season, weather and game speed |
 | L | Notification history; Enter jumps to where it happened, Shift+Enter makes it the navigation target |
 | Shift+L | Repeat the last notification |
@@ -216,10 +216,12 @@ Cancel; choose "It's toast" to delete. "Save deleted" confirms it.
 
 ## Mod settings (Ctrl+Shift+O)
 
-Everything about the mod can be changed in the game, from any screen:
+Everything about the mod can be changed in the game, from any screen. Up and Down move, Page Up and
+Page Down jump between the groups (you hear when you reach the first or last group):
 
 * **Speech:** announce notifications, announce seasons and new years, detailed tile descriptions while
-  moving, speak coordinates after each tile, hints for new players.
+  moving, speak coordinates after each tile, hints for new players, and **say the position in menus
+  and lists** ("Load, 4 of 19"; off by default, F5 always says it).
 * **Sound:** sound cues on or off, sound cue volume (Left / Right in steps of 10 percent; you hear the new
   volume).
 * **Map:** camera follows the cursor, auto-walk speed (slow, normal, fast).
