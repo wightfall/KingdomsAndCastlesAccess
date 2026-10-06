@@ -127,9 +127,10 @@ namespace KCAccess.Speech
         /// <summary>Re-detect the screen reader (e.g. after the user starts NVDA while the game runs).</summary>
         public bool Redetect()
         {
-            if (ctx == IntPtr.Zero) return false;
             try
             {
+                if (ctx == IntPtr.Zero) ctx = prism_init(IntPtr.Zero); // connection was closed: open it again
+                if (ctx == IntPtr.Zero) return false;
                 return CreateBackend(preferSapi: false);
             }
             catch (Exception e)

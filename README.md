@@ -72,7 +72,7 @@ Press **F1** at any time for help about the current screen: what it is and only 
 | F1 | Help for the current screen, naming only the keys that work there |
 | Shift+F1 | Key list: Up / Down read one key at a time, Page Up / Page Down jump between groups, Enter on a sound plays it, Escape closes |
 | Ctrl+Shift+F5 | Search for the screen reader again (if you started it after the game) |
-| Ctrl+Shift+F10 | Reset the mod if it ever stops speaking or responding (no need to quit the game) |
+| Ctrl+Shift+F10 | Reset the mod and reconnect the screen reader if it ever stops speaking or responding (no need to quit the game) |
 | Ctrl+Shift+F11 | Keyboard report: what owns the keyboard, held modifiers, keyboard layout (also written to the log) |
 | Ctrl+Shift+M | Sound cues on / off |
 

@@ -41,7 +41,9 @@ namespace KCAccess
 
         private int tickedFrame = -1;
 
-        private void OnApplicationQuit() => Plugin.Shutdown();
+        // No speech shutdown in OnApplicationQuit: the game cancels Alt+F4 there (World.OnApplicationQuit calls
+        // Application.CancelQuit to show its "Exit game" dialog), so closing the screen reader connection left the
+        // mod silent for the rest of the session. The connection ends with the process when the game really exits.
 
         private void Update() => EnsureTick();
 
@@ -210,7 +212,8 @@ namespace KCAccess
         /// </summary>
         private void ResetAccessibility()
         {
-            Plugin.Log.LogInfo("[reset] before: " + Diagnostics.KeyboardReport());
+            Plugin.Log.LogInfo("[reset] before: " + Diagnostics.KeyboardReport() + ", speech: " + A.BackendName);
+            if (A.BackendName == "log only") Plugin.Log.LogInfo("[reset] screen reader reconnected: " + A.Redetect());
             Special.ResetCapture();
             Nav.EndEdit(false);
             ActiveMenu = null;

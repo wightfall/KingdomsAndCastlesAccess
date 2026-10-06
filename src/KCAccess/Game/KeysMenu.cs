@@ -72,6 +72,7 @@ namespace KCAccess.Game
                     }
                 }
                 A.Cue(Cue.Edge);
+                A.Say(dir > 0 ? "No more groups, this is the last" : "No more groups, this is the first");
                 return true;
             }
             return false;

@@ -54,7 +54,7 @@ namespace KCAccess
             var os = Environment.OSVersion.Version;
             string win = os.Major == 10 && os.Build >= 22000 ? "Windows 11" : "Windows " + os.Major + "." + os.Minor;
             return "KCAccess " + Plugin.Version + ", " + win + " build " + os.Build + ". " + StateLine() + ". " + Modifiers.Describe()
-                + ". Keyboard layout " + Modifiers.KeyboardLayout() + ", language " + System.Globalization.CultureInfo.CurrentCulture.Name;
+                + ". Speech: " + A.BackendName + ". Keyboard layout " + Modifiers.KeyboardLayout() + ", language " + System.Globalization.CultureInfo.CurrentCulture.Name;
         }
 
         internal static void DumpUI(bool activeOnly)
