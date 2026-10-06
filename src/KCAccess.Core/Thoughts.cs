@@ -10,22 +10,22 @@ namespace KCAccess.Core
     {
         private static readonly Dictionary<string, string> Meanings = new Dictionary<string, string>
         {
-            { "House", "homeless" },
-            { "Food", "hungry" },
-            { "FoodCritical", "starving" },
-            { "Plague", "sick with plague" },
-            { "PlagueCritical", "badly sick with plague" },
-            { "Wage", "wages not paid" },
-            { "WageCritical", "wages not paid for a long time, soldiers may desert" },
-            { "GeneralError", "cannot work, select it and read its panel for the reason" },
-            { "Rats", "rats are eating the stored food" },
-            { "DeadBody", "a dead villager waits for burial" },
-            { "DeadBodyWarning", "an unburied body, plague may spread" },
-            { "DeadBodySafe", "a dead villager, safe for now" },
+            { "House", Loc.N("homeless") },
+            { "Food", Loc.N("hungry") },
+            { "FoodCritical", Loc.N("starving") },
+            { "Plague", Loc.N("sick with plague") },
+            { "PlagueCritical", Loc.N("badly sick with plague") },
+            { "Wage", Loc.N("wages not paid") },
+            { "WageCritical", Loc.N("wages not paid for a long time, soldiers may desert") },
+            { "GeneralError", Loc.N("cannot work, select it and read its panel for the reason") },
+            { "Rats", Loc.N("rats are eating the stored food") },
+            { "DeadBody", Loc.N("a dead villager waits for burial") },
+            { "DeadBodyWarning", Loc.N("an unburied body, plague may spread") },
+            { "DeadBodySafe", Loc.N("a dead villager, safe for now") },
         };
 
         /// <summary>Spoken meaning of a thought, or null for ones that are not a problem (Satisfied).</summary>
-        public static string Meaning(string thought) => thought != null && Meanings.TryGetValue(thought, out var m) ? m : null;
+        public static string Meaning(string thought) => thought != null && Meanings.TryGetValue(thought, out var m) ? Loc.T(m) : null;
 
         /// <summary>Problems urgent enough to announce when they appear.</summary>
         public static bool IsCritical(string thought) =>

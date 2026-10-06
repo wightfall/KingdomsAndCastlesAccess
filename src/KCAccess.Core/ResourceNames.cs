@@ -7,18 +7,18 @@ namespace KCAccess.Core
         {
             switch (enumName)
             {
-                case "Tree": return "wood";
-                case "IronOre": return "iron";
-                case "Armament": return "armaments";
-                case "Wheat": return "wheat";
-                case "Apples": return "apples";
-                case "Fish": return "fish";
-                case "Pork": return "pork";
-                case "Stone": return "stone";
-                case "Gold": return "gold";
-                case "Charcoal": return "charcoal";
-                case "Tools": return "tools";
-                case "DeadVillager": return "bodies";
+                case "Tree": return Loc.T("wood");
+                case "IronOre": return Loc.T("iron");
+                case "Armament": return Loc.T("armaments");
+                case "Wheat": return Loc.T("wheat");
+                case "Apples": return Loc.T("apples");
+                case "Fish": return Loc.T("fish");
+                case "Pork": return Loc.T("pork");
+                case "Stone": return Loc.T("stone");
+                case "Gold": return Loc.T("gold");
+                case "Charcoal": return Loc.T("charcoal");
+                case "Tools": return Loc.T("tools");
+                case "DeadVillager": return Loc.T("bodies");
                 default: return TextUtil.Humanize(enumName ?? string.Empty).ToLowerInvariant();
             }
         }
@@ -31,10 +31,10 @@ namespace KCAccess.Core
             {
                 if (need[i] <= 0) continue;
                 string p = Name(names[i]) + " " + need[i];
-                if (have != null && have[i] < need[i]) p += " (have " + have[i] + ")";
+                if (have != null && have[i] < need[i]) p += " " + Loc.F("(have {0})", have[i]);
                 parts.Add(p);
             }
-            return parts.Count == 0 ? "free" : string.Join(", ", parts.ToArray());
+            return parts.Count == 0 ? Loc.T("free") : string.Join(", ", parts.ToArray());
         }
     }
 }

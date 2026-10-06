@@ -19,9 +19,8 @@ namespace KCAccess.Core
 
         public string Describe()
         {
-            string prefix = Severity == Severity.Danger ? "Danger: " : (Severity == Severity.Warning ? "Warning: " : string.Empty);
-            string year = Year > 0 ? ", year " + Year : string.Empty;
-            return prefix + Text + year;
+            string text = Severity == Severity.Danger ? Loc.F("Danger: {0}", Text) : (Severity == Severity.Warning ? Loc.F("Warning: {0}", Text) : Text);
+            return Year > 0 ? text + ", " + Loc.F("year {0}", Year) : text;
         }
     }
 

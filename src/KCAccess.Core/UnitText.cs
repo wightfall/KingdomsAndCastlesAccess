@@ -6,8 +6,9 @@ namespace KCAccess.Core
     /// <summary>Spoken words for units, unit panel tabs, trade negotiation moods and ship / cart route stops.</summary>
     public static class UnitText
     {
-        /// <summary>"your ", "enemy " or "foreign " for a team, from its relation to the player (team 0).</summary>
-        public static string Owner(bool mine, bool enemy) => mine ? "your " : enemy ? "enemy " : "foreign ";
+        /// <summary>"your dragon", "enemy dragon" or "foreign dragon", from the team's relation to the player (team 0).</summary>
+        public static string Owned(bool mine, bool enemy, string what) =>
+            mine ? Loc.F("your {0}", what) : enemy ? Loc.F("enemy {0}", what) : Loc.F("foreign {0}", what);
 
         /// <summary>
         /// The unit panel's tabs (UnitUI.UnitTabs) are pictures with a number: name them.
@@ -17,15 +18,15 @@ namespace KCAccess.Core
         {
             switch (tab)
             {
-                case "All": return "All selected units";
-                case "Knights": return "Knights";
-                case "Archers": return "Archers";
-                case "Settlers": return "Settlers";
-                case "Envoys": return "Envoys";
-                case "Catapults": return "Siege catapults";
-                case "TransportShips": return "Troop ships";
-                case "Dragons": return "Dragons";
-                case "Individual": return "Single unit";
+                case "All": return Loc.T("All selected units");
+                case "Knights": return Loc.T("Knights");
+                case "Archers": return Loc.T("Archers");
+                case "Settlers": return Loc.T("Settlers");
+                case "Envoys": return Loc.T("Envoys");
+                case "Catapults": return Loc.T("Siege catapults");
+                case "TransportShips": return Loc.T("Troop ships");
+                case "Dragons": return Loc.T("Dragons");
+                case "Individual": return Loc.T("Single unit");
                 default: return null;
             }
         }
@@ -36,11 +37,11 @@ namespace KCAccess.Core
         /// </summary>
         public static string NegotiationMood(float value)
         {
-            if (value == 1f) return "very happy";
-            if (value > 1f && value <= 2f) return "happy";
-            if (value > 2f && value <= 5f) return "neutral";
-            if (value > 5f && value <= 8f) return "angry";
-            return "very angry";
+            if (value == 1f) return Loc.T("very happy");
+            if (value > 1f && value <= 2f) return Loc.T("happy");
+            if (value > 2f && value <= 5f) return Loc.T("neutral");
+            if (value > 5f && value <= 8f) return Loc.T("angry");
+            return Loc.T("very angry");
         }
 
         /// <summary>
@@ -53,11 +54,11 @@ namespace KCAccess.Core
             bool grows = perLevel > 0f && maxLevels > 0;
             int full = (int)Math.Round(baseRange + maxLevels * perLevel);
             if (height < 0)
-                return "range " + TextUtil.Plural((int)Math.Round(baseRange), "tile") + (grows ? ", " + full + " on " + maxLevels + " castle levels" : string.Empty);
+                return Loc.P((int)Math.Round(baseRange), "range {0} tile", "range {0} tiles") + (grows ? ", " + Loc.F("{0} on {1} castle levels", full, maxLevels) : string.Empty);
             int h = Math.Min(height, Math.Max(0, maxLevels));
-            string s = "range " + TextUtil.Plural((int)Math.Round(baseRange + (grows ? h * perLevel : 0f)), "tile");
+            string s = Loc.P((int)Math.Round(baseRange + (grows ? h * perLevel : 0f)), "range {0} tile", "range {0} tiles");
             if (!grows) return s;
-            return s + (h >= maxLevels ? ", full height" : ", " + h + " of " + maxLevels + " castle levels high, " + full + " tiles at full height");
+            return s + ", " + (h >= maxLevels ? Loc.T("full height") : Loc.F("{0} of {1} castle levels high, {2} tiles at full height", h, maxLevels, full));
         }
 
         /// <summary>"wood 20, stone 5" for the non-zero amounts, or null when everything is zero.</summary>
@@ -78,14 +79,14 @@ namespace KCAccess.Core
         /// </summary>
         public static string RouteStop(int index, int count, string place, string where, bool waypoint, bool sells, string pickUp, string dropOff)
         {
-            var parts = new List<string> { "Stop " + index + " of " + count + ": " + (string.IsNullOrEmpty(place) ? (waypoint ? "waypoint" : "building") : place) };
+            var parts = new List<string> { Loc.F("Stop {0} of {1}: {2}", index, count, string.IsNullOrEmpty(place) ? (waypoint ? Loc.T("waypoint") : Loc.T("building")) : place) };
             if (!string.IsNullOrEmpty(where)) parts.Add(where);
-            if (waypoint) parts.Add("passes by");
-            else if (sells) parts.Add("sells the cargo here");
+            if (waypoint) parts.Add(Loc.T("passes by"));
+            else if (sells) parts.Add(Loc.T("sells the cargo here"));
             else
             {
-                parts.Add("pick up " + (pickUp ?? "nothing"));
-                parts.Add("drop off " + (dropOff ?? "nothing"));
+                parts.Add(Loc.F("pick up {0}", pickUp ?? Loc.T("nothing")));
+                parts.Add(Loc.F("drop off {0}", dropOff ?? Loc.T("nothing")));
             }
             return string.Join(", ", parts.ToArray());
         }

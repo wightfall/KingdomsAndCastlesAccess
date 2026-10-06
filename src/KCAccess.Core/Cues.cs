@@ -78,36 +78,61 @@ namespace KCAccess.Core
             { Cue.Step, new[] { new ToneSegment(140, 110, 0.04f, 0.3f, Waveform.Noise) } },
         };
 
+        private static readonly Dictionary<Cue, string> Names = new Dictionary<Cue, string>
+        {
+            { Cue.Navigate, Loc.N("Navigate") },
+            { Cue.Wrap, Loc.N("Wrap") },
+            { Cue.Edge, Loc.N("Edge") },
+            { Cue.Activate, Loc.N("Activate") },
+            { Cue.ToggleOn, Loc.N("Toggle on") },
+            { Cue.ToggleOff, Loc.N("Toggle off") },
+            { Cue.Open, Loc.N("Open") },
+            { Cue.Close, Loc.N("Close") },
+            { Cue.StepLand, Loc.N("Step land") },
+            { Cue.StepWater, Loc.N("Step water") },
+            { Cue.StepOccupied, Loc.N("Step occupied") },
+            { Cue.StepFog, Loc.N("Step fog") },
+            { Cue.PlaceValid, Loc.N("Place valid") },
+            { Cue.PlaceInvalid, Loc.N("Place invalid") },
+            { Cue.Placed, Loc.N("Placed") },
+            { Cue.Error, Loc.N("Error") },
+            { Cue.Notify, Loc.N("Notify") },
+            { Cue.Alert, Loc.N("Alert") },
+            { Cue.Value, Loc.N("Value") },
+            { Cue.Beacon, Loc.N("Beacon") },
+            { Cue.Step, Loc.N("Step") },
+        };
+
         private static readonly Dictionary<Cue, string> Meanings = new Dictionary<Cue, string>
         {
-            { Cue.Navigate, "Moved to another item" },
-            { Cue.Wrap, "A list wrapped around from the last item to the first" },
-            { Cue.Edge, "Reached the edge of a list or of the map" },
-            { Cue.Activate, "A button or command was activated" },
-            { Cue.ToggleOn, "A check box or option turned on" },
-            { Cue.ToggleOff, "A check box or option turned off" },
-            { Cue.Open, "A window, menu or mode opened" },
-            { Cue.Close, "A window, menu or mode closed" },
-            { Cue.StepLand, "Map cursor moved onto open land" },
-            { Cue.StepWater, "Map cursor moved onto water" },
-            { Cue.StepOccupied, "Map cursor moved onto a building, stone or iron" },
-            { Cue.StepFog, "Map cursor moved onto unexplored land" },
-            { Cue.PlaceValid, "While placing: this spot is valid" },
-            { Cue.PlaceInvalid, "While placing: this spot is not valid" },
-            { Cue.Placed, "A building was placed, or you arrived at your target" },
-            { Cue.Error, "Something is not possible right now" },
-            { Cue.Notify, "A kingdom notification" },
-            { Cue.Alert, "Danger: raid, dragon, fire or plague" },
-            { Cue.Value, "A slider or value changed; the pitch follows the value" },
-            { Cue.Beacon, "Target beacon: left or right ear for west or east, higher pitch north, lower south, faster when closer" },
-            { Cue.Step, "One step of an auto walk" },
+            { Cue.Navigate, Loc.N("Moved to another item") },
+            { Cue.Wrap, Loc.N("A list wrapped around from the last item to the first") },
+            { Cue.Edge, Loc.N("Reached the edge of a list or of the map") },
+            { Cue.Activate, Loc.N("A button or command was activated") },
+            { Cue.ToggleOn, Loc.N("A check box or option turned on") },
+            { Cue.ToggleOff, Loc.N("A check box or option turned off") },
+            { Cue.Open, Loc.N("A window, menu or mode opened") },
+            { Cue.Close, Loc.N("A window, menu or mode closed") },
+            { Cue.StepLand, Loc.N("Map cursor moved onto open land") },
+            { Cue.StepWater, Loc.N("Map cursor moved onto water") },
+            { Cue.StepOccupied, Loc.N("Map cursor moved onto a building, stone or iron") },
+            { Cue.StepFog, Loc.N("Map cursor moved onto unexplored land") },
+            { Cue.PlaceValid, Loc.N("While placing: this spot is valid") },
+            { Cue.PlaceInvalid, Loc.N("While placing: this spot is not valid") },
+            { Cue.Placed, Loc.N("A building was placed, or you arrived at your target") },
+            { Cue.Error, Loc.N("Something is not possible right now") },
+            { Cue.Notify, Loc.N("A kingdom notification") },
+            { Cue.Alert, Loc.N("Danger: raid, dragon, fire or plague") },
+            { Cue.Value, Loc.N("A slider or value changed; the pitch follows the value") },
+            { Cue.Beacon, Loc.N("Target beacon: left or right ear for west or east, higher pitch north, lower south, faster when closer") },
+            { Cue.Step, Loc.N("One step of an auto walk") },
         };
 
         /// <summary>Short spoken name of a cue ("Place valid").</summary>
-        public static string Name(Cue cue) => TextUtil.Humanize(cue.ToString());
+        public static string Name(Cue cue) => Names.TryGetValue(cue, out var n) ? Loc.T(n) : TextUtil.Humanize(cue.ToString());
 
         /// <summary>What the cue means, for the sound preview list.</summary>
-        public static string Meaning(Cue cue) => Meanings.TryGetValue(cue, out var m) ? m : Name(cue);
+        public static string Meaning(Cue cue) => Meanings.TryGetValue(cue, out var m) ? Loc.T(m) : Name(cue);
 
         public static IEnumerable<Cue> All => (Cue[])Enum.GetValues(typeof(Cue));
 

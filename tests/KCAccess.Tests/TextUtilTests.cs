@@ -55,13 +55,13 @@ namespace KCAccess.Tests
         [InlineData(4, "4 trees")]
         public void Plural_UsesEnglishPlural(int n, string expected)
         {
-            Assert.Equal(expected, TextUtil.Plural(n, "tree"));
+            Assert.Equal(expected, Loc.P(n, "{0} tree", "{0} trees"));
         }
 
         [Fact]
         public void Plural_AcceptsIrregularPlural()
         {
-            Assert.Equal("2 enemy armies", TextUtil.Plural(2, "enemy army", "enemy armies"));
+            Assert.Equal("2 enemy armies", Loc.P(2, "{0} enemy army", "{0} enemy armies"));
         }
 
         [Theory]

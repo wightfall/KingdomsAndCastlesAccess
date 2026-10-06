@@ -53,11 +53,11 @@ namespace KCAccess.Core
                 case "bullet":
                     return string.Empty;
                 case "armaments":
-                    return "armaments";
+                    return Loc.T("armaments");
                 case "apple":
-                    return "apples";
+                    return Loc.T("apples");
             }
-            return n.Replace('_', ' ');
+            return Loc.T(n.Replace('_', ' ')); // most are resource names ("wood", "stone") that have a translation
         }
 
         /// <summary>Joins non-empty cleaned parts with the given separator.</summary>
@@ -111,18 +111,11 @@ namespace KCAccess.Core
             return digit;
         }
 
-        /// <summary>"1 tree", "3 trees". Handles simple English plurals.</summary>
-        public static string Plural(int count, string singular, string plural = null)
-        {
-            if (count == 1) return "1 " + singular;
-            return count + " " + (plural ?? singular + "s");
-        }
-
         public static string Percent(float fraction)
         {
             if (float.IsNaN(fraction) || float.IsInfinity(fraction)) fraction = 0f;
             int p = (int)Math.Round(fraction * 100f);
-            return p + " percent";
+            return Loc.F("{0} percent", p);
         }
 
         /// <summary>Converts identifiers like "smallhouse", "AdvTown", "wood_castle_block" into spoken words.</summary>

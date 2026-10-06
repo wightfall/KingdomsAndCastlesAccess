@@ -28,51 +28,52 @@ namespace KCAccess.Core
         {
             if (seconds < 0) seconds = 0;
             int m = seconds / 60, s = seconds % 60;
-            if (m == 0) return TextUtil.Plural(s, "second");
-            return s == 0 ? TextUtil.Plural(m, "minute") : TextUtil.Plural(m, "minute") + " " + TextUtil.Plural(s, "second");
+            if (m == 0) return Loc.P(s, "{0} second", "{0} seconds");
+            string minutes = Loc.P(m, "{0} minute", "{0} minutes");
+            return s == 0 ? minutes : minutes + " " + Loc.P(s, "{0} second", "{0} seconds");
         }
 
         /// <summary>"New Twitch vote, ends in 2 minutes: 1, Bountiful harvest; 2, Plague".</summary>
         public static string NewVote(IList<VoteOption> options, int seconds)
         {
             if (options == null || options.Count == 0)
-                return "No Twitch vote could start: every vote option is turned off or not possible right now";
+                return Loc.T("No Twitch vote could start: every vote option is turned off or not possible right now");
             var parts = new List<string>();
             foreach (var o in options) parts.Add(o.Number + ", " + o.Title);
-            return "New Twitch vote, ends in " + Duration(seconds) + ": " + string.Join("; ", parts.ToArray());
+            return Loc.F("New Twitch vote, ends in {0}: {1}", Duration(seconds), string.Join("; ", parts.ToArray()));
         }
 
         /// <summary>"Twitch vote: 1 Bountiful harvest 3 votes, 2 Plague 1 vote, 45 seconds left".</summary>
         public static string Status(IList<VoteOption> options, int seconds)
         {
-            if (options == null || options.Count == 0) return "No Twitch vote running";
+            if (options == null || options.Count == 0) return Loc.T("No Twitch vote running");
             var parts = new List<string>();
-            foreach (var o in options) parts.Add(o.Number + " " + o.Title + " " + TextUtil.Plural(o.Votes, "vote"));
-            return "Twitch vote: " + string.Join(", ", parts.ToArray()) + ", " + Duration(seconds) + " left";
+            foreach (var o in options) parts.Add(o.Number + " " + o.Title + " " + Loc.P(o.Votes, "{0} vote", "{0} votes"));
+            return Loc.F("Twitch vote: {0}, {1} left", string.Join(", ", parts.ToArray()), Duration(seconds));
         }
 
         /// <summary>"Leading: 2, Plague, 3 votes", "Tied at 2 votes: 1, Harvest and 3, Rain", "No votes yet".</summary>
         public static string Leading(IList<VoteOption> options)
         {
-            if (options == null || options.Count == 0) return "No votes yet";
+            if (options == null || options.Count == 0) return Loc.T("No votes yet");
             int max = 0;
             foreach (var o in options) if (o.Votes > max) max = o.Votes;
-            if (max == 0) return "No votes yet";
+            if (max == 0) return Loc.T("No votes yet");
             var top = new List<string>();
             foreach (var o in options) if (o.Votes == max) top.Add(o.Number + ", " + o.Title);
-            if (top.Count == 1) return "Leading: " + top[0] + ", " + TextUtil.Plural(max, "vote");
-            return "Tied at " + TextUtil.Plural(max, "vote") + ": " + string.Join(" and ", top.ToArray());
+            if (top.Count == 1) return Loc.F("Leading: {0}, {1}", top[0], Loc.P(max, "{0} vote", "{0} votes"));
+            return Loc.F("Tied at {0}: {1}", Loc.P(max, "{0} vote", "{0} votes"), string.Join(" " + Loc.T("and") + " ", top.ToArray()));
         }
 
         /// <summary>Said once when the vote is about to end.</summary>
         public static string Countdown(IList<VoteOption> options, int seconds) =>
-            Duration(seconds) + " left in the Twitch vote. " + Leading(options);
+            Loc.F("{0} left in the Twitch vote.", Duration(seconds)) + " " + Leading(options);
 
         /// <summary>"Twitch viewers chose Plague, picked by someone".</summary>
         public static string Winner(string title, string voter)
         {
-            string s = "Twitch viewers chose " + (string.IsNullOrEmpty(title) ? "an effect" : title);
-            return string.IsNullOrEmpty(voter) ? s : s + ", picked by " + voter;
+            string s = Loc.F("Twitch viewers chose {0}", string.IsNullOrEmpty(title) ? Loc.T("an effect") : title);
+            return string.IsNullOrEmpty(voter) ? s : s + ", " + Loc.F("picked by {0}", voter);
         }
     }
 
@@ -131,7 +132,7 @@ namespace KCAccess.Core
                 return null;
             }
             recent.Enqueue(now);
-            string user = string.IsNullOrEmpty(username) ? "someone" : username.Trim();
+            string user = string.IsNullOrEmpty(username) ? Loc.T("someone") : username.Trim();
             return user + ": " + text;
         }
 
@@ -142,7 +143,7 @@ namespace KCAccess.Core
             double now = clock();
             Expire(now);
             if (recent.Count >= MaxMessages) return null;
-            string s = "and " + TextUtil.Plural(dropped, "more chat message");
+            string s = Loc.P(dropped, "and {0} more chat message", "and {0} more chat messages");
             dropped = 0;
             recent.Enqueue(now);
             return s;
@@ -231,11 +232,11 @@ namespace KCAccess.Core
         public static string Build(string kingdom, string date, string population, string gold, string lastNotification, string extra = null)
         {
             var sb = new StringBuilder();
-            Line(sb, string.IsNullOrEmpty(kingdom) ? null : "Kingdom: " + kingdom);
+            Line(sb, string.IsNullOrEmpty(kingdom) ? null : Loc.F("Kingdom: {0}", kingdom));
             Line(sb, date);
             Line(sb, population);
             Line(sb, gold);
-            Line(sb, string.IsNullOrEmpty(lastNotification) ? null : "Last: " + lastNotification);
+            Line(sb, string.IsNullOrEmpty(lastNotification) ? null : Loc.F("Last: {0}", lastNotification));
             Line(sb, extra);
             return sb.ToString();
         }
