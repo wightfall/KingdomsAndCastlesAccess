@@ -241,7 +241,7 @@ what was painted and the brush size ("Painted very fertile land, brush size 2").
 | Up / Down, Home / End | Choose a building: name, cost (what you are missing), size, available or why not |
 | I or F5 | Full description, workers, wages and the range of towers |
 | Letters | Jump to a building by name |
-| Enter or Space | Pick up the building; cemeteries, statues and parks open their own list |
+| Enter or Space | Pick up the building (archer towers and ballistas go on top of castle blocks); cemeteries, statues and parks open their own list |
 | Escape or B (your build menu key) | Close |
 
 When you pick up a building, the cursor marks its **south west corner**; a 3 by 3 building covers the

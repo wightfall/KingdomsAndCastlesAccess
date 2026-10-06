@@ -234,6 +234,8 @@ namespace KCAccess.Game
             }
             if (building.dragPlacementMode == Building.DragPlacementMode.Path) parts.Add("built in lines with Shift Enter");
             else if (building.dragPlacementMode == Building.DragPlacementMode.Rectangle) parts.Add("built in areas with Shift Enter");
+            // Archer towers and ballistas: the game only shows this rule as a red placement hint.
+            if (building.CategoryName == World.projectileTopper) parts.Add("placed on top of castle blocks");
             if (!brief)
             {
                 parts.Add(building.Description);
