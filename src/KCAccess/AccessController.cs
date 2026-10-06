@@ -143,6 +143,10 @@ namespace KCAccess
             InputGate.EscapePassThrough = false;
 
             DetectModal();
+            // Exploring the map belongs to the map setup screen only: any other screen or a confirmation on top of it
+            // (back to the main menu, an error) must get the keyboard, not the map cursor.
+            if (!playing && Game.MapController.Inst.MenuMapMode && (modal == null || modal.Id != "NewMap"))
+                Game.MapController.Inst.MenuMapMode = false;
             if (modal != null)
             {
                 helpId = modal.Id;
