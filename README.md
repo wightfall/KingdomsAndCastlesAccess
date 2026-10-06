@@ -230,7 +230,8 @@ F6 reaches **Creative mode options**: press the Creative Mode button to open the
 boxes (Build For Free, Hide Fog of War, Viking Attacks …) and brushes (spawn knights, archers, vikings,
 dragons, resource stacks, fire, trees, removal tool). Picking a brush returns you to the map; **Enter**
 applies it at the cursor, **Escape** turns the brush off. On the map setup screen the map editor
-brushes work the same way: pick a brush, press Ctrl+M, move the cursor and press Enter to paint.
+brushes work the same way: pick a brush, press Ctrl+M, move the cursor and press Enter to paint; you hear
+what was painted and the brush size ("Painted very fertile land, brush size 2").
 
 ### Build menu (B)
 

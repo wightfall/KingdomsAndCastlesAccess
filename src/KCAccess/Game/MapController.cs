@@ -226,12 +226,23 @@ namespace KCAccess.Game
             if (HandleMovement()) return;
             if (MenuMapMode)
             {
-                if ((KInput.Plain(KeyCode.Return) || KInput.Plain(KeyCode.KeypadEnter)) && MapEditBrushActive())
+                if (KInput.Plain(KeyCode.Return) || KInput.Plain(KeyCode.KeypadEnter))
                 {
-                    VirtualPointer.Inst?.Click();
-                    A.Cue(Cue.Activate);
-                    A.Say("Painted at " + cursor.Pos);
-                    return;
+                    var edit = MapEditor();
+                    if (edit != null && edit.brushMode != MapEdit.BrushMode.None)
+                    {
+                        VirtualPointer.Inst?.Click();
+                        A.Cue(Cue.Activate);
+                        // Say what was painted and how big the brush is (the game shows both only on screen).
+                        A.Say("Painted " + TextUtil.Humanize(edit.brushMode.ToString()).ToLowerInvariant() + ", brush size " + Mathf.RoundToInt(edit.radius + 1f) + ", at " + cursor.Pos);
+                        return;
+                    }
+                    if (edit != null)
+                    {
+                        A.Cue(Cue.Error);
+                        A.Say("No map editor brush is selected. Control M returns to the menu, where the brushes are.");
+                        return;
+                    }
                 }
                 HandleInfoKeys();
                 return;
@@ -322,13 +333,12 @@ namespace KCAccess.Game
             }
         }
 
-        /// <summary>Creative mode map editor (map setup screen) has a brush selected.</summary>
-        private static bool MapEditBrushActive()
+        /// <summary>The creative mode map editor of the map setup screen, when it is shown; otherwise null.</summary>
+        private static MapEdit MapEditor()
         {
             var mm = GameState.inst.mainMenuMode;
-            if (mm == null || mm.mapEditUI == null || !mm.mapEditUI.activeInHierarchy) return false;
-            var edit = mm.mapEditUI.GetComponent<MapEdit>();
-            return edit != null && edit.brushMode != MapEdit.BrushMode.None;
+            if (mm == null || mm.mapEditUI == null || !mm.mapEditUI.activeInHierarchy) return null;
+            return mm.mapEditUI.GetComponent<MapEdit>();
         }
 
         /// <summary>Moves the cursor one step during auto-walk (camera follows, placement re-checked).</summary>
