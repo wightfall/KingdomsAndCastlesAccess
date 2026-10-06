@@ -120,19 +120,29 @@ namespace KCAccess
             }
         }
 
-        internal static void Deliver(KeyCode key)
+        internal static void Deliver(KeyCode key) => Deliver(key, Modifiers.Shift, Modifiers.Ctrl, Modifiers.Alt, "fallback");
+
+        /// <summary>
+        /// Hands a key press to the mod (KInput) and to the game's hotkeys, as if it had been typed.
+        /// Used for presses Unity missed and for the controller layer.
+        /// </summary>
+        internal static void Deliver(KeyCode key, bool shift, bool ctrl, bool alt, string source)
         {
-            bool shift = Modifiers.Shift, ctrl = Modifiers.Ctrl, alt = Modifiers.Alt;
-            Plugin.Log.LogInfo("[fallback] " + key + " delivered from Windows (Unity missed it)" + (shift ? " +shift" : "") + (ctrl ? " +ctrl" : "") + (alt ? " +alt" : ""));
+            if (source == "fallback") Plugin.Log.LogInfo("[fallback] " + key + " delivered from Windows (Unity missed it)" + (shift ? " +shift" : "") + (ctrl ? " +ctrl" : "") + (alt ? " +alt" : ""));
             KInput.Inject(key, shift, ctrl, alt);
             bool menuEscape = key == KeyCode.Escape && GameState.inst != null && GameState.inst.IsMainMenuMode();
             if (menuEscape)
             {
                 // In the pause and settings menus the game reads Escape directly instead of as a hotkey.
+                // Only when that menu itself has the keyboard: a mod list, a text field or a confirmation on top of it
+                // gets the (injected) Escape instead.
+                var ac = AccessController.Inst;
+                var scr = ac != null ? ac.CurrentScreen : null;
+                if (ac == null || ac.ActiveMenu != null || ac.Nav.IsEditing || scr == null) return;
                 var mm = GameState.inst.mainMenuMode;
                 var st = mm.GetState();
-                if (st == MainMenuMode.State.PauseMenu) mm.OnClickedReturnToGame();
-                else if (st == MainMenuMode.State.SettingsMenu) mm.settingsUI.GetComponent<SettingsMenuUI>().RevertChanges();
+                if (st == MainMenuMode.State.PauseMenu && scr.Id == "PauseMenu") mm.OnClickedReturnToGame();
+                else if (st == MainMenuMode.State.SettingsMenu && scr.Id == "SettingsMenu") mm.settingsUI.GetComponent<SettingsMenuUI>().RevertChanges();
                 return;
             }
             // Let the game's own hotkeys see it too (pause, speed, Escape menu, chop, rotate ...).
@@ -149,6 +159,30 @@ namespace KCAccess
             catch (Exception)
             {
                 // settings not ready yet
+            }
+        }
+
+        /// <summary>
+        /// The mod used this key itself (KInput.Consume): the game must not act on it too, not even a frame later
+        /// (closing the key list with the controller's B button also opened the pause menu).
+        /// </summary>
+        internal static void CancelForKey(KeyCode key)
+        {
+            if (forced.Count == 0) return;
+            try
+            {
+                var settings = Assets.Settings.inst.KeyboardSettings;
+                var drop = new List<InputActions>();
+                foreach (var kv in forced)
+                {
+                    int i = (int)kv.Key;
+                    if (i < settings.Length && settings[i].key == key) drop.Add(kv.Key);
+                }
+                foreach (var a in drop) forced.Remove(a);
+            }
+            catch (Exception)
+            {
+                forced.Clear();
             }
         }
 

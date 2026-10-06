@@ -64,6 +64,7 @@ namespace KCAccess.Game
             Number(() => "Auto-walk speed: " + (Plugin.CfgWalkSpeed.Value <= 1 ? "slow" : Plugin.CfgWalkSpeed.Value >= 3 ? "fast" : "normal"),
                 d => Plugin.CfgWalkSpeed.Value = Mathf.Clamp(Plugin.CfgWalkSpeed.Value + d, 1, 3));
             Header("Keyboard and logs");
+            Toggle("Controller support: play with a gamepad (turn off to use the game's own controller mode)", Plugin.CfgController);
             Toggle("Deliver key presses the game missed (for Windows 11, NVDA Remote and Steam Input problems)", Plugin.CfgKeyFallback);
             Toggle("Write key presses to the log (bug reports)", Plugin.CfgLogKeys);
             Toggle("Write everything spoken to the log (bug reports)", Plugin.CfgLogSpeech);

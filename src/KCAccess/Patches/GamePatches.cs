@@ -374,3 +374,45 @@ namespace KCAccess
         }
     }
 }
+
+namespace KCAccess
+{
+    /// <summary>
+    /// Buttons that leave the game (Discord, Twitter, Twitch, the shop, news links, the feedback document, the save
+    /// folder) switch to another window without a word. Say where focus is going and how to come back.
+    /// </summary>
+    internal static class ExternalLinks
+    {
+        internal static void Leaving(string what) =>
+            A.Say("Opening " + what + ". The game stays open: Alt Tab returns to it.", force: true);
+    }
+
+    [HarmonyPatch(typeof(MainMenuMode), nameof(MainMenuMode.OnClickedDiscord))]
+    internal static class Patch_Discord { private static void Prefix() => ExternalLinks.Leaving("the Kingdoms and Castles Discord in your web browser"); }
+
+    [HarmonyPatch(typeof(MainMenuMode), nameof(MainMenuMode.OnClickedTwitter))]
+    internal static class Patch_Twitter { private static void Prefix() => ExternalLinks.Leaving("Lion Shield on Twitter in your web browser"); }
+
+    [HarmonyPatch(typeof(MainMenuMode), nameof(MainMenuMode.OnClickedTwitch))]
+    internal static class Patch_Twitch { private static void Prefix() => ExternalLinks.Leaving("Lion Shield on Twitch in your web browser"); }
+
+    [HarmonyPatch(typeof(MainMenuMode), nameof(MainMenuMode.OnClickedSendSaveToDev))]
+    internal static class Patch_SendSave { private static void Prefix() => ExternalLinks.Leaving("the instructions for sending a save to the developers in your web browser"); }
+
+    [HarmonyPatch(typeof(GameState), nameof(GameState.OnClickedOpenWebpage))]
+    internal static class Patch_OpenWebpage
+    {
+        private static void Prefix(string url)
+        {
+            string host = url;
+            try { host = new System.Uri(url).Host.Replace("www.", ""); } catch { }
+            ExternalLinks.Leaving("a web page, " + host + ", in your web browser");
+        }
+    }
+
+    [HarmonyPatch(typeof(StoreInfo), nameof(StoreInfo.OnClickedStore))]
+    internal static class Patch_Store { private static void Prefix() => ExternalLinks.Leaving("the Lion Shield shop in your web browser"); }
+
+    [HarmonyPatch(typeof(OpenInFileBrowser), nameof(OpenInFileBrowser.Open))]
+    internal static class Patch_OpenFolder { private static void Prefix() => ExternalLinks.Leaving("the folder in File Explorer"); }
+}

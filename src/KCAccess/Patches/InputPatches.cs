@@ -173,3 +173,21 @@ namespace KCAccess
         }
     }
 }
+
+namespace KCAccess
+{
+    /// <summary>
+    /// While the mod's controller support is on, the game's own console-controller mode stays off: it is built for
+    /// sighted players (it moves a highlight around the screen and changes the interface) and would fight the mod.
+    /// </summary>
+    [HarmonyPatch(typeof(GamepadControl), "Update")]
+    internal static class Patch_GamepadControl
+    {
+        private static bool Prefix()
+        {
+            if (!Plugin.Loaded || !ControllerInput.Enabled) return true;
+            GamepadControl.isControllerActive = false;
+            return false;
+        }
+    }
+}

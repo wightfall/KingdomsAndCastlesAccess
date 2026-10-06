@@ -15,7 +15,7 @@ namespace KCAccess
     {
         public const string Guid = "kcaccess.screenreader";
         public const string Name = "KCAccess";
-        public const string Version = "1.8.0";
+        public const string Version = "1.9.0";
 
         internal static Plugin Instance;
 
@@ -43,6 +43,7 @@ namespace KCAccess
         internal static ConfigEntry<int> CfgWalkSpeed;
         internal static ConfigEntry<bool> CfgHints;
         internal static ConfigEntry<bool> CfgPositions;
+        internal static ConfigEntry<bool> CfgController;
 
         /// <summary>The mod's key bindings (rebindable in the mod settings, Ctrl+Shift+O).</summary>
         internal static readonly KCAccess.Core.Bindings Keys = new KCAccess.Core.Bindings();
@@ -68,6 +69,7 @@ namespace KCAccess
             CfgWalkSpeed = Config.Bind("Map", "WalkSpeed", 2, new ConfigDescription("Auto-walk speed: 1 slow, 2 normal, 3 fast.", new AcceptableValueRange<int>(1, 3)));
             CfgHints = Config.Bind("Speech", "Hints", true, "Speak short hints for new players (for example how to use a target after choosing it).");
             CfgPositions = Config.Bind("Speech", "SayPositions", false, "In every menu, list and panel, say the position after each item, for example \"New, 3 of 19\".");
+            CfgController = Config.Bind("Keyboard", "ControllerSupport", true, "Play with a gamepad (Xbox, PlayStation and most others): buttons do the same as the mod's keys. Turn off to use the game's own controller mode instead.");
             Keys.Load(CfgBindings.Value);
             KeyHelp.KeyNameOf = Keys.Spoken; // help texts name the player's own keys
             CfgLogKeys = Config.Bind("Debug", "KeyLog", true, "Write every key press (key name only), with the modifier state seen by the game and by Windows, to the BepInEx log (for keyboard bug reports).");

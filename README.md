@@ -158,6 +158,13 @@ unburied bodies, rats) are announced when they appear. Water tiles say how many 
 on their tile and in the villager description. Heavy rain (farms may flood) and thunderstorms (fires) are
 announced, as are newly unlocked achievements. Stacked castle blocks are read as "stacked 4 high".
 
+### Leaving the game
+
+The main menu's Discord, Twitter and Twitch buttons, news links, the shop and "open folder" buttons open your
+web browser or File Explorer. The mod says where you are going; Alt+Tab brings you back, and the mod then says
+"Back in the game" and where you are. The language button reads "Language: English" and opens a list with
+focus on the current language; Enter switches language, Escape closes the list.
+
 ### Trading, diplomacy and research
 
 * **Merchants:** when "A merchant ship has arrived" is announced, find it with the scanner (Your soldiers
@@ -223,6 +230,31 @@ build roads out from your keep first (I tells you whether a tile is covered).
 
 On the Load and Save screens, **Delete** on a saved game deletes it. The confirmation starts on
 Cancel; choose "It's toast" to delete. "Save deleted" confirms it.
+
+## Playing with a controller
+
+Xbox, PlayStation and most other gamepads work (through the game's Rewired input). Every button does the
+same as a keyboard key, so all of the mod works with a controller; the mod says "Controller connected" when
+one is plugged in. Hold a trigger to switch layer. (PlayStation: A is cross, B circle, X square, Y triangle,
+LB/RB L1/R1, LT/RT L2/R2, Back Share, Start Options.)
+
+| Button | Without triggers | Hold LT | Hold RT | Hold both triggers |
+|--------|------------------|---------|---------|--------------------|
+| D-pad / left stick | Arrow keys (held = repeat) | Jump to the next change (Ctrl+arrows) | Move 5 tiles | Left normal speed, up fast, right fastest, down pause |
+| A | Enter | Walk to the target (N) | Build menu (B) | Chop trees mode (Shift+C) |
+| B | Escape | Jump to the target (\) | Kingdom status (K) | Send soldiers (M) |
+| X | Shift+Enter | Beacon (Shift+N) | Notifications (L) | Demolish the selected building (Delete) |
+| Y | Map: describe the tile (I); menus: repeat (F5) | Where is the target (Shift+\) | Survey (O) | Why the placing spot is (in)valid (V) |
+| LB / RB | Map: scan category; lists: Page Up / Down | Previous / next target ([ ]) | Map: keep / selected building; menus: first / last | |
+| Back / View | F6 (panels) | Shift+F6 | Respond to the nearest alert (Ctrl+E) | Reset the mod |
+| Start / Menu | F1 (help) | Pause / resume (Space) | Key list (Shift+F1) | Mod settings |
+| Left stick click | Map: jump to the keep; menus: first item | Walk in a straight line (Ctrl+N) | Coordinates (G) | |
+| Right stick click | Map: date (T); menus: read the screen | | Repeat the last notification | |
+
+Buttons follow your key bindings: if you change a mod key in the settings, its controller button does the new
+key's action. The layout is also in the Shift+F1 key list (group "Controller"). Typing names needs a keyboard.
+The game's own console-controller mode is kept off while this is on; turn "Controller support" off in the mod
+settings to use the game's mode instead.
 
 ## Mod settings (Ctrl+Shift+O)
 

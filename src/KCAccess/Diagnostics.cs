@@ -154,6 +154,26 @@ namespace KCAccess
                             Plugin.Log.LogInfo(sb.ToString());
                             break;
                         }
+                        case "listeners":
+                        {
+                            var lcur = AccessController.Inst.Nav.Current;
+                            var lbtn = lcur != null ? lcur.Go.GetComponent<UnityEngine.UI.Button>() : null;
+                            var lstr = new StringBuilder("[listeners] ");
+                            if (lbtn != null)
+                            {
+                                lstr.Append(lbtn.name).Append(": ");
+                                for (int i = 0; i < lbtn.onClick.GetPersistentEventCount(); i++)
+                                    lstr.Append(lbtn.onClick.GetPersistentTarget(i)?.GetType().Name).Append('.').Append(lbtn.onClick.GetPersistentMethodName(i)).Append(' ');
+                                foreach (var c in lbtn.GetComponents<Component>()) lstr.Append('<').Append(c.GetType().Name).Append('>');
+                            }
+                            Plugin.Log.LogInfo(lstr.ToString());
+                            break;
+                        }
+                        case "pad":
+                            // Test only: "pad A", "pad Up lt", "pad Start lt rt"
+                            if (parts.Length > 1 && Enum.TryParse(parts[1], true, out KCAccess.Core.PadButton pb))
+                                ControllerInput.Simulate(pb, Array.IndexOf(parts, "lt") > 0, Array.IndexOf(parts, "rt") > 0);
+                            break;
                         case "alerttest":
                             // Test only: raise the keep's advisor exclamation mark like the game does.
                             if (Player.inst != null && Player.inst.keep != null && Player.inst.keep.issueButton != null) Player.inst.keep.issueButton.gameObject.SetActive(true);
@@ -212,11 +232,11 @@ namespace KCAccess
                             break;
                         case "ai":
                             var abc = AIBrainsContainer.inst;
-                            var sb2 = new StringBuilder("[ai] kingdoms=" + (abc != null ? abc.kingdoms.Count : -1));
-                            if (abc != null) foreach (var k in abc.kingdoms) sb2.Append(" | team=" + k.LandmassOwner?.teamId + " lms=" + (k.LandmassOwner?.ownedLandMasses != null ? k.LandmassOwner.ownedLandMasses.Count : -1));
-                            sb2.Append(" start=" + (abc?.aiStartInfo?.startData != null ? abc.aiStartInfo.startData.Length : -1));
-                            for (int lmi = 0; lmi < World.inst.NumLandMasses; lmi++) sb2.Append(" [" + lmi + ":" + (lmi < Player.inst.LandMassNames.Count ? Player.inst.LandMassNames[lmi] : "?") + " owner=" + (World.GetLandmassOwner(lmi)?.teamId.ToString() ?? "none") + " keeps=" + Player.inst.GetBuildingListForLandMass(lmi, World.keepHash).Count + "]");
-                            Plugin.Log.LogInfo(sb2.ToString());
+                            var lsb = new StringBuilder("[ai] kingdoms=" + (abc != null ? abc.kingdoms.Count : -1));
+                            if (abc != null) foreach (var k in abc.kingdoms) lsb.Append(" | team=" + k.LandmassOwner?.teamId + " lms=" + (k.LandmassOwner?.ownedLandMasses != null ? k.LandmassOwner.ownedLandMasses.Count : -1));
+                            lsb.Append(" start=" + (abc?.aiStartInfo?.startData != null ? abc.aiStartInfo.startData.Length : -1));
+                            for (int lmi = 0; lmi < World.inst.NumLandMasses; lmi++) lsb.Append(" [" + lmi + ":" + (lmi < Player.inst.LandMassNames.Count ? Player.inst.LandMassNames[lmi] : "?") + " owner=" + (World.GetLandmassOwner(lmi)?.teamId.ToString() ?? "none") + " keeps=" + Player.inst.GetBuildingListForLandMass(lmi, World.keepHash).Count + "]");
+                            Plugin.Log.LogInfo(lsb.ToString());
                             break;
                         case "invoke":
                             var cur = AccessController.Inst.Nav.Current;

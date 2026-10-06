@@ -92,6 +92,7 @@ namespace KCAccess
                 consumedFrame = Time.frameCount;
             }
             consumed.Add(key);
+            OsKeyboard.CancelForKey(key);
         }
 
         internal static bool IsConsumed(KeyCode key) => consumedFrame == Time.frameCount && consumed.Contains(key);

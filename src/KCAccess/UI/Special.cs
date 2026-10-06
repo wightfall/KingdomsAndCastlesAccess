@@ -291,6 +291,8 @@ namespace KCAccess.UI
             if (row != null && item.Control == row.DisableToggle) return PriorityRow(row);
             if (item.Control is Button && item.Go.GetComponentInParent<PickNameUI>() != null && UIText.LabelOf(item.Control) == "unlabelled")
                 return "Choose banner, button";
+            if (item.IsControl && item.Go.GetComponent<ChangeLanguage>() is ChangeLanguage cl)
+                return "Language: " + TextUtil.Clean(UIText.TextOf(cl.languageButtonText)) + ", button, Enter opens the list";
             var kbd = item.IsControl ? item.Go.GetComponentInParent<KeyButton>() : null;
             if (IsKeyRow(kbd)) return KeyAction(kbd) + ": " + KeyName(kbd) + ", button, Enter to change";
             if (item.IsControl && item.Go.name == "SeedInput" && !UIText.LabelOf(item.Control).ToLowerInvariant().Contains("seed"))
@@ -434,6 +436,34 @@ namespace KCAccess.UI
                     }
                     return true;
                 }
+            }
+            if (KInput.Plain(KeyCode.Escape))
+            {
+                // Escape closes the language list (the game only closes it with a click outside it).
+                var picker = UnityEngine.Object.FindObjectOfType<ChangeLanguage>();
+                if (picker != null && picker.dropdownList != null && picker.dropdownList.activeInHierarchy && item.Go.transform.IsChildOf(picker.dropdownList.transform))
+                {
+                    KInput.Consume(KeyCode.Escape);
+                    picker.dropdownList.SetActive(false);
+                    A.Cue(Cue.Close);
+                    var btn = picker.gameObject;
+                    nav.RequestFocus(g => g == btn);
+                    return true;
+                }
+            }
+            var lang = item.IsControl ? item.Go.GetComponent<ChangeLanguage>() : null;
+            if (lang != null && lang.dropdownList != null && (KInput.Plain(KeyCode.Return) || KInput.Plain(KeyCode.Space)))
+            {
+                // The language picker opens a list elsewhere on the screen: open it and put focus on the current language.
+                KInput.Consume(KeyCode.Return);
+                KInput.Consume(KeyCode.Space);
+                UINavigator.Click(item.Go);
+                string current = I2.Loc.LocalizationManager.CurrentLanguage;
+                var list = lang.dropdownList.transform;
+                A.Cue(Cue.Open);
+                A.Say("Language list. Up and Down choose, Enter switches the game to that language", force: true);
+                nav.RequestFocus(g => g.transform.IsChildOf(list) && g.GetComponent<Button>() != null && UIText.LabelOf(g.GetComponent<Button>()).StartsWith(current));
+                return true;
             }
             var keyBtn = item.IsControl ? item.Go.GetComponentInParent<KeyButton>() : null;
             if (IsKeyRow(keyBtn) && (KInput.Plain(KeyCode.Return) || KInput.Plain(KeyCode.Space) || KInput.Plain(KeyCode.KeypadEnter)))

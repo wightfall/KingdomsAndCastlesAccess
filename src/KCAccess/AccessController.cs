@@ -47,6 +47,22 @@ namespace KCAccess
 
         private void Update() => EnsureTick();
 
+        private float lostFocusAt = -1f;
+
+        /// <summary>Coming back with Alt+Tab (from a web page, File Explorer, another program): say where you are.</summary>
+        private void OnApplicationFocus(bool focus)
+        {
+            if (!focus)
+            {
+                lostFocusAt = Time.unscaledTime;
+                return;
+            }
+            if (lostFocusAt < 0f || Time.unscaledTime - lostFocusAt < 1f || !Plugin.Loaded) return;
+            lostFocusAt = -1f;
+            string where = modal != null ? modal.Title : panel != null ? panel.Title : (GameState.inst != null && GameState.inst.IsPlayMode() ? "the map" : null);
+            A.Say("Back in the game" + (where != null ? ", " + where : string.Empty), force: true);
+        }
+
         /// <summary>
         /// Runs the mod once per frame. Also called from a prefix on the game's KeyboardControl.Update so the
         /// mod always sees (and can consume) keys before the game reacts to them, whatever the script order.
@@ -57,6 +73,7 @@ namespace KCAccess
             tickedFrame = Time.frameCount;
             SteamOverlay.Ensure();
             OsKeyboard.Tick(Nav.IsEditing || SteamOverlay.Active);
+            if (!SteamOverlay.Active && !Nav.IsEditing) ControllerInput.Tick(OnMapForPad);
             KInput.BeginFrame();
             Diagnostics.PollCommands();
             if (Plugin.CfgLogKeys.Value) Diagnostics.LogKeys();
@@ -410,6 +427,9 @@ namespace KCAccess
         // ---------------------------------------------------------------- global keys & help
 
         /// <summary>The keyboard is on the map right now (no window, panel or mod menu).</summary>
+        /// <summary>The map has the keyboard (playing, or exploring from the map setup screen).</summary>
+        internal bool OnMapForPad => OnMapNow || (Game.MapController.Inst != null && Game.MapController.Inst.MenuMapMode && ActiveMenu == null);
+
         private bool OnMapNow => modal == null && panel == null && ActiveMenu == null && GameState.inst != null && GameState.inst.IsPlayMode();
 
         private bool GlobalKeys()

@@ -162,6 +162,13 @@ namespace KCAccess.Core
                 K("Escape or B", "close")),
         };
 
+        static KeyHelp()
+        {
+            var pad = new KeySection("Controller");
+            pad.Lines.AddRange(ControllerMap.Lines);
+            Sections.Add(pad);
+        }
+
         /// <summary>The whole reference as one text (used for tests and the README check).</summary>
         public static string AllText()
         {
