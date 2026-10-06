@@ -84,19 +84,12 @@ namespace KCAccess
             CfgLogSpeech = Config.Bind("Speech", "LogSpeech", true, "Write everything spoken to the BepInEx log (useful for bug reports).");
 
             string pluginDir = Path.GetDirectoryName(Info.Location);
-            ISpeechBackend backend;
             prism = new PrismSpeech();
             Prism = prism;
-            if (prism.Initialize(pluginDir))
-            {
-                backend = prism;
-                Log.LogInfo("Prism " + prism.Version + " ready, backend: " + prism.Name);
-            }
-            else
-            {
-                backend = new LogOnlySpeech();
-                Log.LogError("Prism could not start (" + prism.LastError + "). Make sure prism.dll is in " + pluginDir);
-            }
+            if (prism.Initialize(pluginDir)) Log.LogInfo("Prism " + prism.Version + " ready, backend: " + prism.Name);
+            else Log.LogError("Prism could not start (" + prism.LastError + "). Make sure prism.dll is in " + pluginDir);
+            // Speaks through Prism as soon as it has a backend (also one found later by re-detection), else logs only.
+            ISpeechBackend backend = new SwitchingSpeech(prism);
 
             A.Init(new Announcer(backend, () => Time.realtimeSinceStartup), prism);
             A.Announcer.Spoken += text =>

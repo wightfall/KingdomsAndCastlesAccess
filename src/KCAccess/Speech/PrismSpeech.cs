@@ -227,11 +227,24 @@ namespace KCAccess.Speech
         }
     }
 
-    /// <summary>Fallback when Prism is missing: only writes to the BepInEx log.</summary>
-    internal sealed class LogOnlySpeech : ISpeechBackend
+    /// <summary>
+    /// What the announcer speaks through: Prism whenever it has a backend, otherwise only the BepInEx log.
+    /// Deciding per message means a screen reader found later (Ctrl+Shift+F5, Ctrl+Shift+F10) is used at once even when
+    /// Prism had no backend at start-up; before, the announcer stayed bound to a log-only fallback for the whole session.
+    /// </summary>
+    internal sealed class SwitchingSpeech : ISpeechBackend
     {
-        public string Name => "log only";
-        public bool Speak(string text, bool interrupt) => true;
-        public void Stop() { }
+        private readonly PrismSpeech prism;
+
+        public SwitchingSpeech(PrismSpeech prism)
+        {
+            this.prism = prism;
+        }
+
+        public string Name => prism != null && prism.IsReady ? prism.Name : "log only";
+
+        public bool Speak(string text, bool interrupt) => prism == null || !prism.IsReady || prism.Speak(text, interrupt);
+
+        public void Stop() => prism?.Stop();
     }
 }
