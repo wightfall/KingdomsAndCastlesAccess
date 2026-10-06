@@ -24,13 +24,14 @@ namespace KCAccess.Game
                 || st == MainMenuMode.State.GameWorkshopUI || st == MainMenuMode.State.LoadError || st == MainMenuMode.State.KingdomShareFromMenu;
             if (freshWorld)
             {
+                // Another world: nothing from the previous kingdom may leak into announcements.
                 Log.Clear();
+                lastWeather = null;
+                EnvoyWatch.Reset();
                 MapController.Inst.OnEnterPlayMode();
             }
             else MapController.Inst.OnResume();
         }
-
-        internal static void OnSaved() => A.SayQueued("Game saved");
 
         private static Weather.WeatherType? lastWeather;
 

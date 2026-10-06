@@ -269,7 +269,10 @@ namespace KCAccess
 
         private void DetectModal()
         {
-            if (Time.unscaledTime < nextDetect && modal != null && modal.Root != null && modal.Root.gameObject.activeInHierarchy && Nav.Count > 0) return;
+            // With nothing open the search ran every frame on the map (GameScreens.Detect walks every game window and
+            // calls FindObjectsOfType for confirmations): look 10 times a second instead.
+            bool modalOk = modal == null || (modal.Root != null && modal.Root.gameObject.activeInHierarchy && Nav.Count > 0);
+            if (Time.unscaledTime < nextDetect && modalOk) return;
             nextDetect = Time.unscaledTime + 0.1f;
             ScreenInfo next = ScreenDetector.DetectMainMenu() ?? Game.GameScreens.Detect();
             if (next == null)
@@ -400,7 +403,7 @@ namespace KCAccess
         /// <summary>Keeps the focused panel group in sync with what the game shows.</summary>
         private void UpdatePanel()
         {
-            // Own timer: DetectModal runs every frame and moves nextDetect forward, so sharing it meant this check
+            // Own timer: DetectModal moves nextDetect forward on its own schedule, so sharing it meant this check
             // never ran and a panel closed by its Close button kept the keyboard (every key silent).
             if (Time.unscaledTime < nextPanelCheck) return;
             nextPanelCheck = Time.unscaledTime + 0.15f;
@@ -438,7 +441,6 @@ namespace KCAccess
 
         // ---------------------------------------------------------------- global keys & help
 
-        /// <summary>The keyboard is on the map right now (no window, panel or mod menu).</summary>
         /// <summary>The map has the keyboard (playing, or exploring from the map setup screen).</summary>
         internal bool OnMapForPad => OnMapNow || (Game.MapController.Inst != null && Game.MapController.Inst.MenuMapMode && ActiveMenu == null);
 

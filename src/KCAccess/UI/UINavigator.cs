@@ -755,8 +755,11 @@ namespace KCAccess.UI
         internal void EndEdit(bool announce)
         {
             if (editSession == null) return;
-            editSession.Finish();
+            // Forget the session first: if finishing it throws (its window was destroyed meanwhile), the mod must not
+            // stay "editing" for ever with every key swallowed.
+            var session = editSession;
             editSession = null;
+            session.Finish();
             if (announce) A.Cue(Cue.Close);
         }
     }
@@ -839,6 +842,12 @@ namespace KCAccess.UI
 
         public void Finish()
         {
+            if (field == null)
+            {
+                // The field (or its whole window) was destroyed while typing: only give the game its hotkeys back.
+                if (GameState.inst != null) GameState.inst.AlphaNumericHotkeysEnabled = true;
+                return;
+            }
             if (field is InputField inf)
             {
                 inf.DeactivateInputField();

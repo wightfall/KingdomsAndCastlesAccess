@@ -114,12 +114,8 @@ namespace KCAccess
         }
     }
 
-    /// <summary>Confirms manual saves (autosaves stay silent).</summary>
-    [HarmonyPatch(typeof(Assets.Code.UI.SaveLoadUI), nameof(Assets.Code.UI.SaveLoadUI.ClickSaveItem))]
-    internal static class Patch_Save
-    {
-        private static void Postfix() => GameEvents.OnSaved();
-    }
+    // No hook on SaveLoadUI.ClickSaveItem: it only opens the "overwrite?" confirmation, so "Game saved" was spoken
+    // before the player answered (even after No). Patch_ManualSave confirms a save once it really happened.
 }
 
 namespace KCAccess
@@ -299,6 +295,13 @@ namespace KCAccess
             // The alert watcher announces it ("an envoy waits to speak with you"); make it the navigation target too.
             var p = e.transform.position;
             Game.MapController.Inst.Nav.SetTarget(new KCAccess.Core.GridPos((int)p.x, (int)p.z), "envoy from " + KingdomOf(e));
+        }
+
+        /// <summary>A new or loaded world: forget the envoys of the previous one.</summary>
+        internal static void Reset()
+        {
+            enroute.Clear();
+            arrived.Clear();
         }
 
     }

@@ -45,6 +45,7 @@ namespace KCAccess.Game
         {
             Target = null;
             TargetLabel = null;
+            BeaconOn = false; // a beacon left on from the previous kingdom would start pinging at the next target
             StopWalk(announce: false);
         }
 

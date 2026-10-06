@@ -150,6 +150,21 @@ namespace KCAccess.Game
             initialized = false;
             MenuMapMode = false;
             enteredPlayAt = Time.unscaledTime;
+            // A new or loaded world: the announcement tracking must not compare with the previous kingdom
+            // (it said "Selection cleared" right after loading a save in which something had been selected).
+            wasPlacing = false;
+            lastHeldName = null;
+            lastPlacedName = null;
+            lastSelected = null;
+            hadSelection = false;
+            areaStart = null;
+            lastValidity = (PlacementValidationResult)(-1);
+            validityCheckFrame = -1;
+            if (GameUI.inst != null)
+            {
+                lastCursorMode = GameUI.inst.currCursorMode;
+                lastBrush = GameUI.inst.brushMode;
+            }
             EnsureInit();
             scanner.Invalidate();
             Nav.ClearTarget();
