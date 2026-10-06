@@ -21,7 +21,7 @@ namespace KCAccess.Game
 
         private static readonly string[] Categories =
         {
-            "Your buildings", "Construction sites", "Your soldiers and ships", "Alerts", "Threats", "Stone", "Iron", "Fertile land", "Forests", "Fresh water", "Foreign kingdoms", "Special places"
+            "Your buildings", "Construction sites", "Your soldiers and ships", "Alerts", "Problems", "Threats", "Stone", "Iron", "Fertile land", "Forests", "Fresh water", "Fishing grounds", "Foreign kingdoms", "Special places"
         };
 
         private int category;
@@ -185,6 +185,16 @@ namespace KCAccess.Game
                 case "Iron":
                     AddClusters(found, c => c.Type == ResourceType.IronDeposit && CellInfo.Explored(c), n => "iron deposit, " + TextUtil.Plural(n, "tile"));
                     break;
+                case "Problems":
+                    foreach (var p in Problems.All()) found.Add(new Item { Label = p.Label, Pos = p.Pos });
+                    break;
+                case "Fishing grounds":
+                {
+                    var fc = FishSystem.inst != null ? FishSystem.inst.fishCells : null;
+                    if (fc == null) break;
+                    AddClusters(found, c => CellInfo.FishAt(c) > 0 && CellInfo.Explored(c), n => "fishing ground, " + TextUtil.Plural(n, "tile"));
+                    break;
+                }
                 case "Alerts":
                     foreach (var e in Alerts.Active()) found.Add(new Item { Label = Alerts.Describe(e), Pos = Alerts.PosOf(e) });
                     break;

@@ -105,6 +105,7 @@ namespace KCAccess
             {
                 Game.GameEvents.Tick();
                 Game.Alerts.Tick();
+                Game.Problems.Tick();
             }
 
             if (ActiveMenu != null)

@@ -146,6 +146,14 @@ namespace KCAccess
                         case "deliver":
                             if (parts.Length > 1 && Enum.TryParse(parts[1], true, out KeyCode dk)) OsKeyboard.Deliver(dk);
                             break;
+                        case "bubbles":
+                        {
+                            var tb = ThoughtBubbleSystem.thoughts;
+                            var sb = new StringBuilder("[bubbles] ");
+                            if (tb != null) for (int i = 0; i < tb.Count; i++) { var b = tb.data[i]; if (b != null) sb.Append(b.thought).Append(b.visible ? "+" : "-").Append(' '); }
+                            Plugin.Log.LogInfo(sb.ToString());
+                            break;
+                        }
                         case "alerttest":
                             // Test only: raise the keep's advisor exclamation mark like the game does.
                             if (Player.inst != null && Player.inst.keep != null && Player.inst.keep.issueButton != null) Player.inst.keep.issueButton.gameObject.SetActive(true);

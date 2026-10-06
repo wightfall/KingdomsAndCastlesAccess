@@ -117,7 +117,7 @@ mouse drag), Left / Right change how many workers are allowed.
 | Shift+C | Chop trees mode on / off (Shift+Enter one corner, Enter the other) |
 | B | Build menu |
 | F6 / Shift+F6 | Move into the open panels: selected building or tile → kingdom overview (population, happiness, tax buttons, resources) → toolbar (speed, chop / demolish / rebuild modes, menu). F6 at the end, or Escape, returns to the map |
-| K | Kingdom status list, including years until the next viking raid and dragon attack (Enter on a line reads the game's detailed report) |
+| K | Kingdom status list, including years until the next viking raid and dragon attack and a summary of the problems the game shows as thought bubbles (Enter on a line reads the game's detailed report) |
 | T | Year, season, weather and game speed |
 | L | Notification history; Enter jumps to where it happened, Shift+Enter makes it the navigation target |
 | Shift+L | Repeat the last notification |
@@ -125,7 +125,7 @@ mouse drag), Left / Right change how many workers are allowed.
 | End | Jump to the selected building |
 | Ctrl+Shift+1 … 9 | Store a bookmark at the cursor (saved per kingdom) |
 | Ctrl+1 … 9 | Jump to a bookmark |
-| Page Up / Page Down | Choose a scan category: your buildings, construction sites, your soldiers and ships, alerts, threats, stone, iron, open fertile land, forests, fresh water, foreign kingdoms, special places |
+| Page Up / Page Down | Choose a scan category: your buildings, construction sites, your soldiers and ships, alerts, problems (hungry, starving, plague, unpaid wages, homeless, rats, unburied dead, buildings that cannot work), threats, stone, iron, open fertile land, forests, fresh water, fishing grounds, foreign kingdoms, special places |
 | [ and ] | Choose the previous / next item of that category as the navigation target, nearest first (the list refreshes itself) |
 | N | Auto-walk the cursor to the target along a route villagers can walk (ends next to it if the target itself is blocked) |
 | Ctrl+N | Walk to the target in a straight line, over water and buildings |
@@ -147,6 +147,16 @@ The game's own keys keep working: **Space** pause, **1 2 3** speed, **R** rotate
 **Delete** demolish the selected building, **C** chop trees on the selected tile, **J** job priority,
 **Escape** cancel / close / pause menu, **WASD QE** camera. **U** (hide the game interface) is
 blocked by the mod, because hidden panels cannot be read; if the interface was hidden anyway, F6 shows it again.
+
+### Problems, fish, plague and weather
+
+The game warns with small pictures over villagers and buildings (thought bubbles). The mod reads them:
+the **Problems** scanner category lists each one ("villager at Farm: hungry", "Hovel: problems: 2 hungry"),
+I on a tile says them, K gives a summary, and critical ones (starving, bad plague, unpaid soldiers,
+unburied bodies, rats) are announced when they appear. Water tiles say how many fish swim there, the
+**Fishing grounds** category finds them for fishing huts, and O counts them. Sick villagers are mentioned
+on their tile and in the villager description. Heavy rain (farms may flood) and thunderstorms (fires) are
+announced, as are newly unlocked achievements. Stacked castle blocks are read as "stacked 4 high".
 
 ### Trading, diplomacy and research
 

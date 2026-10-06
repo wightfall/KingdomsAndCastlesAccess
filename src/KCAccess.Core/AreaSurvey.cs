@@ -6,7 +6,7 @@ namespace KCAccess.Core
     public sealed class AreaSurvey
     {
         public int Radius;
-        public int Land, Open, Fertile, VeryFertile, Forest, Stone, Iron, Water, DeepWater, Buildings, Fog;
+        public int Land, Open, Fertile, VeryFertile, Forest, Stone, Iron, Water, DeepWater, Buildings, Fog, FishTiles;
 
         /// <summary>Nearest resources outside the counted square, as already-phrased directions ("12 tiles east, ..."); may be null.</summary>
         public string NearestStone, NearestIron, NearestWater;
@@ -25,6 +25,7 @@ namespace KCAccess.Core
             if (Iron > 0) parts.Add(Iron + " iron");
             if (Water > 0) parts.Add(Water + " shallow water");
             if (DeepWater > 0) parts.Add(DeepWater + " deep water");
+            if (FishTiles > 0) parts.Add(TextUtil.Plural(FishTiles, "water tile") + " with fish");
             if (Buildings > 0) parts.Add(TextUtil.Plural(Buildings, "tile") + " with buildings");
             if (Stone == 0 && NearestStone != null) parts.Add("nearest stone " + NearestStone);
             if (Iron == 0 && NearestIron != null) parts.Add("nearest iron " + NearestIron);

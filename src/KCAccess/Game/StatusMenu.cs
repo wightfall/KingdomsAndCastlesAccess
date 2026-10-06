@@ -173,6 +173,7 @@ namespace KCAccess.Game
             Add(() => "Armaments " + Status.Res(FreeResourceType.Armament), () => Examine(GameUI.inst.islandInfoUI.GetComponentInChildren<ArmamentInfo>(true)));
             Add(Status.TaxLine);
             Add(Status.ThreatLine);
+            Add(Problems.SummaryLine);
             Add("Press Enter on gold, food, a material, happiness or health for the detailed report. F6 from the map reaches the kingdom overview panel with the tax buttons.");
         }
 

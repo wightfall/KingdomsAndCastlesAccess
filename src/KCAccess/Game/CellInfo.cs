@@ -92,7 +92,7 @@ namespace KCAccess.Game
                 }
                 counts[name]++;
             }
-            foreach (var n in order) result.Add(counts[n] > 1 ? n + " times " + counts[n] : n);
+            foreach (var n in order) result.Add(counts[n] > 1 ? n + ", stacked " + counts[n] + " high" : n);
             return result;
         }
 
@@ -245,7 +245,21 @@ namespace KCAccess.Game
             if (c.TreeAmount > 0 && GameUI.inst != null && GameUI.inst.GetClearCutterJob(c) != null) parts.Add("marked for chopping");
             if (verbose && !IsWater(c) && c.Type == ResourceType.None) parts.Add(Fertility(c)); // soil only matters on open ground
             int villagers = VillagerCount(c);
-            if (villagers > 0) parts.Add(TextUtil.Plural(villagers, "villager"));
+            if (villagers > 0)
+            {
+                int sick = SickCount(c);
+                parts.Add(TextUtil.Plural(villagers, "villager") + (sick > 0 ? ", " + sick + " sick" : string.Empty));
+            }
+            if (IsWater(c))
+            {
+                int fish = FishAt(c);
+                if (fish > 0) parts.Add(TextUtil.Plural(fish, "fish", "fish"));
+            }
+            if (verbose)
+            {
+                string problem = Problems.At(c.x, c.z);
+                if (problem != null) parts.Add(problem);
+            }
             parts.Add(Owner(c));
             if (Plugin.CfgCoordinates.Value) parts.Add(c.x + ", " + c.z);
             return TextUtil.Join(", ", parts);
@@ -276,6 +290,30 @@ namespace KCAccess.Game
             return TextUtil.Sentences(parts.ToArray());
         }
 
+        /// <summary>Fish swimming in this water tile (fishing huts need them nearby).</summary>
+        internal static int FishAt(Cell c)
+        {
+            try
+            {
+                var fc = FishSystem.inst != null ? FishSystem.inst.fishCells : null;
+                if (c == null || fc == null || !IsWater(c)) return 0; // fish swim over the shoreline; only water tiles count
+                int i = c.z * World.inst.GridWidth + c.x;
+                return i >= 0 && i < fc.Length && fc[i] != null ? fc[i].fish.Count : 0;
+            }
+            catch (System.Exception)
+            {
+                return 0;
+            }
+        }
+
+        internal static int SickCount(Cell c)
+        {
+            var v = World.inst.GetVillagersAt(c.x, c.z);
+            int n = 0;
+            if (v != null) for (int i = 0; i < v.Count; i++) if (v.data[i] != null && v.data[i].sick) n++;
+            return n;
+        }
+
         internal static int VillagerCount(Cell c)
         {
             try
@@ -304,6 +342,7 @@ namespace KCAccess.Game
                     if (IsWater(c))
                     {
                         if (c.deepWater) s.DeepWater++; else s.Water++;
+                        if (FishAt(c) > 0) s.FishTiles++;
                         continue;
                     }
                     s.Land++;
@@ -361,6 +400,7 @@ namespace KCAccess.Game
             string job = v.job != null ? TextUtil.Clean(v.job.GetDescription() ?? string.Empty) : string.Empty;
             parts.Add(job.Length > 0 ? job : "no job");
             if (v.Residence == null) parts.Add("homeless");
+            if (v.sick) parts.Add("sick with plague");
             string thought = TextUtil.Clean(v.GetThought() ?? string.Empty);
             if (thought.Length > 0) parts.Add("thinks: " + thought);
             return string.Join(", ", parts.ToArray());

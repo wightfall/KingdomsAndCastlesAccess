@@ -32,6 +32,8 @@ namespace KCAccess.Game
 
         internal static void OnSaved() => A.SayQueued("Game saved");
 
+        private static Weather.WeatherType? lastWeather;
+
         internal static void Tick()
         {
             if (Weather.inst != null)
@@ -43,6 +45,20 @@ namespace KCAccess.Game
                     A.SayQueued(s == Weather.Season.Winter ? "Winter has come" : "Summer has come");
                 }
                 lastSeason = s;
+            }
+            try
+            {
+                var wt = Weather.CurrentWeather;
+                if (lastWeather.HasValue && lastWeather.Value != wt && Plugin.CfgAnnounceSeasons.Value)
+                {
+                    if (wt == Weather.WeatherType.HeavyRain) { A.Cue(Cue.Notify); A.SayQueued("Heavy rain. Farms near water may flood."); }
+                    else if (wt == Weather.WeatherType.LightningStorm) { A.Cue(Cue.Notify); A.SayQueued("Thunderstorm. Lightning can start fires."); }
+                }
+                lastWeather = wt;
+            }
+            catch (System.Exception)
+            {
+                // weather is optional
             }
             if (TimeManager.inst != null)
             {

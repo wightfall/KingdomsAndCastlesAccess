@@ -346,3 +346,31 @@ namespace KCAccess
         }
     }
 }
+
+namespace KCAccess
+{
+    /// <summary>Steam shows unlocked achievements as a picture pop-up; say it when one is newly unlocked.</summary>
+    [HarmonyPatch(typeof(Assets.Achievements), "Try")]
+    internal static class Patch_Achievement
+    {
+        private static void Prefix(string achievement, out bool __state)
+        {
+            __state = false;
+            try { __state = IntegrationManager.inst != null && IntegrationManager.inst.GetAchievement(achievement); } catch { }
+        }
+
+        private static void Postfix(string achievement, bool __state)
+        {
+            try
+            {
+                if (__state || IntegrationManager.inst == null || !IntegrationManager.inst.GetAchievement(achievement)) return;
+                A.Cue(KCAccess.Core.Cue.Placed);
+                A.SayQueued("Achievement unlocked: " + KCAccess.Core.TextUtil.Humanize(achievement.Replace('_', ' ')));
+            }
+            catch
+            {
+                // announcement only
+            }
+        }
+    }
+}
