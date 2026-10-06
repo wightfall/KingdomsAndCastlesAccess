@@ -75,6 +75,14 @@ namespace KCAccess.Game
 
         internal static void OnNotification(string id, string message, KingdomLog.LogStatus status, Vector3? pos)
         {
+            if (id == "streamervote")
+            {
+                // Effect banners (Twitch vote results, witch spells) log their title. The banner itself is read in full
+                // when it opens, and a Twitch result is logged with its voter by Twitch.OnWinner.
+                if (EffectBanner.inst != null && EffectBanner.inst.resetVotesOnDismiss) return;
+                Log.Add(message, Severity.Info, Player.inst != null ? Player.inst.CurrYear : 0);
+                return;
+            }
             var sev = NotificationLog.Classify(id, status == KingdomLog.LogStatus.Warning, status == KingdomLog.LogStatus.Important);
             GridPos? where = null;
             if (pos.HasValue) where = new GridPos((int)pos.Value.x, (int)pos.Value.z);

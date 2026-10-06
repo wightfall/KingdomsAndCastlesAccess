@@ -123,7 +123,9 @@ namespace KCAccess
                 Game.GameEvents.Tick();
                 Game.Alerts.Tick();
                 Game.Problems.Tick();
+                Game.Twitch.Tick();
             }
+            Game.StreamStatusFile.Tick(playing);
 
             if (ActiveMenu != null)
             {
@@ -224,6 +226,7 @@ namespace KCAccess
                 if (panel != null)
                 {
                     KInput.Consume(KeyCode.Escape);
+                    if (panel.Key == "Twitch") Game.Twitch.Hide(); // the settings slide over the map; Escape closes them too
                     LeavePanel(announce: true);
                     return;
                 }
@@ -349,6 +352,15 @@ namespace KCAccess
             if (groups.Count == 0) return false;
             int idx = direction >= 0 ? 0 : groups.Count - 1;
             EnterPanel(groups[idx]);
+            return true;
+        }
+
+        /// <summary>Moves focus into the panel group with this key (e.g. "Twitch"). False when it is not open.</summary>
+        internal bool FocusPanelGroup(string key)
+        {
+            var g = Game.GameScreens.PanelGroups().Find(x => x.Key == key);
+            if (g == null) return false;
+            EnterPanel(g);
             return true;
         }
 
@@ -496,7 +508,11 @@ namespace KCAccess
                 features.CanGoBack = modal.Id != "Menu";
                 return TextUtil.Sentences(title, desc, Special.Help(Nav.Current), KeyHelp.NavKeys(features));
             }
-            if (panel != null) return TextUtil.Sentences(panel.Title, HelpText.For("Panel"), Special.Help(Nav.Current), KeyHelp.NavKeys(Nav.Features(true, playing)));
+            if (panel != null)
+            {
+                string pid = HelpText.Has("Panel." + panel.Key) ? "Panel." + panel.Key : "Panel";
+                return TextUtil.Sentences(panel.Title, HelpText.For(pid), Special.Help(Nav.Current), KeyHelp.NavKeys(Nav.Features(true, playing)));
+            }
             if (playing || Game.MapController.Inst.MenuMapMode) return KeyHelp.MapHelp(Game.MapController.Inst.State());
             return HelpText.For(helpId);
         }

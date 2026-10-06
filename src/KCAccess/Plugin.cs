@@ -44,6 +44,10 @@ namespace KCAccess
         internal static ConfigEntry<bool> CfgHints;
         internal static ConfigEntry<bool> CfgPositions;
         internal static ConfigEntry<bool> CfgController;
+        internal static ConfigEntry<bool> CfgTwitchCountdown;
+        internal static ConfigEntry<bool> CfgTwitchChat;
+        internal static ConfigEntry<bool> CfgCaptions;
+        internal static ConfigEntry<bool> CfgStreamFile;
 
         /// <summary>The mod's key bindings (rebindable in the mod settings, Ctrl+Shift+O).</summary>
         internal static readonly KCAccess.Core.Bindings Keys = new KCAccess.Core.Bindings();
@@ -70,6 +74,10 @@ namespace KCAccess
             CfgHints = Config.Bind("Speech", "Hints", true, "Speak short hints for new players (for example how to use a target after choosing it).");
             CfgPositions = Config.Bind("Speech", "SayPositions", false, "In every menu, list and panel, say the position after each item, for example \"New, 3 of 19\".");
             CfgController = Config.Bind("Keyboard", "ControllerSupport", true, "Play with a gamepad (Xbox, PlayStation and most others): buttons do the same as the mod's keys. Turn off to use the game's own controller mode instead.");
+            CfgTwitchCountdown = Config.Bind("Streaming", "AnnounceTwitchCountdown", true, "With the game's Twitch chat voting connected: say once when 10 seconds are left in a vote, with the leading option.");
+            CfgTwitchChat = Config.Bind("Streaming", "ReadTwitchChat", false, "With the game's Twitch chat voting connected: read Twitch chat messages aloud (vote messages are skipped, busy chat is summarised).");
+            CfgCaptions = Config.Bind("Streaming", "SpeechCaptions", false, "Show the last spoken lines as captions at the bottom of the screen, for people watching your stream.");
+            CfgStreamFile = Config.Bind("Streaming", "StatusFile", false, "Every 2 seconds write BepInEx/kcaccess_stream.txt (kingdom, year, population, gold, last notification) for an OBS text source.");
             Keys.Load(CfgBindings.Value);
             KeyHelp.KeyNameOf = Keys.Spoken; // help texts name the player's own keys
             CfgLogKeys = Config.Bind("Debug", "KeyLog", true, "Write every key press (key name only), with the modifier state seen by the game and by Windows, to the BepInEx log (for keyboard bug reports).");
@@ -94,6 +102,7 @@ namespace KCAccess
             A.Announcer.Spoken += text =>
             {
                 if (CfgLogSpeech.Value) Log.LogInfo("[speech] " + text);
+                Game.CaptionOverlay.OnSpoken(text);
             };
 
             harmony = new Harmony(Guid);
@@ -111,6 +120,7 @@ namespace KCAccess
             root.hideFlags = HideFlags.HideAndDontSave;
             root.AddComponent<AudioCues>();
             root.AddComponent<AccessController>();
+            root.AddComponent<Game.CaptionOverlay>();
             Loaded = true;
             Log.LogInfo(Name + " " + Version + " loaded. OS " + Environment.OSVersion + ", keyboard layout " + Modifiers.KeyboardLayout() + ".");
         }

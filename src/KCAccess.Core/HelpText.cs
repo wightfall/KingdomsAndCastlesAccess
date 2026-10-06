@@ -37,6 +37,11 @@ namespace KCAccess.Core
             { "Confirm", "A question needs an answer. Choose yes or no." },
             { "Dialog", "A window is open." },
             { "Panel", "You are inside an information panel of the game." },
+            { "Panel.Twitch",
+                "Twitch chat voting. Type your Twitch channel name in the text field and press Enter; you hear when the chat is connected. " +
+                "The interval and maximum votes lists set how often a vote runs and how many options it offers, and the check boxes turn single vote options on or off. " +
+                "Each new vote is announced with the numbers viewers type in chat, for example #2. K shows the running vote counts and the time left, Enter on that line opens or closes these settings. " +
+                "The result banner says what the viewers chose. Escape closes the settings and returns to the map. Captions, reading chat aloud and the overlay status file are in the mod settings, group Streaming." },
             { "BuildMenu",
                 "Build menu. Left and Right arrows switch category, Up and Down choose a building. Each building lists cost, size and whether you can build it now. " +
                 "Enter picks the building up for placement. I reads the full description. Letters jump to buildings by name. Escape closes the menu." },
@@ -65,7 +70,7 @@ namespace KCAccess.Core
             { "Log", "Notification history, newest first. Up and Down move through notifications, Enter jumps the map cursor to where it happened, Shift Enter makes that place your navigation target, Escape closes." },
             { "ModSettings", "Mod settings. Up and Down move through the settings, Enter or Space toggles a check box, Left and Right change a value such as the sound volume or walking speed. On a mod key, Enter waits for the new key: press it with Control, Shift or Alt if you like, Escape cancels. A key already used by the mod or the game is refused and you are told what uses it. Delete restores that key's default. The last line resets everything. Escape closes." },
             { "Keys", "Key list. Up and Down read one key at a time, Page Up and Page Down jump between groups, Home and End go to the first and last line, letters jump to a line. The sound cues are at the end: Enter on a sound plays it. Escape closes." },
-            { "Status", "Kingdom status list. Up and Down move through the lines, Escape closes." },
+            { "Status", "Kingdom status list. Up and Down move through the lines, Enter on a resource, happiness or health line reads the game's report, Enter on the Twitch vote line opens the Twitch voting settings. Escape closes." },
         };
 
         public static string For(string screenId)

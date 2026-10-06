@@ -117,7 +117,7 @@ mouse drag), Left / Right change how many workers are allowed.
 | Shift+C | Chop trees mode on / off (Shift+Enter one corner, Enter the other) |
 | B | Build menu |
 | F6 / Shift+F6 | Move into the open panels: selected building or tile → kingdom overview (population, happiness, tax buttons, resources) → toolbar (speed, chop / demolish / rebuild modes, menu). F6 at the end, or Escape, returns to the map |
-| K | Kingdom status list, including years until the next viking raid and dragon attack and a summary of the problems the game shows as thought bubbles (Enter on a line reads the game's detailed report) |
+| K | Kingdom status list, including years until the next viking raid and dragon attack, a summary of the problems the game shows as thought bubbles, active timed effects and the running Twitch vote (Enter on a line reads the game's detailed report; on the Twitch line it opens the voting settings) |
 | T | Year, season, weather and game speed |
 | L | Notification history; Enter jumps to where it happened, Shift+Enter makes it the navigation target |
 | Shift+L | Repeat the last notification |
@@ -157,6 +157,33 @@ unburied bodies, rats) are announced when they appear. Water tiles say how many 
 **Fishing grounds** category finds them for fishing huts, and O counts them. Sick villagers are mentioned
 on their tile and in the villager description. Heavy rain (farms may flood) and thunderstorms (fires) are
 announced, as are newly unlocked achievements. Stacked castle blocks are read as "stacked 4 high".
+
+### Streaming
+
+For players who stream on Twitch or record videos. Everything is off by default except the Twitch countdown;
+change it in the mod settings (Ctrl+Shift+O, group **Streaming**).
+
+* **Twitch chat voting** (the game's Settings: Enable Twitch Chat Voting). Viewers vote in chat for effects
+  such as a good harvest or a plague. The voting panel is a panel group: F6 from the map reaches **Twitch
+  vote** (the current options) or, while its settings are open, **Twitch voting** (channel name field,
+  vote interval, number of options and a check box for every vote option). K has a **Twitch vote** line with
+  the vote counts and the time left; Enter on it opens or closes the settings and moves you into them.
+  Escape closes them again. After you type your channel name you hear "Connected to the Twitch chat" or
+  that the channel could not be joined.
+* Every new vote is announced with the numbers viewers type: "New Twitch vote, ends in 2 minutes: 4, Bountiful
+  harvest; 5, Plague; 6, Rain". Single votes are not spoken (K has the counts). **Announce when 10 seconds are
+  left in a Twitch vote** (on by default) says once per vote how much time is left and which option leads.
+  The result banner starts with "Twitch viewers chose Plague, picked by name"; "Nobody voted" when no one did.
+* **Read Twitch chat aloud** (off): chat messages are spoken as "name: message" after whatever is being said.
+  Votes like "#2" are skipped, long messages are cut at 200 characters, and when chat is busy at most 3
+  messages per 10 seconds are spoken, followed by "and 7 more chat messages".
+* **Show speech captions on screen** (off): your viewers cannot hear your screen reader, so the last 3 spoken
+  lines are shown at the bottom of the screen in large white text on a dark box; each fades after 6 seconds.
+* **Write a status file for streaming overlays** (off): every 2 seconds the mod writes
+  `BepInEx\kcaccess_stream.txt` with the kingdom name, year and season, population, gold, the last
+  notification and the running Twitch vote. In OBS add a Text source, tick "Read from file" and choose that file.
+* K also lists **active effects** with their time left (Twitch vote results, witch blessings and curses,
+  Chamber of War orders), which the game shows only as icons.
 
 ### Leaving the game
 
@@ -268,6 +295,8 @@ Page Down jump between the groups (you hear when you reach the first or last gro
   volume).
 * **Map:** camera follows the cursor, auto-walk speed (slow, normal, fast).
 * **Keyboard and logs:** deliver key presses the game missed, key log, speech log.
+* **Streaming:** Twitch vote countdown, read Twitch chat aloud, speech captions on screen, status file for
+  streaming overlays (see [Streaming](#streaming)).
 * **Mod keys:** every mod key is listed with its current key. Enter waits for a new key (hold Control,
   Shift or Alt with it if you like; Escape cancels). A key that the mod already uses, or that is one of the
   game's own keys, is refused and you are told what uses it, for example "J cannot be used: it is the
@@ -311,6 +340,10 @@ Every sound can be previewed: Shift+F1, End, then Up through the sounds and pres
 | Map / CameraFollowsCursor | true | Camera follows the keyboard cursor (helps sighted helpers) |
 | Speech / AnnounceNotifications | true | Speak kingdom notifications automatically |
 | Speech / LogSpeech | true | Write everything spoken to `BepInEx\LogOutput.log` |
+| Streaming / AnnounceTwitchCountdown | true | Say once when 10 seconds are left in a Twitch vote |
+| Streaming / ReadTwitchChat | false | Read Twitch chat aloud (votes skipped, busy chat summarised) |
+| Streaming / SpeechCaptions | false | Show the last spoken lines on screen for stream viewers |
+| Streaming / StatusFile | false | Write `BepInEx\kcaccess_stream.txt` every 2 seconds for OBS |
 
 ## Game bugs fixed by the mod
 

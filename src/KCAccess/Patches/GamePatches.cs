@@ -416,3 +416,52 @@ namespace KCAccess
     [HarmonyPatch(typeof(OpenInFileBrowser), nameof(OpenInFileBrowser.Open))]
     internal static class Patch_OpenFolder { private static void Prefix() => ExternalLinks.Leaving("the folder in File Explorer"); }
 }
+
+namespace KCAccess
+{
+    /// <summary>
+    /// Twitch chat voting (StreamerUI): the connection result, every new vote with the numbers viewers type, and the
+    /// winner were visual only. See Game.Twitch for the countdown, the K status line and reading chat aloud.
+    /// </summary>
+    [HarmonyPatch(typeof(StreamerUI), nameof(StreamerUI.NewVoteSet))]
+    internal static class Patch_TwitchNewVote
+    {
+        private static void Postfix()
+        {
+            try { Game.Twitch.OnNewVoteSet(); } catch (Exception e) { Plugin.Log.LogWarning("Twitch vote announcement failed: " + e.Message); }
+        }
+    }
+
+    [HarmonyPatch(typeof(StreamerUI), nameof(StreamerUI.OnVotingEnd))]
+    internal static class Patch_TwitchVotingEnd
+    {
+        private static void Prefix() => Game.Twitch.BeforeVotingEnd();
+    }
+
+    [HarmonyPatch(typeof(StreamerUI), nameof(StreamerUI.SetUsername))]
+    internal static class Patch_TwitchUsername
+    {
+        private static void Postfix(string username)
+        {
+            try { Game.Twitch.OnUsernameSet(username); } catch { /* announcement only */ }
+        }
+    }
+
+    [HarmonyPatch(typeof(StreamerUI), "SetOnline")]
+    internal static class Patch_TwitchOnline
+    {
+        private static void Postfix(bool show)
+        {
+            try { Game.Twitch.OnOnline(show); } catch { /* announcement only */ }
+        }
+    }
+
+    [HarmonyPatch(typeof(EffectBanner), nameof(EffectBanner.ShowBannerVoteSystem))]
+    internal static class Patch_TwitchWinner
+    {
+        private static void Postfix(Votable votable, string voterName)
+        {
+            try { if (votable != null) Game.Twitch.OnWinner(votable, voterName); } catch { /* announcement only */ }
+        }
+    }
+}

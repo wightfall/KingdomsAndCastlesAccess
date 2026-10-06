@@ -24,9 +24,14 @@ namespace KCAccess.Game
             }
         }
 
+        internal static string SeasonName() => Weather.inst != null ? (Weather.inst.season == Weather.Season.Winter ? "winter" : "summer") : string.Empty;
+
+        /// <summary>Villagers on the player's island.</summary>
+        internal static int Population() => Landmass < 0 ? 0 : World.inst.GetVillagersForLandMass(Landmass).Count;
+
         internal static string DateLine()
         {
-            string season = Weather.inst != null ? (Weather.inst.season == Weather.Season.Winter ? "winter" : "summer") : string.Empty;
+            string season = SeasonName();
             string weather = string.Empty;
             try
             {
@@ -63,7 +68,7 @@ namespace KCAccess.Game
         internal static string PopulationLine()
         {
             if (Landmass < 0) return "No population yet";
-            int pop = World.inst.GetVillagersForLandMass(Landmass).Count;
+            int pop = Population();
             int idle = World.inst.AvailableWorkersOnLandMass(Landmass);
             int beds = Player.inst.TotalResidentialSlotsOnLandMass(Landmass);
             int homeless = Player.inst.Homeless != null ? Player.inst.Homeless.Count : 0;
@@ -148,6 +153,27 @@ namespace KCAccess.Game
             if (enemies > 0) parts.Add(TextUtil.Plural(enemies, "enemy army", "enemy armies") + " on the map");
             return parts.Count == 0 ? "No threats visible" : TextUtil.Join(". ", parts);
         }
+
+        /// <summary>
+        /// Timed effects shown only as icons with a countdown (StatusEffectsManager): Twitch vote results, witch
+        /// blessings and curses, Chamber of War orders. Null when none is active.
+        /// </summary>
+        internal static string EffectsLine()
+        {
+            var m = StatusEffectsManager.inst;
+            if (m == null || m.activeEffectContainer == null) return null;
+            var parts = new System.Collections.Generic.List<string>();
+            foreach (var e in m.activeEffectContainer.GetComponentsInChildren<StreamerEffect>())
+            {
+                if (e == null) continue;
+                string term = e.NameText != null ? e.NameText.Term : e.pendingTerm;
+                string name = Twitch.Translate(term);
+                if (name.Length == 0) name = TextUtil.Humanize(e.GetType().Name.Replace("StreamerEffect_", "").Replace("ChamberOfWarEffect_", ""));
+                float left = e.Timer != null && e.Timer.Duration > 0f ? e.TimeRemaining() : -1f;
+                parts.Add(left > 0f ? name + ", " + TwitchText.Duration(Mathf.CeilToInt(left)) + " left" : name);
+            }
+            return parts.Count == 0 ? null : "Active effects: " + string.Join("; ", parts.ToArray());
+        }
     }
 
     /// <summary>K: kingdom status list. Enter on a resource line reads the game's detailed yearly report.</summary>
@@ -174,6 +200,8 @@ namespace KCAccess.Game
             Add(Status.TaxLine);
             Add(Status.ThreatLine);
             Add(Problems.SummaryLine);
+            if (Status.EffectsLine() != null) Add(() => Status.EffectsLine() ?? "No active effects");
+            if (Twitch.Enabled) Add(Twitch.StatusLine, () => { Close(announce: false); Twitch.OpenSettings(); });
             Add("Press Enter on gold, food, a material, happiness or health for the detailed report. F6 from the map reaches the kingdom overview panel with the tax buttons.");
         }
 

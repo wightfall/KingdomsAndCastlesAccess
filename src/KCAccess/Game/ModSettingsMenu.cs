@@ -68,6 +68,11 @@ namespace KCAccess.Game
             Toggle("Deliver key presses the game missed (for Windows 11, NVDA Remote and Steam Input problems)", Plugin.CfgKeyFallback);
             Toggle("Write key presses to the log (bug reports)", Plugin.CfgLogKeys);
             Toggle("Write everything spoken to the log (bug reports)", Plugin.CfgLogSpeech);
+            Header("Streaming");
+            Toggle("Announce when 10 seconds are left in a Twitch vote", Plugin.CfgTwitchCountdown);
+            Toggle("Read Twitch chat aloud (vote messages are skipped)", Plugin.CfgTwitchChat);
+            Toggle("Show speech captions on screen for stream viewers", Plugin.CfgCaptions);
+            Toggle("Write a status file for streaming overlays, kcaccess_stream.txt in the BepInEx folder", Plugin.CfgStreamFile);
             Header("Mod keys. Enter changes a key, Delete restores its default");
             foreach (var def in Bindings.Defs)
             {
@@ -137,7 +142,7 @@ namespace KCAccess.Game
         {
             if (KInput.Plain(KeyCode.PageDown) || KInput.Plain(KeyCode.PageUp))
             {
-                // Jump between the groups (Speech, Sound, Map, Keyboard, Mod keys, Reset), like the Shift+F1 list.
+                // Jump between the groups (Speech, Sound, Map, Keyboard, Streaming, Mod keys, Reset), like the Shift+F1 list.
                 int dir = KInput.Down(KeyCode.PageDown) ? 1 : -1;
                 for (int i = List.Index + dir; i >= 0 && i < settings.Count; i += dir)
                 {

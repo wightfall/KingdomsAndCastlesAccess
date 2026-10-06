@@ -18,7 +18,12 @@ namespace KCAccess.Game
             ScreenInfo s;
             if (Is(ui.demolishWarningUI, out s, "DemolishWarning", "Demolish warning")) return s;
             if (Is(ui.levelUpUI, out s, "LevelUp", "Your town grew")) return s;
-            if (EffectBanner.inst != null && EffectBanner.inst.Showing() && Is(EffectBanner.inst, out s, "Banner", "Announcement")) return s;
+            if (EffectBanner.inst != null && EffectBanner.inst.Showing() && Is(EffectBanner.inst, out s, "Banner", "Announcement"))
+            {
+                string winner = Twitch.BannerTitle(); // a Twitch vote result: say who won first
+                if (winner != null) s.Title = winner;
+                return s;
+            }
             if (ui.survivalIntro != null && Is(ui.survivalIntro, out s, "SurvivalIntro", "Survival mode")) return s;
             if (ui.survivalSuccess != null && Is(ui.survivalSuccess, out s, "SurvivalSuccess", "Survival success")) return s;
             // AdvisorUI.IsVisible() only checks the outer object, which stays active after Hide(); the real window is containerRect.
@@ -122,6 +127,9 @@ namespace KCAccess.Game
                 AddIfVisible(creative, ui.creativeModeOptions.transform);
                 if (creative.Count > 0) groups.Add(Group("Creative", "Creative mode options", creative));
             }
+
+            var twitch = Twitch.PanelRoots();
+            if (twitch.Count > 0) groups.Add(Group("Twitch", Twitch.SettingsVisible ? "Twitch voting" : "Twitch vote", twitch));
 
             var toolbar = new List<Transform>();
             if (SpeedControlUI.inst != null) AddIfVisible(toolbar, SpeedControlUI.inst);
