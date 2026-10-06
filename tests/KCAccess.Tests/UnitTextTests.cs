@@ -45,6 +45,16 @@ namespace KCAccess.Tests
         }
 
         [Fact]
+        public void TowerRangeGrowsWithCastleLevels()
+        {
+            Assert.Equal("range 8 tiles, 1 of 4 castle levels high, 14 tiles at full height", UnitText.Range(6f, 2f, 1, 4));
+            Assert.Equal("range 12 tiles, full height", UnitText.Range(6f, 1.5f, 4, 4));
+            Assert.Equal("range 6 tiles, 12 on 4 castle levels", UnitText.Range(6f, 1.5f, -1, 4));
+            Assert.Equal("range 10 tiles", UnitText.Range(10f, 0f, 2, 0));
+            Assert.Equal("range 1 tile", UnitText.Range(1f, 0f, -1, 0));
+        }
+
+        [Fact]
         public void RouteStopDescribesPlaceAndCargo()
         {
             Assert.Equal("Stop 2 of 3: Northport, 4 tiles east, pick up wood 20, drop off nothing",

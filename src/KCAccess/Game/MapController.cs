@@ -1119,7 +1119,9 @@ namespace KCAccess.Game
             if (r.Value == PlacementValidationResult.Valid)
             {
                 A.Cue(Cue.PlaceValid);
-                if (always) A.Say("Can build here", force: true);
+                // Towers: the range rings (which grow on castle walls) are drawn only; V tells them.
+                string range = always ? CellInfo.RangeText(GameUI.inst.CurrPlacementMode.GetHoverBuilding(), placed: true) : null;
+                if (always) A.Say("Can build here" + (range != null ? ", " + range : string.Empty), force: true);
                 else if (changed) A.SayQueued("can build");
             }
             else

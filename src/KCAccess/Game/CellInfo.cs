@@ -110,6 +110,11 @@ namespace KCAccess.Game
                     parts.Add(b.WorkersAllocated + " of " + b.WorkersForFullYield + " workers");
                 }
             }
+            if (!brief && b.IsBuilt())
+            {
+                string range = RangeText(b, placed: true);
+                if (range != null) parts.Add(range);
+            }
             int team = b.TeamID();
             if (team != 0)
             {
@@ -117,6 +122,25 @@ namespace KCAccess.Game
                 parts.Add(rel == World.Relations.Enemy ? "enemy" : "foreign");
             }
             return TextUtil.Join(", ", parts);
+        }
+
+        /// <summary>
+        /// Shooting range of towers (the rings the game draws on the ground). <paramref name="placed"/>: the building
+        /// stands on the map (built or being placed), so its castle height counts; otherwise (build menu) only the
+        /// range on the ground and at full height.
+        /// </summary>
+        internal static string RangeText(Building b, bool placed)
+        {
+            var r = b != null ? b.GetComponent<IMaxRangeDisplay>() : null;
+            if (r == null) return null;
+            try
+            {
+                return UnitText.Range(r.GetInitRadius(), r.GetUnitsPerRing(), placed ? r.GetCurrHeight() : -1, r.GetNumRings());
+            }
+            catch (System.Exception)
+            {
+                return null; // not set up yet
+            }
         }
 
         internal static string Owner(Cell c)

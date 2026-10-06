@@ -135,7 +135,7 @@ mouse drag), Left / Right change how many workers are allowed.
 | Shift+N | Target beacon on / off: pings panned to the target's side, higher pitch north, lower south, faster when closer, a chime on arrival |
 | Alt+1 … 9 | Make a bookmark the navigation target |
 | Any arrow / Escape | Stop an auto-walk |
-| V | While placing: why the spot is (in)valid |
+| V | While placing: why the spot is (in)valid; for towers also their shooting range, which grows with every castle level they stand on |
 | M | Send the selected soldiers (also siege catapults and your dragons) to the cursor; on a route stop in a ship or cart panel: move the stop to the cursor |
 | Ctrl+E | Respond to the nearest alert (the game's exclamation marks): advisor news at the keep, a foreign envoy waiting to speak, a stopped transport cart, a ship needing orders |
 
@@ -238,7 +238,7 @@ brushes work the same way: pick a brush, press Ctrl+M, move the cursor and press
 |-----|--------|
 | Left / Right or Tab | Previous / next category (Castle, Town, Advanced town, Food, Industry, Maritime) |
 | Up / Down, Home / End | Choose a building: name, cost (what you are missing), size, available or why not |
-| I or F5 | Full description, workers and wages |
+| I or F5 | Full description, workers, wages and the range of towers |
 | Letters | Jump to a building by name |
 | Enter or Space | Pick up the building; cemeteries, statues and parks open their own list |
 | Escape or B (your build menu key) | Close |

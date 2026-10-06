@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace KCAccess.Core
@@ -40,6 +41,23 @@ namespace KCAccess.Core
             if (value > 2f && value <= 5f) return "neutral";
             if (value > 5f && value <= 8f) return "angry";
             return "very angry";
+        }
+
+        /// <summary>
+        /// Shooting range of a tower (IMaxRangeDisplay: archer tower, ballista, keep), shown in the game only as rings on
+        /// the ground. The range grows with every castle level the tower stands on. <paramref name="height"/> -1 = not
+        /// built yet (build menu): only the range on the ground and at full height.
+        /// </summary>
+        public static string Range(float baseRange, float perLevel, int height, int maxLevels)
+        {
+            bool grows = perLevel > 0f && maxLevels > 0;
+            int full = (int)Math.Round(baseRange + maxLevels * perLevel);
+            if (height < 0)
+                return "range " + TextUtil.Plural((int)Math.Round(baseRange), "tile") + (grows ? ", " + full + " on " + maxLevels + " castle levels" : string.Empty);
+            int h = Math.Min(height, Math.Max(0, maxLevels));
+            string s = "range " + TextUtil.Plural((int)Math.Round(baseRange + (grows ? h * perLevel : 0f)), "tile");
+            if (!grows) return s;
+            return s + (h >= maxLevels ? ", full height" : ", " + h + " of " + maxLevels + " castle levels high, " + full + " tiles at full height");
         }
 
         /// <summary>"wood 20, stone 5" for the non-zero amounts, or null when everything is zero.</summary>

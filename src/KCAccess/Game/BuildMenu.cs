@@ -244,6 +244,7 @@ namespace KCAccess.Game
                     float perYear = wage.GetGoldWage(Player.inst.PlayerLandmassOwner) * wage.PaydaysPerYear();
                     parts.Add("wages " + perYear + " gold per year");
                 }
+                parts.Add(CellInfo.RangeText(building, placed: false));
             }
             return TextUtil.Join(", ", parts);
         }
