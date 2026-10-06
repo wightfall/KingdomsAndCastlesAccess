@@ -979,9 +979,31 @@ namespace KCAccess.Game
                     : "No soldiers selected. Use Shift Enter on soldiers to select them.");
                 return;
             }
-            ui.MoveUnitsToPosition(CurrentCell.Center);
+            var cell = CurrentCell;
+            // The game takes the attack or visit target (an enemy building, a keep for an envoy) from what the pointer
+            // hovers, but hovers no building while the real mouse rests over a panel; then M only walked there.
+            // Pick the building on the cursor tile exactly like the game's own hover does.
+            if (ui.highlightBuilding == null && cell != null)
+            {
+                if (cell.OccupyingStructure.Count > 0 && cell.OccupyingStructure[0].IsVisibleForFog()) ui.highlightBuilding = cell.OccupyingStructure[0];
+                else if (cell.SubStructure.Count > 0 && cell.TopSubStructure.IsVisibleForFog()) ui.highlightBuilding = cell.TopSubStructure;
+                if (ui.highlightBuilding != null && ui.highlightBuilding.Life <= 0f) ui.highlightBuilding = null;
+            }
+            string target = null;
+            foreach (var h in ui.highlightedObjs)
+            {
+                if (h is IMoveableUnit mu && !ui.IsSelected(h) && mu.TeamID() != 0 && World.inst.RelationBetween(0, mu.TeamID()) == World.Relations.Enemy)
+                {
+                    target = "Attacking " + CellInfo.UnitName(mu);
+                    break;
+                }
+            }
+            var b = ui.highlightBuilding;
+            if (target == null && b != null && b.TeamID() != 0)
+                target = (World.inst.RelationBetween(0, b.TeamID()) == World.Relations.Enemy ? "Attacking " : "Going to ") + CellInfo.BuildingSummary(b, brief: true);
+            ui.MoveUnitsToPosition(cell.Center);
             A.Cue(Cue.Activate);
-            A.Say("Moving to " + cursor.Pos);
+            A.Say(target ?? "Moving to " + cursor.Pos);
         }
 
         internal void SpeakSelection(bool detailed)

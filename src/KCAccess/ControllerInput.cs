@@ -19,6 +19,10 @@ namespace KCAccess
 
         private static readonly Dictionary<PadButton, float> nextRepeat = new Dictionary<PadButton, float>();
         private static readonly HashSet<PadButton> heldDirs = new HashSet<PadButton>();
+        // Reused every frame (this runs once per frame, also with no controller in the menus).
+        private static readonly List<PadButton> pressed = new List<PadButton>();
+        private static readonly HashSet<PadButton> dirs = new HashSet<PadButton>();
+        private static readonly PadButton[] Directions = { PadButton.Up, PadButton.Down, PadButton.Left, PadButton.Right };
         private static int lastCount = -1;
         private static bool failed;
 
@@ -33,9 +37,10 @@ namespace KCAccess
                 var sticks = ReInput.controllers.Joysticks;
                 AnnounceConnections(sticks);
                 if (!Application.isFocused) return;
+                if (sticks.Count == 0 && heldDirs.Count == 0) return; // nothing plugged in: no work every frame
                 bool lt = false, rt = false;
-                var pressed = new List<PadButton>();
-                var dirs = new HashSet<PadButton>();
+                pressed.Clear();
+                dirs.Clear();
                 foreach (var j in sticks)
                 {
                     var t = j.GetTemplate<IGamepadTemplate>();
@@ -75,7 +80,7 @@ namespace KCAccess
                         }
                     }
                 }
-                foreach (var d in new[] { PadButton.Up, PadButton.Down, PadButton.Left, PadButton.Right })
+                foreach (var d in Directions)
                 {
                     if (!dirs.Contains(d))
                     {
