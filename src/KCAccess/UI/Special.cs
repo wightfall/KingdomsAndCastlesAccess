@@ -291,6 +291,8 @@ namespace KCAccess.UI
             if (row != null && item.Control == row.DisableToggle) return PriorityRow(row);
             if (item.Control is Button && item.Go.GetComponentInParent<PickNameUI>() != null && UIText.LabelOf(item.Control) == "unlabelled")
                 return "Choose banner, button";
+            if (item.IsControl && StreamerUI.inst != null && item.Go.transform.IsChildOf(StreamerUI.inst.transform) && UIText.LabelOf(item.Control) == "Toggle Visible")
+                return (Game.Twitch.SettingsVisible ? "Hide" : "Show") + " the Twitch voting settings, button";
             if (item.IsControl && item.Go.GetComponent<ChangeLanguage>() is ChangeLanguage cl)
                 return "Language: " + TextUtil.Clean(UIText.TextOf(cl.languageButtonText)) + ", button, Enter opens the list";
             var kbd = item.IsControl ? item.Go.GetComponentInParent<KeyButton>() : null;
