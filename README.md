@@ -380,6 +380,9 @@ Every sound can be previewed: Shift+F1, End, then Up through the sounds and pres
   Ctrl+key also triggered the plain key's action. Modifiers are now checked as held.
 * **Ctrl+C silently switched the game into creative mode** during normal play (a developer shortcut
   outside the cheat check). It now only works when cheats are enabled.
+* **Holding End made every AI kingdom plan a farm at your cursor.** A developer test left in the AI's
+  update adds a "build a farm at the pointer" job each frame End is held; End is the mod's "jump to the
+  selected building" key. That test job now ends at once without doing anything.
 
 ## Troubleshooting
 

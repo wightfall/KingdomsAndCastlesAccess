@@ -95,6 +95,7 @@ Status legend: `[x]` done and verified in the running game · `[~]` implemented,
 |---|-----|-----|
 | 1 | `KeyChord.GetKeyDown/GetKeyUp` compare Ctrl/Alt/Shift with `GetKeyDown` (pressed *this frame*) instead of `GetKey` (held). Bindings with modifiers (e.g. Ctrl+S) practically never fire, and Ctrl+key also triggers the plain binding (Ctrl+1/2/3 changed speed) | Prefix replaces both methods with a held-modifier check |
 | 2 | `KeyboardControl.UpdatePlaymodeKeys` toggles **creative mode** on Ctrl+C in normal play (developer shortcut outside the cheat check) | Postfix restores the mode unless cheats are enabled |
+| 3 | `AIKingdom.Update` adds an `Intention_Test` ("build a farm at the pointer") for every AI kingdom each frame **End** is held (developer test outside any debug check); End is the mod's jump-to-selection key and the pointer is the keyboard cursor | Prefix on `Intention_Test.Tick` marks it done without doing anything |
 
 ## Mod bugs found while testing (fixed)
 - Visibility test used `lossyScale` of screen-space-camera canvases → nearly every control looked invisible.

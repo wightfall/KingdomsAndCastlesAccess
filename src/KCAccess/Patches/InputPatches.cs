@@ -143,6 +143,22 @@ namespace KCAccess
         }
     }
 
+    /// <summary>
+    /// Game bug fix: every AI kingdom's Update adds a developer "test" intention each frame the End key is held
+    /// (AIKingdom.Update: Input.GetKey(KeyCode.End)), which tells the AI to build a farm at the pointer, here the
+    /// player's keyboard cursor. End is the mod's "jump to the selected building" key and "last item" in menus.
+    /// The test intention now ends at once without doing anything.
+    /// </summary>
+    [HarmonyPatch(typeof(Intention_Test), nameof(Intention_Test.Tick))]
+    internal static class Patch_AiTestIntention
+    {
+        private static bool Prefix(Intention_Test __instance)
+        {
+            __instance.Done = true;
+            return false;
+        }
+    }
+
     /// <summary>Let the mod handle the keyboard before the game's own hotkeys run this frame.</summary>
     [HarmonyPatch(typeof(Assets.Code.KeyboardControl), "Update")]
     internal static class Patch_KeyboardControlUpdate
