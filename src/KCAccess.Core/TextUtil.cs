@@ -95,6 +95,9 @@ namespace KCAccess.Core
             return sb.ToString();
         }
 
+        /// <summary>First letter in upper case.</summary>
+        public static string Capitalize(string s) => string.IsNullOrEmpty(s) ? s : char.ToUpperInvariant(s[0]) + s.Substring(1);
+
         /// <summary>True for texts that are only a number or counter ("51", "273/1000", "20%", "+15") with no words.</summary>
         public static bool IsNumberOnly(string s)
         {

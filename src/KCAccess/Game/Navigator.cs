@@ -15,7 +15,8 @@ namespace KCAccess.Game
         /// <summary>Footpath cost at or above which a tile counts as not walkable (buildings, walls, rock, deep water).</summary>
         private const int BlockedCost = 250;
 
-        private const float StepSeconds = 0.16f;
+        /// <summary>Seconds per step: slow, normal, fast (mod settings).</summary>
+        private static float StepSeconds => Plugin.CfgWalkSpeed.Value <= 1 ? 0.3f : (Plugin.CfgWalkSpeed.Value >= 3 ? 0.08f : 0.16f);
 
         internal GridPos? Target { get; private set; }
         internal string TargetLabel { get; private set; }
@@ -49,7 +50,7 @@ namespace KCAccess.Game
 
         internal string Describe(GridPos from)
         {
-            if (!Target.HasValue) return "No target. Choose one with Page Up, Page Down and the bracket keys.";
+            if (!Target.HasValue) return KCAccess.Core.KeyHelp.Resolve("No target. Choose one with {PrevCategory}, {NextCategory} and {PrevItem} or {NextItem}.");
             return TargetLabel + ", " + Directions.Relative(from, Target.Value);
         }
 
@@ -58,7 +59,7 @@ namespace KCAccess.Game
             if (!Target.HasValue)
             {
                 A.Cue(Cue.Error);
-                A.Say("No target for the beacon. Choose one with Page Up, Page Down and the bracket keys.");
+                A.Say(KCAccess.Core.KeyHelp.Resolve("No target for the beacon. Choose one with {PrevCategory}, {NextCategory} and {PrevItem} or {NextItem}."));
                 return;
             }
             BeaconOn = !BeaconOn;
@@ -97,7 +98,7 @@ namespace KCAccess.Game
             if (!Target.HasValue)
             {
                 A.Cue(Cue.Error);
-                A.Say("No target. Choose one with Page Up, Page Down and the bracket keys.");
+                A.Say(KCAccess.Core.KeyHelp.Resolve("No target. Choose one with {PrevCategory}, {NextCategory} and {PrevItem} or {NextItem}."));
                 return;
             }
             var from = map.CursorPos;
@@ -124,7 +125,7 @@ namespace KCAccess.Game
                     if (a != null && a.Type == ResourceType.Water) why = ". The cursor is on water; move onto land first.";
                     else if (a != null && b != null && a.landMassIdx >= 0 && b.landMassIdx >= 0 && a.landMassIdx != b.landMassIdx) why = ". It is on another island, across water.";
                     else why = ". It may be across water or behind walls.";
-                    A.Say("No walkable route to " + TargetLabel + why + " Control N walks in a straight line, Backslash jumps there.");
+                    A.Say("No walkable route to " + TargetLabel + why + KCAccess.Core.KeyHelp.Resolve(" {WalkStraight} walks in a straight line, {JumpTarget} jumps there."));
                     return;
                 }
             }

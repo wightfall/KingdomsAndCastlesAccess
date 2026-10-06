@@ -21,7 +21,7 @@ namespace KCAccess.Game
 
         private static readonly string[] Categories =
         {
-            "Your buildings", "Construction sites", "Your soldiers and ships", "Threats", "Stone", "Iron", "Fertile land", "Forests", "Fresh water", "Foreign kingdoms", "Special places"
+            "Your buildings", "Construction sites", "Your soldiers and ships", "Alerts", "Threats", "Stone", "Iron", "Fertile land", "Forests", "Fresh water", "Foreign kingdoms", "Special places"
         };
 
         private int category;
@@ -184,6 +184,9 @@ namespace KCAccess.Game
                     break;
                 case "Iron":
                     AddClusters(found, c => c.Type == ResourceType.IronDeposit && CellInfo.Explored(c), n => "iron deposit, " + TextUtil.Plural(n, "tile"));
+                    break;
+                case "Alerts":
+                    foreach (var e in Alerts.Active()) found.Add(new Item { Label = Alerts.Describe(e), Pos = Alerts.PosOf(e) });
                     break;
                 case "Fertile land":
                     // Open fertile ground where farms can go (no trees, rock, water or buildings).

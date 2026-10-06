@@ -37,7 +37,7 @@ namespace KCAccess.Game
             if (Weather.inst != null)
             {
                 var s = Weather.inst.season;
-                if (lastSeason.HasValue && lastSeason.Value != s)
+                if (lastSeason.HasValue && lastSeason.Value != s && Plugin.CfgAnnounceSeasons.Value)
                 {
                     A.Cue(Cue.Notify);
                     A.SayQueued(s == Weather.Season.Winter ? "Winter has come" : "Summer has come");
@@ -65,6 +65,7 @@ namespace KCAccess.Game
             int year = Player.inst != null ? Player.inst.CurrYear : 0;
             var n = Log.Add(message, sev, year, where);
             if (!Plugin.CfgAnnounceLog.Value || GameState.inst == null || !GameState.inst.IsPlayMode()) return;
+            if (!Plugin.CfgAnnounceSeasons.Value && System.Text.RegularExpressions.Regex.IsMatch(message ?? "", @"^\s*Year \d+\s*$")) return; // "Year 74" banners
             A.Cue(sev == Severity.Danger ? Cue.Alert : (sev == Severity.Warning ? Cue.Error : Cue.Notify));
             A.SayQueued(n.Text + (where.HasValue ? ", " + Directions.Relative(MapController.Inst.CursorPos, where.Value) : string.Empty));
         }
@@ -73,7 +74,7 @@ namespace KCAccess.Game
         {
             Log.Add(text, Severity.Danger, Player.inst != null ? Player.inst.CurrYear : 0);
             A.Cue(Cue.Alert);
-            A.Say(text + " Page Down to the Threats category, then right bracket picks the nearest, Backslash jumps there.", Priority.High);
+            A.Say(text + KCAccess.Core.KeyHelp.Resolve(" {NextCategory} to the Threats category, then {NextItem} picks the nearest, {JumpTarget} jumps there."), Priority.High);
         }
 
         internal static void OnInfo(string text)

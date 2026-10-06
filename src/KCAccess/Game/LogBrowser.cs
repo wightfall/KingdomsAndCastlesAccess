@@ -20,7 +20,7 @@ namespace KCAccess.Game
             MapController.Inst.Nav.SetTarget(n.Where.Value, n.Text);
             Close(announce: false);
             A.Cue(Cue.Close);
-            A.Say("Target set: " + MapController.Inst.Nav.Describe(MapController.Inst.CursorPos) + ". N walks there, Shift N turns on the beacon.");
+            A.Say("Target set: " + MapController.Inst.Nav.Describe(MapController.Inst.CursorPos) + KCAccess.Core.KeyHelp.Resolve(". {Walk} walks there, {Beacon} turns on the beacon."));
             return true;
         }
 

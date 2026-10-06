@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace KCAccess.Core
@@ -45,7 +46,7 @@ namespace KCAccess.Core
             Action = action;
         }
 
-        public override string ToString() => Keys + ": " + Action;
+        public override string ToString() => KeyHelp.Resolve(Keys) + ": " + Action;
     }
 
     public sealed class KeySection
@@ -65,15 +66,27 @@ namespace KCAccess.Core
     {
         private static KeyLine K(string keys, string action) => new KeyLine(keys, action);
 
+        /// <summary>Spoken key for a binding id; the plugin points this at the player's current bindings.</summary>
+        public static Func<string, string> KeyNameOf = id =>
+        {
+            var d = Bindings.Def(id);
+            return d != null ? d.Default.Spoken() : id;
+        };
+
+        /// <summary>Replaces {BindingId} with the key currently bound to it.</summary>
+        public static string Resolve(string text) =>
+            text == null ? null : System.Text.RegularExpressions.Regex.Replace(text, @"\{(\w+)\}", m => KeyNameOf(m.Groups[1].Value));
+
         public static readonly List<KeySection> Sections = new List<KeySection>
         {
             new KeySection("Everywhere",
                 K("F1", "help for the current screen, only the keys that work there"),
-                K("Shift F1", "this key list, with sound cue previews at the end"),
-                K("Control Shift F5", "search again for your screen reader"),
-                K("Control Shift M", "sound cues on or off"),
-                K("Control Shift F10", "reset the mod if speech stops responding"),
-                K("Control Shift F11", "keyboard report for bug reports")),
+                K("{KeyList}", "this key list, with sound cue previews at the end"),
+                K("{Redetect}", "search again for your screen reader"),
+                K("{Mute}", "sound cues on or off"),
+                K("{Settings}", "mod settings: options, sound volume and changing these keys"),
+                K("{Reset}", "reset the mod if speech stops responding"),
+                K("{Report}", "keyboard report for bug reports")),
             new KeySection("Menus, dialogs and panels",
                 K("Up and Down arrows", "move through everything on the screen"),
                 K("Tab and Shift Tab", "move between controls only"),
@@ -97,24 +110,24 @@ namespace KCAccess.Core
                 K("Arrow keys", "move the cursor one tile, north is up"),
                 K("Shift arrows", "move 5 tiles"),
                 K("Control arrows", "jump to where the terrain changes"),
-                K("I", "everything about the tile"),
+                K("{TileInfo}", "everything about the tile"),
                 K("F5", "repeat the tile"),
-                K("O", "survey the area around the cursor"),
-                K("G", "cursor coordinates and map size"),
-                K("Home", "jump to your keep"),
-                K("End", "jump to the selected building"),
-                K("T", "year, season, weather and speed"),
-                K("K", "kingdom status"),
-                K("L", "notification history"),
-                K("Shift L", "repeat the last notification")),
+                K("{Survey}", "survey the area around the cursor"),
+                K("{Coordinates}", "cursor coordinates and map size"),
+                K("{Keep}", "jump to your keep"),
+                K("{SelectedBuilding}", "jump to the selected building"),
+                K("{Date}", "year, season, weather and speed"),
+                K("{Status}", "kingdom status"),
+                K("{Log}", "notification history"),
+                K("{LastNotification}", "repeat the last notification")),
             new KeySection("Map: finding and going places",
-                K("Page Up and Page Down", "choose a scan category"),
-                K("Open and close bracket", "choose the previous or next thing of that category as your target"),
-                K("Backslash", "jump to the target"),
-                K("Shift Backslash", "where the target is"),
-                K("N", "walk to the target along a walkable route"),
-                K("Control N", "walk to the target in a straight line"),
-                K("Shift N", "target beacon on or off"),
+                K("{PrevCategory} and {NextCategory}", "choose a scan category"),
+                K("{PrevItem} and {NextItem}", "choose the previous or next thing of that category as your target"),
+                K("{JumpTarget}", "jump to the target"),
+                K("{WhereTarget}", "where the target is"),
+                K("{Walk}", "walk to the target along a walkable route"),
+                K("{WalkStraight}", "walk to the target in a straight line"),
+                K("{Beacon}", "target beacon on or off"),
                 K("Any arrow or Escape", "stop walking"),
                 K("Control Shift 1 to 9", "store a bookmark"),
                 K("Control 1 to 9", "jump to a bookmark"),
@@ -123,11 +136,12 @@ namespace KCAccess.Core
                 K("Enter", "select what is under the cursor"),
                 K("Shift Enter", "select soldiers, a ship or a villager on the tile"),
                 K("F6", "move into the open panels"),
-                K("B", "build menu"),
+                K("{BuildMenu}", "build menu"),
                 K("Delete", "demolish the selected building"),
                 K("C", "chop trees on the selected tile, or cancel it"),
-                K("Shift C", "chop trees mode on or off"),
-                K("M", "send selected soldiers to the cursor"),
+                K("{ChopMode}", "chop trees mode on or off"),
+                K("{MoveSoldiers}", "send selected soldiers to the cursor"),
+                K("{Alert}", "respond to the nearest alert: advisor news, a waiting envoy, a stopped cart"),
                 K("J", "job priority"),
                 K("Space", "pause"),
                 K("1, 2 and 3", "game speed"),
@@ -137,7 +151,7 @@ namespace KCAccess.Core
                 K("Enter", "build here"),
                 K("Shift Enter", "for roads, walls and fields: mark the start, Enter at the end builds the line or area"),
                 K("R", "rotate"),
-                K("V", "why the spot is valid or not"),
+                K("{Validity}", "why the spot is valid or not"),
                 K("Escape", "stop placing")),
             new KeySection("Build menu",
                 K("Left and Right arrows", "category"),
@@ -184,13 +198,13 @@ namespace KCAccess.Core
         {
             var p = new List<string>();
             if (s.Walking)
-                return "Walking to your target. Any arrow key or Escape stops. Shift N turns the beacon on or off.";
+                return Resolve("Walking to your target. Any arrow key or Escape stops. {Beacon} turns the beacon on or off.");
             if (s.Placing)
             {
-                p.Add("Placing a building. Arrow keys move it and you hear whether the spot is valid. Enter builds here, R rotates, V says why the spot is valid or not");
+                p.Add("Placing a building. Arrow keys move it and you hear whether the spot is valid. Enter builds here, R rotates, {Validity} says why the spot is valid or not");
                 if (s.LinePlacement) p.Add("Shift Enter marks the start of a line or area, move to the end, then Enter builds all of it");
                 p.Add("Escape stops placing");
-                return string.Join(". ", p) + ".";
+                return Resolve(string.Join(". ", p) + ".");
             }
             if (s.Brush)
                 return "A creative mode brush is selected. Move with the arrow keys, Enter applies it at the cursor, Escape turns the brush off.";
@@ -198,26 +212,26 @@ namespace KCAccess.Core
                 return "A tool mode is on, such as chop trees or demolish. Enter applies it to the tile under the cursor. Shift Enter marks one corner of an area, move, then Enter applies it to the whole area. Escape returns to normal mode.";
 
             p.Add(s.MenuMap ? "Exploring the generated map before the game starts" : "Kingdom map");
-            p.Add("Arrow keys move one tile, Shift arrows 5 tiles, Control arrows jump to where the terrain changes. I describes the tile, O surveys the area, G gives the coordinates");
-            p.Add("Page Up and Page Down choose a scan category, open and close bracket choose the previous or next thing in it as your target");
-            if (s.HasTarget) p.Add("Backslash jumps to the target, Shift Backslash says where it is, N walks there, Control N walks in a straight line, Shift N turns the beacon on or off");
+            p.Add("Arrow keys move one tile, Shift arrows 5 tiles, Control arrows jump to where the terrain changes. {TileInfo} describes the tile, {Survey} surveys the area, {Coordinates} gives the coordinates");
+            p.Add("{PrevCategory} and {NextCategory} choose a scan category, {PrevItem} and {NextItem} choose the previous or next thing in it as your target");
+            if (s.HasTarget) p.Add("{JumpTarget} jumps to the target, {WhereTarget} says where it is, {Walk} walks there, {WalkStraight} walks in a straight line, {Beacon} turns the beacon on or off");
             if (s.MenuMap)
             {
                 p.Add("Control M or Escape returns to the map setup menu");
-                return string.Join(". ", p) + ".";
+                return Resolve(string.Join(". ", p) + ".");
             }
             if (!s.HasKeep)
-                p.Add("You have no keep yet: press B, choose the Keep in the Castle category, move to a good spot and press Enter");
+                p.Add("You have no keep yet: press {BuildMenu}, choose the Keep in the Castle category, move to a good spot and press Enter");
             else
-                p.Add("Enter selects what is under the cursor, Shift Enter selects soldiers, a ship or a villager. B opens the build menu, Shift C turns chop trees mode on");
+                p.Add("Enter selects what is under the cursor, Shift Enter selects soldiers, a ship or a villager. {BuildMenu} opens the build menu, {ChopMode} turns chop trees mode on");
             if (s.HasSelection)
             {
-                p.Add("F6 reads the selected " + (s.BuildingSelected ? "building's" : "tile's") + " panel" + (s.BuildingSelected ? ", Delete demolishes it, End jumps back to it" : ", C orders its trees chopped"));
+                p.Add("F6 reads the selected " + (s.BuildingSelected ? "building's" : "tile's") + " panel" + (s.BuildingSelected ? ", Delete demolishes it, {SelectedBuilding} jumps back to it" : ", C orders its trees chopped"));
             }
-            if (s.SoldiersSelected) p.Add("M sends the selected soldiers to the cursor");
-            if (s.HasKeep) p.Add("Home jumps to your keep. K kingdom status, T date and weather, L notifications, J job priority. Control Shift 1 to 9 stores a bookmark, Control 1 to 9 jumps to it");
+            if (s.SoldiersSelected) p.Add("{MoveSoldiers} sends the selected soldiers to the cursor");
+            if (s.HasKeep) p.Add("{Keep} jumps to your keep. {Status} kingdom status, {Date} date and weather, {Log} notifications, J job priority. Control Shift 1 to 9 stores a bookmark, Control 1 to 9 jumps to it");
             p.Add("Space pauses, 1, 2 and 3 set the speed, Escape opens the pause menu");
-            return string.Join(". ", p) + ".";
+            return Resolve(string.Join(". ", p) + ".");
         }
 
         private static string Capitalize(string s) => string.IsNullOrEmpty(s) ? s : char.ToUpperInvariant(s[0]) + s.Substring(1);

@@ -155,8 +155,8 @@ namespace KCAccess.Game
             Nav.ClearTarget();
             UpdatePointer(follow: Player.inst.keep == null);
             string intro = Player.inst.keep == null
-                ? "Your kingdom begins. Build your keep first: press B, choose the keep in the Castle category, then move to a good spot near fertile land, trees and stone (O surveys the area around the cursor), and press Enter. Press F1 for help."
-                : "Kingdom loaded. Press F1 for help, K for status.";
+                ? KCAccess.Core.KeyHelp.Resolve("Your kingdom begins. Build your keep first: press {BuildMenu}, choose the keep in the Castle category, then move to a good spot near fertile land, trees and stone ({Survey} surveys the area around the cursor), and press Enter. Press F1 for help.")
+                : KCAccess.Core.KeyHelp.Resolve("Kingdom loaded. Press F1 for help, {Status} for status.")+"";
             A.Say(intro + " Cursor at " + CellInfo.Brief(CurrentCell, false));
         }
 
@@ -345,47 +345,47 @@ namespace KCAccess.Game
 
         private bool HandleInfoKeys()
         {
-            if (KInput.Plain(KeyCode.I))
+            if (KInput.Pressed("TileInfo"))
             {
                 A.Say(CellInfo.Full(CurrentCell), force: true);
                 return true;
             }
-            if (KInput.Plain(KeyCode.O))
+            if (KInput.Pressed("Survey"))
             {
                 A.Say(CellInfo.Survey(cursor.Pos, 6).Format(), force: true);
                 return true;
             }
-            if (KInput.Plain(KeyCode.G))
+            if (KInput.Pressed("Coordinates"))
             {
                 A.Say("Cursor at " + cursor.Pos.X + ", " + cursor.Pos.Z + ". Map is " + cursor.Width + " by " + cursor.Height + ".", force: true);
                 return true;
             }
-            if (KInput.Plain(KeyCode.PageUp) || KInput.Plain(KeyCode.PageDown))
+            if (KInput.Pressed("PrevCategory") || KInput.Pressed("NextCategory"))
             {
-                scanner.ChangeCategory(KInput.Down(KeyCode.PageDown) ? 1 : -1, cursor.Pos);
+                scanner.ChangeCategory(KInput.Pressed("NextCategory") ? 1 : -1, cursor.Pos);
                 return true;
             }
-            if (KInput.Plain(KeyCode.RightBracket) || KInput.Plain(KeyCode.LeftBracket))
+            if (KInput.Pressed("NextItem") || KInput.Pressed("PrevItem"))
             {
-                var item = scanner.Step(KInput.Down(KeyCode.RightBracket) ? 1 : -1, cursor.Pos);
+                var item = scanner.Step(KInput.Pressed("NextItem") ? 1 : -1, cursor.Pos);
                 if (item != null)
                 {
                     Nav.SetTarget(item.Pos, item.Label);
                     // The cursor does not move: say so the first few times, players expected a jump.
-                    if (targetHints < 3)
+                    if (targetHints < 3 && Plugin.CfgHints.Value)
                     {
                         targetHints++;
-                        A.SayQueued("Target set, the cursor stays here. Backslash jumps there, N walks there.");
+                        A.SayQueued(KCAccess.Core.KeyHelp.Resolve("Target set, the cursor stays here. {JumpTarget} jumps there, {Walk} walks there."));
                     }
                 }
                 return true;
             }
-            if (KInput.Plain(KeyCode.Backslash))
+            if (KInput.Pressed("JumpTarget"))
             {
                 if (!Nav.Target.HasValue)
                 {
                     A.Cue(Cue.Error);
-                    A.Say("No target. Choose one with Page Up, Page Down and the bracket keys.");
+                    A.Say(KCAccess.Core.KeyHelp.Resolve("No target. Choose one with {PrevCategory}, {NextCategory} and {PrevItem} or {NextItem}."));
                 }
                 else
                 {
@@ -394,49 +394,49 @@ namespace KCAccess.Game
                 }
                 return true;
             }
-            if (KInput.WithShift(KeyCode.Backslash))
+            if (KInput.Pressed("WhereTarget"))
             {
                 A.Say(Nav.Describe(cursor.Pos), force: true);
                 return true;
             }
-            if (KInput.Plain(KeyCode.N))
+            if (KInput.Pressed("Walk"))
             {
                 Nav.StartWalk(this, straight: false);
                 return true;
             }
-            if (KInput.WithCtrl(KeyCode.N))
+            if (KInput.Pressed("WalkStraight"))
             {
                 Nav.StartWalk(this, straight: true);
                 return true;
             }
-            if (KInput.WithShift(KeyCode.N))
+            if (KInput.Pressed("Beacon"))
             {
                 Nav.ToggleBeacon(cursor.Pos);
                 return true;
             }
             if (MenuMapMode) return false;
-            if (KInput.Plain(KeyCode.K))
+            if (KInput.Pressed("Status"))
             {
                 AccessController.Inst.ActiveMenu = new StatusMenu();
                 return true;
             }
-            if (KInput.Plain(KeyCode.T))
+            if (KInput.Pressed("Date"))
             {
                 A.Say(Status.DateLine(), force: true);
                 return true;
             }
-            if (KInput.Plain(KeyCode.L))
+            if (KInput.Pressed("Log"))
             {
                 AccessController.Inst.ActiveMenu = new LogBrowser();
                 return true;
             }
-            if (KInput.WithShift(KeyCode.L))
+            if (KInput.Pressed("LastNotification"))
             {
                 var n = GameEvents.Log.Count > 0 ? GameEvents.Log.Items[0] : null;
                 A.Say(n != null ? n.Describe() : "No notifications yet", force: true);
                 return true;
             }
-            if (KInput.Plain(KeyCode.Home))
+            if (KInput.Pressed("Keep"))
             {
                 if (Player.inst.keep != null)
                 {
@@ -451,7 +451,7 @@ namespace KCAccess.Game
                 }
                 return true;
             }
-            if (KInput.Plain(KeyCode.End))
+            if (KInput.Pressed("SelectedBuilding"))
             {
                 var b = GameUI.inst.GetBuildingSelected();
                 var cell = b != null ? b.GetCell() : GameUI.inst.GetCellSelected();
@@ -581,7 +581,7 @@ namespace KCAccess.Game
                 ui.brushMode = GameUI.CursorBrushes.None;
                 return;
             }
-            if (KInput.WithShift(KeyCode.C) && !IsPlacing)
+            if (KInput.Pressed("ChopMode") && !IsPlacing)
             {
                 // Shortcut for the toolbar's chop mode: mark whole areas with Shift Enter.
                 KInput.Consume(KeyCode.C);
@@ -596,7 +596,7 @@ namespace KCAccess.Game
                 if (sel == null) A.Say("Select a forest tile with Enter first, then press C. For a large area use chop trees mode in the toolbar, F6.");
                 else if (sel.TreeAmount == 0) A.Say("No trees on the selected tile");
             }
-            if (KInput.Plain(KeyCode.B))
+            if (KInput.Pressed("BuildMenu"))
             {
                 AccessController.Inst.ActiveMenu = new BuildMenu();
                 return;
@@ -633,17 +633,22 @@ namespace KCAccess.Game
                 ShiftActivate();
                 return;
             }
-            if (KInput.Plain(KeyCode.V) && IsPlacing)
+            if (KInput.Pressed("Validity") && IsPlacing)
             {
                 SpeakValidity(always: true);
                 return;
             }
-            if (KInput.Plain(KeyCode.M))
+            if (KInput.Pressed("Alert"))
+            {
+                Alerts.RespondNearest();
+                return;
+            }
+            if (KInput.Pressed("MoveSoldiers"))
             {
                 MoveUnits();
                 return;
             }
-            if (KInput.WithShift(KeyCode.I))
+            if (KInput.Pressed("BuildingDetails"))
             {
                 SpeakSelection(detailed: true);
                 return;

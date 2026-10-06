@@ -15,7 +15,7 @@ namespace KCAccess
     {
         public const string Guid = "kcaccess.screenreader";
         public const string Name = "KCAccess";
-        public const string Version = "1.5.1";
+        public const string Version = "1.6.0";
 
         internal static Plugin Instance;
 
@@ -36,6 +36,16 @@ namespace KCAccess
         internal static ConfigEntry<bool> CfgLogKeys;
         internal static ConfigEntry<bool> CfgKeyFallback;
 
+        /// <summary>The config file (the plugin object itself is destroyed by the game after start-up).</summary>
+        internal static ConfigFile ConfigRef;
+        internal static ConfigEntry<string> CfgBindings;
+        internal static ConfigEntry<bool> CfgAnnounceSeasons;
+        internal static ConfigEntry<int> CfgWalkSpeed;
+        internal static ConfigEntry<bool> CfgHints;
+
+        /// <summary>The mod's key bindings (rebindable in the mod settings, Ctrl+Shift+O).</summary>
+        internal static readonly KCAccess.Core.Bindings Keys = new KCAccess.Core.Bindings();
+
         private PrismSpeech prism;
         private Harmony harmony;
 
@@ -43,6 +53,7 @@ namespace KCAccess
         {
             Instance = this;
             Log = Logger;
+            ConfigRef = Config;
             CfgCues = Config.Bind("Audio", "SoundCues", true, "Play sound cues for navigation, placement and alerts.");
             CfgCueVolume = Config.Bind("Audio", "CueVolume", 0.5f, new ConfigDescription("Volume of the sound cues.", new AcceptableValueRange<float>(0f, 1f)));
             CfgCoordinates = Config.Bind("Map", "SpeakCoordinates", false, "Speak the X, Z coordinates of the cursor after each cell description.");
@@ -51,6 +62,12 @@ namespace KCAccess
             CfgAnnounceLog = Config.Bind("Speech", "AnnounceNotifications", true, "Automatically speak kingdom notifications (raids, fires, shortages ...).");
             CfgDebugCommands = Config.Bind("Debug", "CommandFile", false, "Developer option: read test commands from BepInEx/kcaccess_commands.txt.");
             CfgKeyFallback = Config.Bind("Keyboard", "WindowsKeyFallback", true, "When Windows reports a key press the game did not receive (seen on some Windows 11 machines, with NVDA Remote or Steam Input), deliver it anyway. Turn off only if keys start acting twice.");
+            CfgBindings = Config.Bind("Keyboard", "Bindings", "", "Changed mod keys as Action=Key pairs separated by semicolons, e.g. Survey=Y;Settings=Ctrl+Shift+P. Empty means all defaults. Easier to change in the game: Ctrl+Shift+O.");
+            CfgAnnounceSeasons = Config.Bind("Speech", "AnnounceSeasons", true, "Speak the start of every summer, winter and new year.");
+            CfgWalkSpeed = Config.Bind("Map", "WalkSpeed", 2, new ConfigDescription("Auto-walk speed: 1 slow, 2 normal, 3 fast.", new AcceptableValueRange<int>(1, 3)));
+            CfgHints = Config.Bind("Speech", "Hints", true, "Speak short hints for new players (for example how to use a target after choosing it).");
+            Keys.Load(CfgBindings.Value);
+            KeyHelp.KeyNameOf = Keys.Spoken; // help texts name the player's own keys
             CfgLogKeys = Config.Bind("Debug", "KeyLog", true, "Write every key press (key name only), with the modifier state seen by the game and by Windows, to the BepInEx log (for keyboard bug reports).");
             CfgLogSpeech = Config.Bind("Speech", "LogSpeech", true, "Write everything spoken to the BepInEx log (useful for bug reports).");
 

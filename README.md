@@ -75,6 +75,7 @@ Press **F1** at any time for help about the current screen: what it is and only 
 | Ctrl+Shift+F10 | Reset the mod and reconnect the screen reader if it ever stops speaking or responding (no need to quit the game) |
 | Ctrl+Shift+F11 | Keyboard report: what owns the keyboard, held modifiers, keyboard layout (also written to the log) |
 | Ctrl+Shift+M | Sound cues on / off |
+| Ctrl+Shift+O | Mod settings: options, sound volume, walking speed and changing the mod's keys |
 
 ### Menus, dialogs and panels
 
@@ -124,7 +125,7 @@ mouse drag), Left / Right change how many workers are allowed.
 | End | Jump to the selected building |
 | Ctrl+Shift+1 … 9 | Store a bookmark at the cursor (saved per kingdom) |
 | Ctrl+1 … 9 | Jump to a bookmark |
-| Page Up / Page Down | Choose a scan category: your buildings, construction sites, your soldiers and ships, threats, stone, iron, open fertile land, forests, fresh water, foreign kingdoms, special places |
+| Page Up / Page Down | Choose a scan category: your buildings, construction sites, your soldiers and ships, alerts, threats, stone, iron, open fertile land, forests, fresh water, foreign kingdoms, special places |
 | [ and ] | Choose the previous / next item of that category as the navigation target, nearest first (the list refreshes itself) |
 | N | Auto-walk the cursor to the target along a route villagers can walk (ends next to it if the target itself is blocked) |
 | Ctrl+N | Walk to the target in a straight line, over water and buildings |
@@ -135,6 +136,7 @@ mouse drag), Left / Right change how many workers are allowed.
 | Any arrow / Escape | Stop an auto-walk |
 | V | While placing: why the spot is (in)valid |
 | M | Send the selected soldiers to the cursor |
+| Ctrl+E | Respond to the nearest alert (the game's exclamation marks): advisor news at the keep, a foreign envoy waiting to speak, a stopped transport cart, a ship needing orders |
 
 **Demolishing:** select a building and press Delete (or the panel's Demolish button), or turn on
 demolish mode in the toolbar (F6) and mark an area with Shift+Enter and Enter. The mod says what was
@@ -211,6 +213,25 @@ build roads out from your keep first (I tells you whether a tile is covered).
 
 On the Load and Save screens, **Delete** on a saved game deletes it. The confirmation starts on
 Cancel; choose "It's toast" to delete. "Save deleted" confirms it.
+
+## Mod settings (Ctrl+Shift+O)
+
+Everything about the mod can be changed in the game, from any screen:
+
+* **Speech:** announce notifications, announce seasons and new years, detailed tile descriptions while
+  moving, speak coordinates after each tile, hints for new players.
+* **Sound:** sound cues on or off, sound cue volume (Left / Right in steps of 10 percent; you hear the new
+  volume).
+* **Map:** camera follows the cursor, auto-walk speed (slow, normal, fast).
+* **Keyboard and logs:** deliver key presses the game missed, key log, speech log.
+* **Mod keys:** every mod key is listed with its current key. Enter waits for a new key (hold Control,
+  Shift or Alt with it if you like; Escape cancels). A key that the mod already uses, or that is one of the
+  game's own keys, is refused and you are told what uses it, for example "J cannot be used: it is the
+  game's key for job priority". Delete restores that key's default. F1 help and the Shift+F1 key list
+  always name your current keys. Arrows, Enter, Escape, Tab, F1, F5, F6 and the bookmark keys are fixed.
+* **Reset everything** (press Enter twice) restores all settings and keys if something feels wrong.
+
+Settings are saved in `BepInEx\config\kcaccess.screenreader.cfg` right away.
 
 ## Sound cues
 

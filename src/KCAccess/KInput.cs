@@ -56,6 +56,26 @@ namespace KCAccess
 
         internal static bool NoMods => !Shift && !Ctrl && !Alt;
 
+        private static readonly Dictionary<string, KeyCode> keyCache = new Dictionary<string, KeyCode>();
+
+        internal static bool TryKeyCode(string name, out KeyCode key)
+        {
+            if (string.IsNullOrEmpty(name)) { key = KeyCode.None; return false; }
+            if (keyCache.TryGetValue(name, out key)) return key != KeyCode.None;
+            try { key = (KeyCode)System.Enum.Parse(typeof(KeyCode), name, true); }
+            catch (System.Exception) { key = KeyCode.None; }
+            keyCache[name] = key;
+            return key != KeyCode.None;
+        }
+
+        /// <summary>The key bound to a mod action (see Core.Bindings) was pressed this frame, with exactly its modifiers.</summary>
+        internal static bool Pressed(string action)
+        {
+            var c = Plugin.Keys.Get(action);
+            if (c.IsEmpty || !TryKeyCode(c.Key, out var k)) return false;
+            return Down(k) && Ctrl == c.Ctrl && Shift == c.Shift && Alt == c.Alt;
+        }
+
         /// <summary>Pressed with no modifiers.</summary>
         internal static bool Plain(KeyCode key) => Down(key) && NoMods;
 

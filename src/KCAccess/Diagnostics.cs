@@ -146,6 +146,10 @@ namespace KCAccess
                         case "deliver":
                             if (parts.Length > 1 && Enum.TryParse(parts[1], true, out KeyCode dk)) OsKeyboard.Deliver(dk);
                             break;
+                        case "alerttest":
+                            // Test only: raise the keep's advisor exclamation mark like the game does.
+                            if (Player.inst != null && Player.inst.keep != null && Player.inst.keep.issueButton != null) Player.inst.keep.issueButton.gameObject.SetActive(true);
+                            break;
                         case "logkeys":
                             Plugin.CfgLogKeys.Value = !Plugin.CfgLogKeys.Value;
                             Plugin.Log.LogInfo("[dbg] LogKeys " + Plugin.CfgLogKeys.Value);

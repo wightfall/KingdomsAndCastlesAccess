@@ -74,6 +74,12 @@ namespace KCAccess
         {
             if (SteamOverlay.Active) return; // the Steam overlay has the keyboard; keys are not meant for the game
             Patch_Demolish.Flush();
+            if (ActiveMenu is Game.ModSettingsMenu ms && ms.Capturing)
+            {
+                InputGate.BlockGameKeys = true;
+                ms.HandleInput();
+                return;
+            }
             if (Special.CapturingKey)
             {
                 InputGate.BlockGameKeys = true;
@@ -95,7 +101,11 @@ namespace KCAccess
                     if (ActiveMenu != null) ActiveMenu = null;
                 }
             }
-            if (playing) Game.GameEvents.Tick();
+            if (playing)
+            {
+                Game.GameEvents.Tick();
+                Game.Alerts.Tick();
+            }
 
             if (ActiveMenu != null)
             {
@@ -132,7 +142,7 @@ namespace KCAccess
                     Game.MapController.Inst.MenuMapMode = true;
                     Game.MapController.Inst.CenterOnStart();
                     A.Cue(Cue.Open);
-                    A.Say("Exploring the map. Arrow keys move, I describes a tile, Page Up and Page Down choose a scan category, brackets choose a target, N walks to it, Backslash jumps there, Shift N turns on a sound beacon. Control M or Escape returns to the menu.");
+                    A.Say(KCAccess.Core.KeyHelp.Resolve("Exploring the map. Arrow keys move, {TileInfo} describes a tile, {PrevCategory} and {NextCategory} choose a scan category, {PrevItem} and {NextItem} choose a target, {Walk} walks to it, {JumpTarget} jumps there, {Beacon} turns on a sound beacon. Control M or Escape returns to the menu."));
                     return;
                 }
                 bool mapInMenu = !playing && Game.MapController.Inst.MenuMapMode;
@@ -398,6 +408,9 @@ namespace KCAccess
 
         // ---------------------------------------------------------------- global keys & help
 
+        /// <summary>The keyboard is on the map right now (no window, panel or mod menu).</summary>
+        private bool OnMapNow => modal == null && panel == null && ActiveMenu == null && GameState.inst != null && GameState.inst.IsPlayMode();
+
         private bool GlobalKeys()
         {
             if (KInput.Down(KeyCode.F12) && KInput.Ctrl && KInput.Shift)
@@ -405,39 +418,42 @@ namespace KCAccess
                 Diagnostics.DumpUI(true);
                 return true;
             }
-            if (KInput.Down(KeyCode.F1) && !KInput.Ctrl && !KInput.Alt)
+            if (KInput.Pressed("KeyList"))
             {
                 KInput.Consume(KeyCode.F1);
-                if (KInput.Shift)
-                {
-                    if (!(ActiveMenu is Game.KeysMenu))
-                    {
-                        bool onMap = modal == null && panel == null && ActiveMenu == null && GameState.inst != null && GameState.inst.IsPlayMode();
-                        ActiveMenu = new Game.KeysMenu(onMap);
-                    }
-                }
-                else A.Say(ContextHelp(), force: true);
+                if (!(ActiveMenu is Game.KeysMenu)) ActiveMenu = new Game.KeysMenu(OnMapNow);
                 return true;
             }
-            if (KInput.Down(KeyCode.F10) && KInput.Ctrl && KInput.Shift)
+            if (KInput.Pressed("Settings"))
+            {
+                if (!(ActiveMenu is Game.ModSettingsMenu)) ActiveMenu = new Game.ModSettingsMenu(OnMapNow);
+                return true;
+            }
+            if (KInput.Plain(KeyCode.F1))
+            {
+                KInput.Consume(KeyCode.F1);
+                A.Say(ContextHelp(), force: true);
+                return true;
+            }
+            if (KInput.Pressed("Reset"))
             {
                 ResetAccessibility();
                 return true;
             }
-            if (KInput.Down(KeyCode.F11) && KInput.Ctrl && KInput.Shift)
+            if (KInput.Pressed("Report"))
             {
                 string report = Diagnostics.KeyboardReport();
                 Plugin.Log.LogInfo("[report] " + report);
                 A.Say(report + ". Written to the BepInEx log.", force: true);
                 return true;
             }
-            if (KInput.Down(KeyCode.F5) && KInput.Ctrl && KInput.Shift)
+            if (KInput.Pressed("Redetect"))
             {
                 bool ok = A.Redetect();
                 A.Say(ok ? "Speech: " + A.BackendName : "No screen reader found, using log only", force: true);
                 return true;
             }
-            if (KInput.Down(KeyCode.M) && KInput.Ctrl && KInput.Shift)
+            if (KInput.Pressed("Mute"))
             {
                 Plugin.CfgCues.Value = !Plugin.CfgCues.Value;
                 A.Say(Plugin.CfgCues.Value ? "Sound cues on" : "Sound cues off", force: true);

@@ -256,3 +256,62 @@ namespace KCAccess
         }
     }
 }
+
+namespace KCAccess
+{
+    /// <summary>
+    /// Foreign envoys travelling to the player's keep only showed a silent banner, and an envoy that arrived waits
+    /// (up to two years) for the player to click it. Both are announced now, and the Alert key (Ctrl+E) talks to it (see Game.Alerts).
+    /// </summary>
+    internal static class EnvoyWatch
+    {
+        private static readonly HashSet<Envoy> enroute = new HashSet<Envoy>();
+        private static readonly HashSet<Envoy> arrived = new HashSet<Envoy>();
+
+        internal static string KingdomOf(Envoy e)
+        {
+            try
+            {
+                var owner = World.GetLandmassOwnerByTeamId(e.TeamID());
+                if (owner != null && owner.ownedLandMasses != null && owner.ownedLandMasses.Count > 0)
+                {
+                    int lm = owner.ownedLandMasses.data[0];
+                    if (lm >= 0 && lm < Player.inst.LandMassNames.Count && !string.IsNullOrEmpty(Player.inst.LandMassNames[lm])) return Player.inst.LandMassNames[lm];
+                }
+            }
+            catch
+            {
+                // name is optional
+            }
+            return "a foreign kingdom";
+        }
+
+        internal static void OnEnroute(Envoy e)
+        {
+            if (e == null || !enroute.Add(e)) return;
+            A.Cue(KCAccess.Core.Cue.Notify);
+            A.SayQueued("An envoy from " + KingdomOf(e) + " is on the way to your keep.");
+        }
+
+        internal static void OnArrived(Envoy e)
+        {
+            if (e == null || !arrived.Add(e)) return; // the game calls this every frame while the envoy waits
+            // The alert watcher announces it ("an envoy waits to speak with you"); make it the navigation target too.
+            var p = e.transform.position;
+            Game.MapController.Inst.Nav.SetTarget(new KCAccess.Core.GridPos((int)p.x, (int)p.z), "envoy from " + KingdomOf(e));
+        }
+
+    }
+
+    [HarmonyPatch(typeof(DiplomacyNotificationUI), nameof(DiplomacyNotificationUI.NotifyEnroute))]
+    internal static class Patch_EnvoyEnroute
+    {
+        private static void Postfix(Envoy envoy) => EnvoyWatch.OnEnroute(envoy);
+    }
+
+    [HarmonyPatch(typeof(DiplomacyNotificationUI), nameof(DiplomacyNotificationUI.NotifyArrived))]
+    internal static class Patch_EnvoyArrived
+    {
+        private static void Postfix(Envoy envoy) => EnvoyWatch.OnArrived(envoy);
+    }
+}
