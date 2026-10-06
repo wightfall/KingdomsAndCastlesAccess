@@ -27,6 +27,7 @@ namespace KCAccess.Core
         public bool Placing;
         public bool LinePlacement;    // roads, walls, fields
         public bool CursorMode;       // chop / demolish / rebuild ...
+        public bool RouteMode;        // editing a ship or cart route (its panel is open)
         public bool Brush;            // creative mode brush
         public bool HasSelection;
         public bool BuildingSelected;
@@ -134,7 +135,8 @@ namespace KCAccess.Core
                 K("Alt 1 to 9", "make a bookmark the target")),
             new KeySection("Map: acting",
                 K("Enter", "select what is under the cursor"),
-                K("Shift Enter", "select soldiers, a ship or a villager on the tile"),
+                K("Shift Enter", "select soldiers, a siege catapult, a dragon, a ship, a cart or a villager on the tile"),
+                K("Control Shift Enter", "add the soldiers on the tile to the selection"),
                 K("F6", "move into the open panels"),
                 K("{BuildMenu}", "build menu"),
                 K("Delete", "demolish the selected building"),
@@ -159,7 +161,12 @@ namespace KCAccess.Core
                 K("I or F5", "full description"),
                 K("Letters", "jump to a building"),
                 K("Enter", "pick the building up"),
-                K("Escape or B", "close")),
+                K("Escape or {BuildMenu}", "close")),
+            new KeySection("Ship and cart routes",
+                K("Shift Enter on your ship or cart", "select it and open its route panel"),
+                K("F6", "move into the route panel, each stop is read with its place and cargo"),
+                K("{MoveSoldiers} on a stop", "move that stop to the dock, building or tile under the map cursor"),
+                K("Enter on the map", "say whether a stop can go on the tile under the cursor")),
         };
 
         static KeyHelp()
@@ -215,6 +222,8 @@ namespace KCAccess.Core
             }
             if (s.Brush)
                 return "A creative mode brush is selected. Move with the arrow keys, Enter applies it at the cursor, Escape turns the brush off.";
+            if (s.RouteMode)
+                return Resolve("Editing a ship or cart route. Move the cursor to a dock, a building or a tile, then press F6, choose a stop in the route panel and press {MoveSoldiers} to move that stop to the cursor. Enter on the map says whether a stop can go there. The panel also adds, removes, pauses and names the route. Escape returns to normal mode.");
             if (s.CursorMode)
                 return "A tool mode is on, such as chop trees or demolish. Enter applies it to the tile under the cursor. Shift Enter marks one corner of an area, move, then Enter applies it to the whole area. Escape returns to normal mode.";
 
@@ -230,12 +239,12 @@ namespace KCAccess.Core
             if (!s.HasKeep)
                 p.Add("You have no keep yet: press {BuildMenu}, choose the Keep in the Castle category, move to a good spot and press Enter");
             else
-                p.Add("Enter selects what is under the cursor, Shift Enter selects soldiers, a ship or a villager. {BuildMenu} opens the build menu, {ChopMode} turns chop trees mode on");
+                p.Add("Enter selects what is under the cursor, Shift Enter selects soldiers, a siege catapult, a dragon, a ship, a cart or a villager. {BuildMenu} opens the build menu, {ChopMode} turns chop trees mode on");
             if (s.HasSelection)
             {
                 p.Add("F6 reads the selected " + (s.BuildingSelected ? "building's" : "tile's") + " panel" + (s.BuildingSelected ? ", Delete demolishes it, {SelectedBuilding} jumps back to it" : ", C orders its trees chopped"));
             }
-            if (s.SoldiersSelected) p.Add("{MoveSoldiers} sends the selected soldiers to the cursor");
+            if (s.SoldiersSelected) p.Add("{MoveSoldiers} sends the selected soldiers to the cursor, Control Shift Enter adds the soldiers on the tile to the selection");
             if (s.HasKeep) p.Add("{Keep} jumps to your keep. {Status} kingdom status, {Date} date and weather, {Log} notifications, J job priority. Control Shift 1 to 9 stores a bookmark, Control 1 to 9 jumps to it");
             p.Add("Space pauses, 1, 2 and 3 set the speed, Escape opens the pause menu");
             return Resolve(string.Join(". ", p) + ".");

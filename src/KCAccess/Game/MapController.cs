@@ -51,7 +51,8 @@ namespace KCAccess.Game
                 var hover = ui.CurrPlacementMode.GetHoverBuilding();
                 st.LinePlacement = hover != null && hover.dragPlacementMode != Building.DragPlacementMode.None;
             }
-            st.CursorMode = ui.currCursorMode != null && ui.currCursorMode != ui.consoleCursorMode;
+            st.RouteMode = ui.currCursorMode is DockRouteCursorMode;
+            st.CursorMode = ui.currCursorMode != null && ui.currCursorMode != ui.consoleCursorMode && !st.RouteMode;
             st.Brush = ui.brushMode != GameUI.CursorBrushes.None;
             st.BuildingSelected = ui.GetBuildingSelected() != null;
             st.HasSelection = st.BuildingSelected || ui.GetCellSelected() != null;
@@ -648,6 +649,13 @@ namespace KCAccess.Game
                 ShiftActivate();
                 return;
             }
+            if (KInput.Down(KeyCode.Return) && KInput.Ctrl && KInput.Shift && !KInput.Alt && !IsPlacing)
+            {
+                // Control Shift Enter: add the soldiers on this tile to the ones already selected.
+                UpdatePointer(follow: false);
+                SelectUnitAt(CurrentCell, add: true);
+                return;
+            }
             if (KInput.Pressed("Validity") && IsPlacing)
             {
                 SpeakValidity(always: true);
@@ -708,6 +716,12 @@ namespace KCAccess.Game
                 A.Say(BrushName(ui.brushMode) + " at " + cursor.Pos);
                 return;
             }
+            if (ui.currCursorMode is DockRouteCursorMode)
+            {
+                // Route stops are dragged with the mouse in the game; here they are moved from the route panel.
+                Routes.SpeakTileForStop(cell);
+                return;
+            }
             if (ui.currCursorMode != null && ui.currCursorMode != ui.consoleCursorMode)
             {
                 if (areaStart.HasValue)
@@ -743,7 +757,8 @@ namespace KCAccess.Game
                 }
                 return;
             }
-            if (ui.currCursorMode != null && ui.currCursorMode != ui.consoleCursorMode)
+            // The route mode (a ship or cart panel is open) has no areas: Shift Enter still selects units there.
+            if (ui.currCursorMode != null && ui.currCursorMode != ui.consoleCursorMode && !(ui.currCursorMode is DockRouteCursorMode))
             {
                 if (!areaStart.HasValue)
                 {
@@ -826,33 +841,70 @@ namespace KCAccess.Game
             SpeakSelection(detailed: false);
         }
 
-        /// <summary>Shift+Enter outside placement: select soldiers / villagers on the tile.</summary>
-        private void SelectUnitAt(Cell cell)
+        private static bool Near(Vector3 p, Cell cell) => Mathf.Abs(p.x - cell.Center.x) <= 1.5f && Mathf.Abs(p.z - cell.Center.z) <= 1.5f;
+
+        /// <summary>
+        /// Shift+Enter outside placement: select soldiers, siege catapults, dragons, ships, carts or villagers on the tile.
+        /// With <paramref name="add"/> (Control Shift Enter) the soldiers are added to the current selection.
+        /// </summary>
+        private void SelectUnitAt(Cell cell, bool add = false)
         {
             var ui = GameUI.inst;
             if (cell == null) return;
+            // Everything the game lets you select and send with a right click: armies, siege catapults, your dragons.
+            var here = new List<IMoveableUnit>();
             var armies = UnitSystem.inst.armies;
-            var here = new List<UnitSystem.Army>();
             for (int i = 0; i < armies.Count; i++)
             {
                 var a = armies.data[i];
-                if (a == null) continue;
-                Vector3 p = a.GetPos();
-                if (Mathf.Abs(p.x - cell.Center.x) <= 1.5f && Mathf.Abs(p.z - cell.Center.z) <= 1.5f && ui.IsUnitSelectable(a)) here.Add(a);
+                if (a != null && Near(a.GetPos(), cell) && ui.IsUnitSelectable(a)) here.Add(a);
+            }
+            var catapults = SiegeCatapultSystem.siegeCatapults;
+            for (int i = 0; catapults != null && i < catapults.Count; i++)
+            {
+                var sc = catapults.data[i];
+                if (sc != null && Near(sc.GetPos(), cell) && ui.IsUnitSelectable(sc)) here.Add(sc);
+            }
+            var dragons = DragonSpawn.inst != null ? DragonSpawn.inst.currentDragons : null;
+            for (int i = 0; dragons != null && i < dragons.Count; i++)
+            {
+                var d = dragons.data[i];
+                if (d != null && Near(d.transform.position, cell) && ui.IsUnitSelectable(d)) here.Add(d);
             }
             if (here.Count > 0)
             {
-                // Cycle through the armies here on repeated presses; Ctrl adds to the selection.
+                // Cycle through the units here on repeated presses; Control Shift Enter adds to the selection.
                 int idx = 0;
-                for (int i = 0; i < here.Count; i++) if (ui.IsSelected(here[i])) idx = i + 1;
-                var army = here[idx % here.Count];
-                if (!KInput.Ctrl) ui.ClearSelection();
-                if (ui.AddToSelection(army))
+                for (int i = 0; i < here.Count; i++) if (ui.IsSelected((ISelectable)here[i])) idx = i + 1;
+                if (add)
                 {
-                    if (ui.DisplayIMovableUI(army)) ui.ClearCellSelected();
+                    // Take the first one here that is not selected yet.
+                    idx = here.FindIndex(u => !ui.IsSelected((ISelectable)u));
+                    if (idx < 0)
+                    {
+                        A.Cue(Cue.Edge);
+                        A.Say("Everything on this tile is already selected");
+                        return;
+                    }
+                }
+                var unit = here[idx % here.Count];
+                if (!add) ui.ClearSelection();
+                if (ui.AddToSelection((ISelectable)unit))
+                {
+                    if (ui.DisplayIMovableUI(unit)) ui.ClearCellSelected();
                 }
                 A.Cue(Cue.Activate);
-                A.Say("Selected " + CellInfo.Units_ArmyName(army).Replace(", selected", "") + ". Move the cursor and press M to send them there. F6 opens the army panel.");
+                int selected = 0;
+                foreach (var s in ui.selectedObjs) if (s is IMoveableUnit) selected++;
+                string what = CellInfo.UnitName(unit).Replace(", selected", "");
+                A.Say((add ? "Added " + what + ", " + TextUtil.Plural(selected, "unit") + " selected" : "Selected " + what)
+                    + KeyHelp.Resolve(". Move the cursor and press {MoveSoldiers} to send them there. F6 opens the army panel."));
+                return;
+            }
+            if (add)
+            {
+                A.Cue(Cue.Error);
+                A.Say("No soldiers of yours here to add to the selection");
                 return;
             }
             // Ships: merchants open the trade window, your own ships can then be sent with M.
@@ -874,8 +926,29 @@ namespace KCAccess.Game
                 ui.AddToSelection((ISelectable)ship);
                 A.Cue(Cue.Activate);
                 bool merchant = ship.type == ShipBase.ShipType.Merchant || ship.type == ShipBase.ShipType.PlayerMerchant;
-                A.Say("Selected " + CellInfo.ShipName(ship).Replace(", selected", "") + (merchant ? ". F6 opens the trade window." : ship.teamID == 0 ? ". M sends it to the cursor, F6 opens its panel." : "."));
+                string how;
+                if (merchant) how = ". F6 opens the trade window.";
+                else if (ship.teamID != 0) how = ".";
+                else if (ship is ILogisticTransport) how = ". F6 opens its route panel: each stop with its cargo, and {MoveSoldiers} on a stop moves it to the cursor.";
+                else how = ". {MoveSoldiers} sends it to the cursor, F6 opens its panel.";
+                A.Say("Selected " + CellInfo.ShipName(ship).Replace(", selected", "") + KeyHelp.Resolve(how));
                 return;
+            }
+            // Transport carts drive routes between stockpiles, markets and other buildings; selecting one opens its route.
+            if (CartSystem.inst != null)
+            {
+                var carts = CartSystem.inst.carts.FindAll(c => c != null && c.TeamID() == 0 && Near(c.GetPos(), cell));
+                if (carts.Count > 0)
+                {
+                    int idx = 0;
+                    for (int i = 0; i < carts.Count; i++) if (ui.IsSelected(carts[i])) idx = i + 1;
+                    var cart = carts[idx % carts.Count];
+                    ui.ClearSelection();
+                    ui.AddToSelection(cart);
+                    A.Cue(Cue.Activate);
+                    A.Say("Selected " + CellInfo.CartName(cart).Replace(", selected", "") + KeyHelp.Resolve(". F6 opens its route panel: each stop with its cargo, and {MoveSoldiers} on a stop moves it to the cursor."));
+                    return;
+                }
             }
             var villagers = World.inst.GetVillagersAt(cell.x, cell.z);
             if (villagers != null && villagers.Count > 0)
@@ -892,7 +965,7 @@ namespace KCAccess.Game
                 return;
             }
             A.Cue(Cue.Error);
-            A.Say("No soldiers, ships or villagers here");
+            A.Say("No soldiers, catapults, dragons, ships, carts or villagers here");
         }
 
         private void MoveUnits()
@@ -901,7 +974,9 @@ namespace KCAccess.Game
             if (!ui.IsUnitSelected())
             {
                 A.Cue(Cue.Error);
-                A.Say("No soldiers selected. Use Shift Enter on soldiers to select them.");
+                A.Say(ui.currCursorMode is DockRouteCursorMode
+                    ? KeyHelp.Resolve("Ships and carts follow their route. F6 opens the route panel; {MoveSoldiers} on a stop moves that stop to the cursor.")
+                    : "No soldiers selected. Use Shift Enter on soldiers to select them.");
                 return;
             }
             ui.MoveUnitsToPosition(CurrentCell.Center);
@@ -1115,6 +1190,7 @@ namespace KCAccess.Game
                 lastCursorMode = mode;
                 areaStart = null;
                 if (mode == null || mode == ui.consoleCursorMode) A.Say("Normal mode");
+                else if (mode is DockRouteCursorMode) A.SayQueued(Routes.ModeIntro());
                 else A.Say(CursorModeName(mode) + ". Enter on a tile applies it, Shift Enter marks an area. Escape returns to normal mode.");
             }
         }

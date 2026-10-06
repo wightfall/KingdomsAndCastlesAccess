@@ -183,10 +183,69 @@ namespace KCAccess.Game
                     var d = dragons.data[i];
                     if (d == null) continue;
                     Vector3 p = d.transform.position;
-                    if ((int)p.x == c.x && (int)p.z == c.z) result.Add("dragon");
+                    if ((int)p.x == c.x && (int)p.z == c.z) result.Add(DragonName(d));
                 }
             }
+            // Siege catapults (yours from the siege workshop, and the vikings') were never mentioned.
+            var catapults = SiegeCatapultSystem.siegeCatapults;
+            for (int i = 0; catapults != null && i < catapults.Count; i++)
+            {
+                var sc = catapults.data[i];
+                if (sc == null || !sc.ValidToSelect()) continue; // dead, or carried on a ship
+                Vector3 p = sc.GetPos();
+                if ((int)p.x == c.x && (int)p.z == c.z) result.Add(CatapultName(sc));
+            }
+            if (CartSystem.inst != null)
+            {
+                foreach (var cart in CartSystem.inst.carts)
+                {
+                    if (cart == null) continue;
+                    Vector3 p = cart.GetPos();
+                    if ((int)p.x == c.x && (int)p.z == c.z) result.Add(CartName(cart));
+                }
+            }
+            int wolves = 0, hunting = 0;
+            for (int i = 0; i < WolfDen.wolves.Count; i++)
+            {
+                var w = WolfDen.wolves.data[i];
+                if (w == null || w.IsInvalid()) continue;
+                if ((int)w.pos.x != c.x || (int)w.pos.z != c.z) continue;
+                wolves++;
+                if (w.status == WolfDen.Status.Chase || w.status == WolfDen.Status.Attack) hunting++;
+            }
+            if (wolves > 0) result.Add(TextUtil.Plural(wolves, "wolf", "wolves") + (hunting > 0 ? ", hunting" : string.Empty));
             return result;
+        }
+
+        private static bool Enemy(int team) => team != 0 && World.inst.RelationBetween(0, team) == World.Relations.Enemy;
+
+        private static string Selected(ISelectable s) => GameUI.inst != null && s != null && GameUI.inst.IsSelected(s) ? ", selected" : string.Empty;
+
+        /// <summary>"your dragon" (from a dragon nest), "wild dragon" (an attacking one) or "enemy dragon".</summary>
+        internal static string DragonName(Dragon d)
+        {
+            if (d.teamId == 0) return "your dragon" + Selected(d);
+            if (d.teamId == -1) return "wild dragon";
+            return UnitText.Owner(false, Enemy(d.teamId)) + "dragon";
+        }
+
+        internal static string CatapultName(SiegeCatapult sc) => UnitText.Owner(sc.TeamID() == 0, Enemy(sc.TeamID())) + "siege catapult" + Selected(sc);
+
+        internal static string CartName(TransportCart cart) => UnitText.Owner(cart.TeamID() == 0, Enemy(cart.TeamID())) + "transport cart" + Selected(cart);
+
+        /// <summary>Any unit the player can select and send somewhere.</summary>
+        internal static string UnitName(IMoveableUnit u)
+        {
+            switch (u)
+            {
+                case UnitSystem.Army a: return Units_ArmyName(a);
+                case SiegeCatapult sc: return CatapultName(sc);
+                case Dragon d: return DragonName(d);
+                case ShipBase s: return ShipName(s);
+                case SiegeMonster _: return "ogre";
+                case DragonPuppet _: return "your dragon";
+                default: return "unit";
+            }
         }
 
         /// <summary>"your transport ship", "merchant ship", "enemy viking ship" …</summary>
@@ -201,6 +260,7 @@ namespace KCAccess.Game
                 case ShipBase.ShipType.TroopTransport: kind = "troop ship"; break;
                 case ShipBase.ShipType.VikingTroopTransport: kind = "viking ship"; break;
                 case ShipBase.ShipType.OgreTroopTransport: kind = "ogre ship"; break;
+                case ShipBase.ShipType.SeedShip: kind = "seed ship"; break;
                 default: kind = "transport ship"; break;
             }
             if (s.type == ShipBase.ShipType.Merchant || s.type == ShipBase.ShipType.PlayerMerchant) return kind;

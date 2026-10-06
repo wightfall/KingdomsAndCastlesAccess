@@ -133,6 +133,68 @@ namespace KCAccess.UI
             return null;
         }
 
+        /// <summary>Resource name for one of the game's resource icons, or null.</summary>
+        private static string ResourceOfSprite(Sprite sprite)
+        {
+            var textures = Player.inst != null ? Player.inst.resourceTextures : null;
+            if (textures == null || sprite == null) return null;
+            for (int i = 0; i < textures.Count; i++)
+                if (textures[i] != null && textures[i] == sprite) return ResourceNames.Name(((FreeResourceType)i).ToString());
+            return null;
+        }
+
+        /// <summary>
+        /// Diplomacy price editor (AINegotiationUI): one slider per resource, shown only with the resource's icon and a
+        /// face that shows how the other kingdom feels about the price. Returns the resource ("Wood"), or null.
+        /// </summary>
+        private static string NegotiationResource(Slider s)
+        {
+            var entry = s != null ? s.GetComponentInParent<ResourceNegotiationEntryUI>() : null;
+            if (entry == null) return null;
+            string res = null;
+            foreach (var img in entry.GetComponentsInChildren<Image>(true))
+            {
+                res = ResourceOfSprite(img.sprite);
+                if (res != null) break;
+            }
+            return TextUtil.Capitalize(res ?? "resource");
+        }
+
+        private static string NegotiationValue(Slider s) => (int)s.value + ", they are " + UnitText.NegotiationMood(s.value);
+
+        /// <summary>Value spoken after a slider was changed, when the slider needs more than the number; null otherwise.</summary>
+        internal static string SliderValue(Slider s) => NegotiationResource(s) != null ? NegotiationValue(s) : null;
+
+        /// <summary>
+        /// The army panel (UnitUI): its tabs and its list of selected units are pictures only. Names them, or returns null.
+        /// </summary>
+        private static string UnitPanelItem(GameObject go)
+        {
+            var ui = UnitUI.inst;
+            if (ui == null || go == null || !go.transform.IsChildOf(ui.transform)) return null;
+            if (ui.tabRoot != null)
+            {
+                for (int i = 0; i < ui.tabRoot.Length; i++)
+                {
+                    var root = ui.tabRoot[i];
+                    if (root == null || !(go.transform == root.transform || go.transform.IsChildOf(root.transform))) continue;
+                    string name = UnitText.TabName(((UnitUI.UnitTabs)i).ToString()) ?? TextUtil.Humanize(((UnitUI.UnitTabs)i).ToString());
+                    var rt = root.transform;
+                    string count = rt.childCount > 0 ? TextUtil.Clean(UIText.TextOf(rt.GetChild(rt.childCount - 1).GetComponent<TMPro.TMP_Text>())) : string.Empty;
+                    bool selected = rt.childCount > 1 && rt.GetChild(1).gameObject.activeSelf && ui.currentTabSelected == (UnitUI.UnitTabs)i;
+                    return TextUtil.Join(", ", name, count, "tab", selected ? "selected" : null);
+                }
+            }
+            if (ui.unitOptionContainer != null && go.transform.parent == ui.unitOptionContainer.transform)
+            {
+                int idx = go.transform.GetSiblingIndex();
+                var units = ui.units;
+                if (units != null && idx >= 0 && idx < units.Count && units.data[idx] != null)
+                    return TextUtil.Capitalize(Game.CellInfo.UnitName(units.data[idx]).Replace(", selected", "")) + ", button, Enter shows this unit's details";
+            }
+            return null;
+        }
+
         /// <summary>Dock / stockpile "desired amount" rows: resource icon, desired amount field, stored amount, transport-only toggle.</summary>
         private static bool OrderRow(GameObject go, out Transform row, out FreeResourceType type)
         {
@@ -276,6 +338,15 @@ namespace KCAccess.UI
         internal static string Describe(UIItem item)
         {
             if (item == null || item.Go == null) return null;
+            if (item.IsControl && item.Go.GetComponentInParent<LogisticsDestUI>() is LogisticsDestUI stop)
+            {
+                string d = Game.Routes.Describe(stop, item.Control);
+                if (d != null) return d;
+            }
+            if (item.IsControl && item.Control is Slider ns && NegotiationResource(ns) is string nres)
+                return nres + " price, slider, " + NegotiationValue(ns);
+            string unit = item.IsControl ? UnitPanelItem(item.Go) : null;
+            if (unit != null) return unit;
             if (item.IsControl && item.Go.GetComponentInParent<PersonListItemUI>() is PersonListItemUI pli && pli.MagGlass != null && item.Control == pli.MagGlass)
             {
                 string who = pli.Description != null ? TextUtil.Clean(UIText.TextOf(pli.Description)) : "villager";
@@ -413,6 +484,8 @@ namespace KCAccess.UI
         internal static bool HandleKey(UINavigator nav, UIItem item)
         {
             if (item == null || item.Go == null) return false;
+            var stop = item.Go.GetComponentInParent<LogisticsDestUI>();
+            if (stop != null && Game.Routes.HandleKey(stop, item)) return true;
             if (KInput.Plain(KeyCode.Delete))
             {
                 // Save / load slots: Delete removes the save (the game asks for confirmation).
@@ -579,6 +652,10 @@ namespace KCAccess.UI
         internal static string Help(UIItem item)
         {
             if (item == null || item.Go == null) return null;
+            var stop = item.Go.GetComponentInParent<LogisticsDestUI>();
+            if (stop != null) return Game.Routes.Help(stop);
+            if (item.Control is Slider ns && NegotiationResource(ns) != null)
+                return "On a price: Left and Right change it, the other kingdom's mood is said with it. Lower prices make them happier.";
             if (item.Go.GetComponentInParent<ResourceLineItemUI>() != null)
                 return "On a trade line: Left and Right change the amount by 1, Page Up and Page Down by 10, Enter lets you type an amount. Then choose the complete transaction button.";
             if (item.Go.GetComponentInParent<Assets.Code.UI.SaveLoadOption>() != null)

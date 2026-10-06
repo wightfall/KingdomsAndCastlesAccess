@@ -149,6 +149,38 @@ namespace KCAccess.Game
                         Vector3 p = s.GetPos();
                         found.Add(new Item { Label = CellInfo.ShipName(s), Pos = new GridPos((int)p.x, (int)p.z) });
                     }
+                    // Siege catapults: yours from the siege workshop, the vikings' as threats.
+                    var catapults = SiegeCatapultSystem.siegeCatapults;
+                    for (int i = 0; catapults != null && i < catapults.Count; i++)
+                    {
+                        var sc = catapults.data[i];
+                        if (sc == null || !sc.ValidToSelect()) continue;
+                        int team = sc.TeamID();
+                        bool enemy = team != 0 && w.RelationBetween(0, team) == World.Relations.Enemy;
+                        if (mine ? team != 0 : !enemy) continue;
+                        Vector3 p = sc.GetPos();
+                        found.Add(new Item { Label = CellInfo.CatapultName(sc), Pos = new GridPos((int)p.x, (int)p.z) });
+                    }
+                    // Dragons: your own (dragon nest) are not threats.
+                    var dragons = DragonSpawn.inst != null ? DragonSpawn.inst.currentDragons : null;
+                    for (int i = 0; dragons != null && i < dragons.Count; i++)
+                    {
+                        var d = dragons.data[i];
+                        if (d == null) continue;
+                        bool enemy = d.teamId != 0 && w.RelationBetween(0, d.teamId) == World.Relations.Enemy;
+                        if (mine ? d.teamId != 0 : !enemy) continue;
+                        Vector3 p = d.transform.position;
+                        found.Add(new Item { Label = CellInfo.DragonName(d), Pos = new GridPos((int)p.x, (int)p.z) });
+                    }
+                    if (mine && CartSystem.inst != null)
+                    {
+                        foreach (var cart in CartSystem.inst.carts)
+                        {
+                            if (cart == null || cart.TeamID() != 0) continue;
+                            Vector3 p = cart.GetPos();
+                            found.Add(new Item { Label = CellInfo.CartName(cart), Pos = new GridPos((int)p.x, (int)p.z) });
+                        }
+                    }
                     if (!mine)
                     {
                         for (int i = 0; i < SiegeMonster.monsters.Count; i++)
@@ -158,13 +190,12 @@ namespace KCAccess.Game
                             Vector3 p = m.GetPos();
                             found.Add(new Item { Label = "ogre", Pos = new GridPos((int)p.x, (int)p.z) });
                         }
-                        var dragons = DragonSpawn.inst.currentDragons;
-                        for (int i = 0; i < dragons.Count; i++)
+                        // Wolves chasing or attacking someone (wandering ones stay near their den, listed below).
+                        for (int i = 0; i < WolfDen.wolves.Count; i++)
                         {
-                            var d = dragons.data[i];
-                            if (d == null) continue;
-                            Vector3 p = d.transform.position;
-                            found.Add(new Item { Label = "dragon", Pos = new GridPos((int)p.x, (int)p.z) });
+                            var wolf = WolfDen.wolves.data[i];
+                            if (wolf == null || wolf.IsInvalid() || (wolf.status != WolfDen.Status.Chase && wolf.status != WolfDen.Status.Attack)) continue;
+                            found.Add(new Item { Label = "hunting wolf", Pos = new GridPos((int)wolf.pos.x, (int)wolf.pos.z) });
                         }
                         if (FireManager.inst != null && FireManager.inst.fireContainer != null)
                         {

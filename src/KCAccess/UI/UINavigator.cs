@@ -656,7 +656,7 @@ namespace KCAccess.UI
                     sl.value = Mathf.Clamp(sl.value + step * steps, sl.minValue, sl.maxValue);
                     if (Mathf.Approximately(before, sl.value)) A.Cue(Cue.Edge);
                     else A.Cue(Cue.Value, ToneSynth.PitchFor(range > 0 ? (sl.value - sl.minValue) / range : 0f) / 600f);
-                    A.Say(UIText.ValueOf(sl));
+                    A.Say(Special.SliderValue(sl) ?? UIText.ValueOf(sl));
                     return true;
                 }
                 case Scrollbar sb:

@@ -237,6 +237,7 @@ namespace KCAccess.Core
             }
             Add("Return", "selecting and activating");
             Add("Shift+Return", "selecting soldiers and marking areas");
+            Add("Ctrl+Shift+Return", "adding soldiers to the selection");
             Add("KeypadEnter", "activating");
             Add("Escape", "going back");
             Add("Tab", "moving between controls");

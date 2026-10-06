@@ -66,6 +66,10 @@ namespace KCAccess.Tests
             Assert.Contains("Backslash jumps", selected);
 
             Assert.StartsWith("Walking", KeyHelp.MapHelp(new MapState { Walking = true }));
+            string route = KeyHelp.MapHelp(new MapState { RouteMode = true });
+            Assert.StartsWith("Editing a ship or cart route", route);
+            Assert.DoesNotContain("Shift Enter marks", route);
+            Assert.Contains("Control Shift Enter adds", KeyHelp.MapHelp(new MapState { SoldiersSelected = true }));
             Assert.Contains("no keep yet", KeyHelp.MapHelp(new MapState { HasKeep = false }));
             Assert.DoesNotContain("Space pauses", KeyHelp.MapHelp(new MapState { MenuMap = true }));
         }

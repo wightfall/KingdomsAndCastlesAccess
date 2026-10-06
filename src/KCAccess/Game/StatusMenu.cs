@@ -151,6 +151,14 @@ namespace KCAccess.Game
                 if (a != null && a.teamId != 0 && World.inst.RelationBetween(0, a.teamId) == World.Relations.Enemy) enemies++;
             }
             if (enemies > 0) parts.Add(TextUtil.Plural(enemies, "enemy army", "enemy armies") + " on the map");
+            int catapults = 0;
+            var sieges = SiegeCatapultSystem.siegeCatapults;
+            for (int i = 0; sieges != null && i < sieges.Count; i++)
+            {
+                var sc = sieges.data[i];
+                if (sc != null && sc.ValidToSelect() && sc.TeamID() != 0 && World.inst.RelationBetween(0, sc.TeamID()) == World.Relations.Enemy) catapults++;
+            }
+            if (catapults > 0) parts.Add(TextUtil.Plural(catapults, "enemy siege catapult") + " on the map");
             return parts.Count == 0 ? "No threats visible" : TextUtil.Join(". ", parts);
         }
 
