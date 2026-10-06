@@ -121,7 +121,8 @@ namespace KCAccess.Game
                 Start();
                 return;
             }
-            if (KInput.Plain(KeyCode.Escape) || KInput.Plain(KeyCode.B))
+            // The key that opened the menu closes it again (B unless the player changed it in the mod settings).
+            if (KInput.Plain(KeyCode.Escape) || KInput.Pressed("BuildMenu"))
             {
                 KInput.Consume(KeyCode.Escape);
                 Close();
@@ -148,7 +149,7 @@ namespace KCAccess.Game
             else
             {
                 char? c = KInput.LetterDown();
-                if (c.HasValue && !KInput.Shift && c.Value != 'i' && c.Value != 'b')
+                if (c.HasValue && !KInput.Shift && c.Value != 'i')
                 {
                     if (items.FindNext(typeAhead.Add(c.Value))) Move(NavResult.Moved);
                     else A.Cue(Cue.Edge);

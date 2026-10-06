@@ -609,7 +609,7 @@ namespace KCAccess.Game
             {
                 // The game's chop shortcut works on the selected tile and stays silent when it cannot.
                 var sel = ui.GetCellSelected();
-                if (sel == null) A.Say("Select a forest tile with Enter first, then press C. For a large area use chop trees mode in the toolbar, F6.");
+                if (sel == null) A.Say(KeyHelp.Resolve("Select a forest tile with Enter first, then press C. For a large area use chop trees mode, {ChopMode}."));
                 else if (sel.TreeAmount == 0) A.Say("No trees on the selected tile");
             }
             if (KInput.Pressed("BuildMenu"))
@@ -1001,7 +1001,7 @@ namespace KCAccess.Game
             }
             else if (ui.IsUnitSelected())
             {
-                text = "Soldiers selected. M moves them to the cursor.";
+                text = KeyHelp.Resolve("Soldiers selected. {MoveSoldiers} moves them to the cursor.");
             }
             else text = "Nothing selected";
             A.Say(text, force: true);
@@ -1208,7 +1208,7 @@ namespace KCAccess.Game
                 bool again = GameUI.inst != null && GameUI.inst.CanPlaceAgain();
                 A.Say("Placed " + what + (again ? ". Move to place another, Escape to stop." : "."));
                 if (name == GameState.inst.GetPlaceableByUniqueName("keep")?.FriendlyName)
-                    A.SayQueued("Next build roads out from your keep: B, Town category, Road. Other buildings must be inside road coverage. I on a tile tells you whether it is inside road coverage.");
+                    A.SayQueued(KeyHelp.Resolve("Next build roads out from your keep: {BuildMenu}, Town category, Road. Other buildings must be inside road coverage. {TileInfo} on a tile tells you whether it is inside road coverage."));
             }
             else
             {

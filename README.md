@@ -108,7 +108,8 @@ mouse drag), Left / Right change how many workers are allowed.
 | Shift+Arrows | Move 5 tiles |
 | Ctrl+Arrows | Jump to the next tile that is different (edge of a forest, a building, water …) |
 | Enter | Select the building or tile under the cursor; while placing: build; in chop / demolish mode: apply |
-| Shift+Enter | While placing roads, walls or fields: set the start point, then Enter at the end point builds the whole line or area. In chop / demolish mode: mark one corner of an area. Otherwise: select soldiers, a ship (merchant ships open the trade window) or a villager on the tile (press again to cycle) |
+| Shift+Enter | While placing roads, walls or fields: set the start point, then Enter at the end point builds the whole line or area. In chop / demolish mode: mark one corner of an area. Otherwise: select soldiers, a siege catapult, your dragon, a ship (merchant ships open the trade window), a transport cart or a villager on the tile (press again to cycle) |
+| Ctrl+Shift+Enter | Add the soldiers (siege catapults, dragons) on the tile to the selection, so several armies move together with M |
 | I | Everything about the tile (terrain, fertility, road coverage, workers …) |
 | Shift+I | Details of the selected building |
 | F5 | Repeat the tile description |
@@ -125,7 +126,7 @@ mouse drag), Left / Right change how many workers are allowed.
 | End | Jump to the selected building |
 | Ctrl+Shift+1 … 9 | Store a bookmark at the cursor (saved per kingdom) |
 | Ctrl+1 … 9 | Jump to a bookmark |
-| Page Up / Page Down | Choose a scan category: your buildings, construction sites, your soldiers and ships, alerts, problems (hungry, starving, plague, unpaid wages, homeless, rats, unburied dead, buildings that cannot work), threats, stone, iron, open fertile land, forests, fresh water, fishing grounds, foreign kingdoms, special places |
+| Page Up / Page Down | Choose a scan category: your buildings, construction sites, your soldiers and ships (also siege catapults, your dragons and transport carts), alerts, problems (hungry, starving, plague, unpaid wages, homeless, rats, unburied dead, buildings that cannot work), threats (enemy armies and ships, viking siege catapults, wild dragons, ogres, fires, hunting wolves, wolf dens), stone, iron, open fertile land, forests, fresh water, fishing grounds, foreign kingdoms, special places |
 | [ and ] | Choose the previous / next item of that category as the navigation target, nearest first (the list refreshes itself) |
 | N | Auto-walk the cursor to the target along a route villagers can walk (ends next to it if the target itself is blocked) |
 | Ctrl+N | Walk to the target in a straight line, over water and buildings |
@@ -135,7 +136,7 @@ mouse drag), Left / Right change how many workers are allowed.
 | Alt+1 … 9 | Make a bookmark the navigation target |
 | Any arrow / Escape | Stop an auto-walk |
 | V | While placing: why the spot is (in)valid |
-| M | Send the selected soldiers to the cursor |
+| M | Send the selected soldiers (also siege catapults and your dragons) to the cursor; on a route stop in a ship or cart panel: move the stop to the cursor |
 | Ctrl+E | Respond to the nearest alert (the game's exclamation marks): advisor news at the keep, a foreign envoy waiting to speak, a stopped transport cart, a ship needing orders |
 
 **Demolishing:** select a building and press Delete (or the panel's Demolish button), or turn on
@@ -201,9 +202,27 @@ focus on the current language; Enter switches language, Escape closes the list.
 * **Diplomacy:** every line an envoy or ruler says is read aloud, followed by the number of replies;
   focus jumps to the first reply. Up / Down choose, Enter answers. To visit a kingdom, select your envoy
   (Shift+Enter), put the cursor on the other kingdom's keep and press M.
+* **Diplomacy prices:** in the price editor each slider reads its resource, the price and how the other
+  kingdom feels about it ("Wood price, slider, 3, they are neutral"); lower prices make them happier.
+* **Army panel (F6 with soldiers selected):** the unit type tabs and the list of selected units are named
+  ("Siege catapults, 2, tab"); Enter on a unit shows its details.
 * **Research (Great Library):** select the library, F6, Research. Each technology reads its effect and
   gold cost, or "already researched"; Enter starts it, or tells you how much gold is missing. While research
   runs the window reads progress and years remaining.
+
+### Ship and cart routes
+
+Transport ships and transport carts carry goods along a route of stops, which the game edits by dragging
+coloured markers. With the mod:
+
+1. Find your ship or cart (scanner category "Your soldiers and ships"), press **Shift+Enter** on it. Its route
+   panel opens and you hear "Route editing".
+2. Move the cursor to the dock, stockpile, market or tile where a stop should be. **Enter** on the map says whether
+   a stop can go there.
+3. **F6** into the route panel. Each stop reads "Stop 2 of 3: Northport, Dock, 4 tiles east, pick up wood 20,
+   drop off nothing". Press **M** on a stop to move it to the cursor. The add buttons at the start and end of the
+   list add stops, "Remove stop" deletes one, and the pick up / drop off check boxes choose the cargo; on a checked
+   one, **Shift+Enter** opens the amounts again for changes.
 
 ### Creative mode
 
@@ -222,7 +241,7 @@ brushes work the same way: pick a brush, press Ctrl+M, move the cursor and press
 | I or F5 | Full description, workers and wages |
 | Letters | Jump to a building by name |
 | Enter or Space | Pick up the building; cemeteries, statues and parks open their own list |
-| Escape or B | Close |
+| Escape or B (your build menu key) | Close |
 
 When you pick up a building, the cursor marks its **south west corner**; a 3 by 3 building covers the
 cursor tile and the tiles to the north and east. Most buildings must be inside **road coverage**:
@@ -338,8 +357,17 @@ Every sound can be previewed: Shift+F1, End, then Up through the sounds and pres
 | Map / SpeakCoordinates | false | Add X, Z to every tile description |
 | Map / VerboseCells | false | Speak fertility for every tile while moving |
 | Map / CameraFollowsCursor | true | Camera follows the keyboard cursor (helps sighted helpers) |
+| Map / WalkSpeed | 2 | Auto-walk speed: 1 slow, 2 normal, 3 fast |
 | Speech / AnnounceNotifications | true | Speak kingdom notifications automatically |
 | Speech / LogSpeech | true | Write everything spoken to `BepInEx\LogOutput.log` |
+| Speech / AnnounceSeasons | true | Speak the start of every summer, winter and new year (and heavy rain / thunderstorms) |
+| Speech / Hints | true | Short hints for new players |
+| Speech / SayPositions | false | Say the position after each item in menus and lists ("3 of 19") |
+| Keyboard / Bindings | (empty) | Changed mod keys, easier to change in the game with Ctrl+Shift+O |
+| Keyboard / ControllerSupport | true | Gamepad support through the mod (off: the game's own controller mode) |
+| Keyboard / WindowsKeyFallback | true | Deliver key presses Windows saw but the game missed |
+| Debug / KeyLog | true | Write key names and modifier state to the log for keyboard bug reports |
+| Debug / CommandFile | false | Developer option: read test commands from `BepInEx\kcaccess_commands.txt` |
 | Streaming / AnnounceTwitchCountdown | true | Say once when 10 seconds are left in a Twitch vote |
 | Streaming / ReadTwitchChat | false | Read Twitch chat aloud (votes skipped, busy chat summarised) |
 | Streaming / SpeechCaptions | false | Show the last spoken lines on screen for stream viewers |

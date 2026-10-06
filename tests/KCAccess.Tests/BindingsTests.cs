@@ -104,6 +104,11 @@ namespace KCAccess.Tests
                 Xunit.Assert.Contains("Y surveys the area", KeyHelp.MapHelp(new MapState()));
                 Xunit.Assert.DoesNotContain("O surveys", KeyHelp.MapHelp(new MapState()));
                 Xunit.Assert.Contains("Y: survey the area", KeyHelp.AllText());
+                // The screen help texts name rebindable keys too (they used to say "O" whatever the binding).
+                Xunit.Assert.Contains("Y surveys the area", HelpText.For("Map"));
+                Xunit.Assert.DoesNotContain("{", HelpText.For("Map"));
+                Xunit.Assert.DoesNotContain("{", HelpText.For("Placement"));
+                Xunit.Assert.DoesNotContain("{", HelpText.For("BuildMenu"));
             }
             finally
             {

@@ -39,7 +39,7 @@ namespace KCAccess.Game
         {
             if (!Plugin.CfgCues.Value)
             {
-                A.Say("Sound cues are off. Control Shift M turns them on.", force: true);
+                A.Say(KeyHelp.Resolve("Sound cues are off. {Mute} turns them on."), force: true);
                 return;
             }
             if (cue == Cue.Beacon)

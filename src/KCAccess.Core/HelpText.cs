@@ -11,7 +11,7 @@ namespace KCAccess.Core
             "Home and End jump to the first and last item. Escape goes back. Control R reads the whole screen. F5 repeats the current item.";
 
         public const string GlobalKeys =
-            "Global keys: F1 help for the current screen. Shift F1 lists every mod key. Control Shift F5 searches again for your screen reader. Control Shift M mutes or unmutes sound cues. Control Shift F11 reports the keyboard state for bug reports. If speech ever stops responding, Control Shift F10 resets the mod.";
+            "Global keys: F1 help for the current screen. {KeyList} lists every mod key. {Redetect} searches again for your screen reader. {Mute} mutes or unmutes sound cues. {Report} reports the keyboard state for bug reports. If speech ever stops responding, {Reset} resets the mod.";
 
         private static readonly Dictionary<string, string> Screens = new Dictionary<string, string>
         {
@@ -40,22 +40,22 @@ namespace KCAccess.Core
             { "Panel.Twitch",
                 "Twitch chat voting. Type your Twitch channel name in the text field and press Enter; you hear when the chat is connected. " +
                 "The interval and maximum votes lists set how often a vote runs and how many options it offers, and the check boxes turn single vote options on or off. " +
-                "Each new vote is announced with the numbers viewers type in chat, for example #2. K shows the running vote counts and the time left, Enter on that line opens or closes these settings. " +
+                "Each new vote is announced with the numbers viewers type in chat, for example #2. {Status} shows the running vote counts and the time left, Enter on that line opens or closes these settings. " +
                 "The result banner says what the viewers chose. Escape closes the settings and returns to the map. Captions, reading chat aloud and the overlay status file are in the mod settings, group Streaming." },
             { "BuildMenu",
                 "Build menu. Left and Right arrows switch category, Up and Down choose a building. Each building lists cost, size and whether you can build it now. " +
-                "Enter picks the building up for placement. I reads the full description. Letters jump to buildings by name. Escape closes the menu." },
+                "Enter picks the building up for placement. I reads the full description. Letters jump to buildings by name. Escape or {BuildMenu} closes the menu." },
             { "Placement",
                 "Placing a building. Move with the arrow keys, the building follows the cursor and you hear whether the spot is valid. " +
-                "Enter places it. R rotates. V reads why the spot is invalid. For roads, walls and fields press Shift Enter to mark a start point, move to the end point, then press Enter to build the whole line or area. " +
+                "Enter places it. R rotates. {Validity} reads why the spot is invalid. For roads, walls and fields press Shift Enter to mark a start point, move to the end point, then press Enter to build the whole line or area. " +
                 "Escape cancels placement." },
             { "Map",
                 "Kingdom map. Arrow keys move the cursor one tile, Shift plus arrows moves 5 tiles, Control plus arrows jumps to where the terrain changes. " +
-                "Enter selects what is under the cursor, like a mouse click. I gives full details of the tile. O surveys the area around the cursor: land, fertile soil, forest, stone, iron and water, useful to choose where to build. B opens the build menu. " +
-                "F6 moves focus into the open information panel. K kingdom status, T date and season, G cursor coordinates. " +
-                "Home jumps to your keep. Control Shift 1 to 9 stores a bookmark at the cursor, Control 1 to 9 jumps back to it. Page Up and Page Down choose a scan category, open and close bracket choose the previous or next thing of that category as your target, nearest first. N walks the cursor to the target along a route villagers can walk, Control N walks in a straight line, Backslash jumps straight there, Shift Backslash says where the target is. Shift N turns the target beacon on or off: pings come from the target's side, higher pitch means north, lower means south, faster means closer. Any arrow key or Escape stops a walk. Alt 1 to 9 makes a bookmark the target. " +
-                "L opens the notification history. Delete demolishes the selected building, C orders trees on the selected tile chopped, or cancels it. Shift C turns chop trees mode on or off: Shift Enter marks one corner, Enter the other, and every tree in between is marked. " +
-                "M moves selected soldiers to the cursor. With a creative mode brush selected, Enter applies it and Escape turns it off. Space pauses, 1, 2 and 3 set game speed, J opens decrees, Escape opens the pause menu." },
+                "Enter selects what is under the cursor, like a mouse click. {TileInfo} gives full details of the tile. {Survey} surveys the area around the cursor: land, fertile soil, forest, stone, iron and water, useful to choose where to build. {BuildMenu} opens the build menu. " +
+                "F6 moves focus into the open information panel. {Status} kingdom status, {Date} date and season, {Coordinates} cursor coordinates. " +
+                "{Keep} jumps to your keep. Control Shift 1 to 9 stores a bookmark at the cursor, Control 1 to 9 jumps back to it. {PrevCategory} and {NextCategory} choose a scan category, {PrevItem} and {NextItem} choose the previous or next thing of that category as your target, nearest first. {Walk} walks the cursor to the target along a route villagers can walk, {WalkStraight} walks in a straight line, {JumpTarget} jumps straight there, {WhereTarget} says where the target is. {Beacon} turns the target beacon on or off: pings come from the target's side, higher pitch means north, lower means south, faster means closer. Any arrow key or Escape stops a walk. Alt 1 to 9 makes a bookmark the target. " +
+                "{Log} opens the notification history. Delete demolishes the selected building, C orders trees on the selected tile chopped, or cancels it. {ChopMode} turns chop trees mode on or off: Shift Enter marks one corner, Enter the other, and every tree in between is marked. " +
+                "{MoveSoldiers} moves selected soldiers to the cursor, Control Shift Enter adds more soldiers to the selection. With a creative mode brush selected, Enter applies it and Escape turns it off. Space pauses, 1, 2 and 3 set game speed, J opens decrees, Escape opens the pause menu." },
             { "Decrees", "Job priority. Each job row tells its priority, name, filled workers and how many workers are allowed. Space turns a job on or off, Shift Up and Shift Down move it up or down in priority, Left and Right change the allowed workers." },
             { "Diplomacy", "Talking with another kingdom. Each line of the conversation is read aloud, then the number of replies. Up and Down choose a reply, Enter answers. Gift, trade and request options appear as buttons." },
             { "LevelUp", "Your town has grown to a new size. Read the message and choose the button to continue." },
@@ -75,7 +75,8 @@ namespace KCAccess.Core
 
         public static string For(string screenId)
         {
-            if (screenId != null && Screens.TryGetValue(screenId, out var text)) return text;
+            // Texts name rebindable keys as {BindingId}: always speak the player's current keys.
+            if (screenId != null && Screens.TryGetValue(screenId, out var text)) return KeyHelp.Resolve(text);
             return Screens["Dialog"];
         }
 
