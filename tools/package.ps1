@@ -28,6 +28,11 @@ $bin = Join-Path $root "src\KCAccess\bin\Release\net472"
 Copy-Item (Join-Path $bin "KCAccess.dll"), (Join-Path $bin "KCAccess.Core.dll") $plugin
 Copy-Item (Join-Path $root "lib\prism\prism.dll") $plugin
 Copy-Item README.md, LICENSE, THIRD-PARTY-NOTICES.md $plugin
+# Shipped language files: the mod copies them to Languages\<code>.txt (or merges updates into the player's copy).
+$langDefault = Join-Path $plugin "Languages\default"
+New-Item -ItemType Directory -Force $langDefault | Out-Null
+Copy-Item (Join-Path $root "src\KCAccess\Languages\*.txt") $langDefault
+if (-not (Test-Path (Join-Path $langDefault "template.txt"))) { throw "Language files missing" }
 $lic = Join-Path $plugin "licenses\prism"
 New-Item -ItemType Directory -Force $lic | Out-Null
 Copy-Item -Recurse (Join-Path $root "lib\prism\licenses\*") $lic

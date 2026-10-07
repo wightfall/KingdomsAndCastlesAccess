@@ -36,5 +36,10 @@
     <MakeDir Directories="$(BepInExDir)\plugins\KCAccess" />
     <Copy SourceFiles="$(TargetDir)KCAccess.dll;$(TargetDir)KCAccess.Core.dll" DestinationFolder="$(BepInExDir)\plugins\KCAccess" />
     <Copy SourceFiles="$(MSBuildThisFileDirectory)..\..\lib\prism\prism.dll" DestinationFolder="$(BepInExDir)\plugins\KCAccess" Condition="Exists('$(MSBuildThisFileDirectory)..\..\lib\prism\prism.dll')" />
+    <!-- Shipped language files go to Languages\default; the mod copies or merges them into the player's Languages folder. -->
+    <ItemGroup>
+      <LanguageFile Include="$(MSBuildThisFileDirectory)Languages\*.txt" />
+    </ItemGroup>
+    <Copy SourceFiles="@(LanguageFile)" DestinationFolder="$(BepInExDir)\plugins\KCAccess\Languages\default" />
   </Target>
 </Project>

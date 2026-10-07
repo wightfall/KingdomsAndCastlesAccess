@@ -24,6 +24,7 @@ namespace KCAccess
         private static string appliedGameLanguage;
         private static float nextFileCheck;
         private static float nextGameCheck;
+        private static bool gameChecked; // the game's language is first read on the first frame, not during plugin start-up
 
         /// <summary>File code of the active language, or null for English.</summary>
         internal static string ActiveCode => activeCode;
@@ -57,7 +58,7 @@ namespace KCAccess
                 Plugin.Log.LogWarning("Language files could not be updated: " + e.Message);
             }
             Refresh();
-            Apply(announce: false);
+            Apply(announce: false, gameLanguage: null);
         }
 
         /// <summary>Reads the list of language files again.</summary>
@@ -101,10 +102,12 @@ namespace KCAccess
         }
 
         /// <summary>Loads the language the setting asks for. Returns true when the language changed.</summary>
-        internal static bool Apply(bool announce)
+        internal static bool Apply(bool announce) => Apply(announce, GameLanguage());
+
+        private static bool Apply(bool announce, string gameLanguage)
         {
             string setting = Setting;
-            string game = GameLanguage();
+            string game = gameLanguage;
             appliedSetting = setting;
             appliedGameLanguage = game;
             string code = LanguageFiles.Resolve(setting, game, available);
@@ -162,7 +165,12 @@ namespace KCAccess
                 nextGameCheck = now + 0.5f;
                 string setting = Setting;
                 string game = GameLanguage();
-                if (setting != appliedSetting || (game != appliedGameLanguage && string.Equals(setting, LanguageFiles.Auto, StringComparison.OrdinalIgnoreCase)))
+                if (!gameChecked)
+                {
+                    gameChecked = true;
+                    Apply(announce: false, gameLanguage: game);
+                }
+                else if (setting != appliedSetting || (game != appliedGameLanguage && string.Equals(setting, LanguageFiles.Auto, StringComparison.OrdinalIgnoreCase)))
                     Apply(announce: true);
                 else if (game != appliedGameLanguage) appliedGameLanguage = game;
             }
