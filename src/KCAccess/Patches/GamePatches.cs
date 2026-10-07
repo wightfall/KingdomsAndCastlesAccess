@@ -52,19 +52,19 @@ namespace KCAccess
     [HarmonyPatch(typeof(VikingNotification), nameof(VikingNotification.ShowBanner))]
     internal static class Patch_VikingBanner
     {
-        private static void Postfix() => GameEvents.OnThreat("Vikings are attacking!");
+        private static void Postfix() => GameEvents.OnThreat(KCAccess.Core.Loc.T("Vikings are attacking!"));
     }
 
     [HarmonyPatch(typeof(DragonNotification), nameof(DragonNotification.ShowBanner))]
     internal static class Patch_DragonBanner
     {
-        private static void Postfix() => GameEvents.OnThreat("Dragons are attacking!");
+        private static void Postfix() => GameEvents.OnThreat(KCAccess.Core.Loc.T("Dragons are attacking!"));
     }
 
     [HarmonyPatch(typeof(MerchantNotification), nameof(MerchantNotification.ShowBanner))]
     internal static class Patch_MerchantBanner
     {
-        private static void Postfix() => GameEvents.OnInfo("A merchant ship has arrived.");
+        private static void Postfix() => GameEvents.OnInfo(KCAccess.Core.Loc.T("A merchant ship has arrived."));
     }
 
     /// <summary>Announces how many pieces were built (the game restages the next piece instantly, so polling misses it).</summary>
@@ -107,7 +107,7 @@ namespace KCAccess
             if (__state.Valid > 0 && __state.Skipped.Count > 0)
             {
                 var parts = new List<string>();
-                foreach (var kv in __state.Skipped) parts.Add(kv.Value + " skipped, " + kv.Key);
+                foreach (var kv in __state.Skipped) parts.Add(KCAccess.Core.Loc.F("{0} skipped, {1}", kv.Value, kv.Key));
                 skipped = string.Join("; ", parts.ToArray());
             }
             MapController.Inst.OnPlacementAccepted(__result, __state.Name, __state.Valid, skipped);
@@ -136,7 +136,7 @@ namespace KCAccess
         {
             if (__state == 0) return;
             A.Cue(__state == 1 ? KCAccess.Core.Cue.Activate : KCAccess.Core.Cue.Close);
-            A.Say(__state == 1 ? "Trees marked for chopping. Idle villagers will cut them for wood." : "Chopping cancelled on this tile.", force: true);
+            A.Say(__state == 1 ? KCAccess.Core.Loc.T("Trees marked for chopping. Idle villagers will cut them for wood.") : KCAccess.Core.Loc.T("Chopping cancelled on this tile."), force: true);
         }
     }
 }
@@ -154,7 +154,7 @@ namespace KCAccess
                 if (GameState.inst != null && GameState.inst.IsMainMenuMode() && GameState.inst.mainMenuMode.GetState() == MainMenuMode.State.Save)
                 {
                     A.Cue(KCAccess.Core.Cue.Placed);
-                    A.SayQueued("Game saved");
+                    A.SayQueued(KCAccess.Core.Loc.T("Game saved"));
                 }
             }
             catch
@@ -175,7 +175,7 @@ namespace KCAccess
         {
             if (__instance == null || __instance.Villager == null) return;
             A.Cue(KCAccess.Core.Cue.Activate);
-            A.Say("Selected " + Game.CellInfo.VillagerSummary(__instance.Villager) + ". Villager details are added at the end of this panel.", force: true);
+            A.Say(KCAccess.Core.Loc.F("Selected {0}", Game.CellInfo.VillagerSummary(__instance.Villager)) + ". " + KCAccess.Core.Loc.T("Villager details are added at the end of this panel."), force: true);
         }
     }
 }
@@ -189,7 +189,7 @@ namespace KCAccess
         private static void Postfix()
         {
             A.Cue(KCAccess.Core.Cue.Close);
-            A.SayQueued("Save deleted");
+            A.SayQueued(KCAccess.Core.Loc.T("Save deleted"));
         }
     }
 }
@@ -213,7 +213,7 @@ namespace KCAccess
                 if (!World.inst.CanDemoBuilding(building))
                 {
                     A.Cue(KCAccess.Core.Cue.Error);
-                    A.Say(building.FriendlyName + " cannot be demolished", force: true);
+                    A.Say(KCAccess.Core.Loc.F("{0} cannot be demolished", building.FriendlyName), force: true);
                     return;
                 }
                 __state = building.FriendlyName;
@@ -246,8 +246,8 @@ namespace KCAccess
                 counts[n]++;
             }
             var parts = new List<string>();
-            foreach (var n in order) parts.Add(counts[n] > 1 ? n + ", " + counts[n] + " pieces" : n);
-            A.Say("Demolished " + string.Join("; ", parts.ToArray()), force: true);
+            foreach (var n in order) parts.Add(counts[n] > 1 ? KCAccess.Core.Loc.F("{0}, {1} pieces", n, counts[n]) : n);
+            A.Say(KCAccess.Core.Loc.F("Demolished {0}", string.Join("; ", parts.ToArray())), force: true);
             demolished.Clear();
         }
     }
@@ -279,14 +279,14 @@ namespace KCAccess
             {
                 // name is optional
             }
-            return "a foreign kingdom";
+            return KCAccess.Core.Loc.T("a foreign kingdom");
         }
 
         internal static void OnEnroute(Envoy e)
         {
             if (e == null || !enroute.Add(e)) return;
             A.Cue(KCAccess.Core.Cue.Notify);
-            A.SayQueued("An envoy from " + KingdomOf(e) + " is on the way to your keep.");
+            A.SayQueued(KCAccess.Core.Loc.F("An envoy from {0} is on the way to your keep.", KingdomOf(e)));
         }
 
         internal static void OnArrived(Envoy e)
@@ -294,7 +294,7 @@ namespace KCAccess
             if (e == null || !arrived.Add(e)) return; // the game calls this every frame while the envoy waits
             // The alert watcher announces it ("an envoy waits to speak with you"); make it the navigation target too.
             var p = e.transform.position;
-            Game.MapController.Inst.Nav.SetTarget(new KCAccess.Core.GridPos((int)p.x, (int)p.z), "envoy from " + KingdomOf(e));
+            Game.MapController.Inst.Nav.SetTarget(new KCAccess.Core.GridPos((int)p.x, (int)p.z), KCAccess.Core.Loc.F("envoy from {0}", KingdomOf(e)));
         }
 
         /// <summary>A new or loaded world: forget the envoys of the previous one.</summary>
@@ -338,7 +338,7 @@ namespace KCAccess
                 string msg = KCAccess.Core.TextUtil.Clean(__instance.msgText != null ? __instance.msgText.text : string.Empty);
                 string code = __instance.codeObj != null && __instance.codeObj.activeSelf && __instance.codeText != null ? __instance.codeText.text : null;
                 A.Cue(KCAccess.Core.Cue.Open);
-                A.Say(msg + (string.IsNullOrEmpty(code) ? string.Empty : ". Code: " + code), force: true);
+                A.Say(msg + (string.IsNullOrEmpty(code) ? string.Empty : ". " + KCAccess.Core.Loc.F("Code: {0}", code)), force: true);
                 var ok = __instance.okayButton;
                 if (ok != null) AccessController.Inst.Nav.RequestFocus(g => g == ok.gameObject);
             }
@@ -368,7 +368,7 @@ namespace KCAccess
             {
                 if (__state || IntegrationManager.inst == null || !IntegrationManager.inst.GetAchievement(achievement)) return;
                 A.Cue(KCAccess.Core.Cue.Placed);
-                A.SayQueued("Achievement unlocked: " + KCAccess.Core.TextUtil.Humanize(achievement.Replace('_', ' ')));
+                A.SayQueued(KCAccess.Core.Loc.F("Achievement unlocked: {0}", KCAccess.Core.TextUtil.Humanize(achievement.Replace('_', ' '))));
             }
             catch
             {
@@ -387,20 +387,20 @@ namespace KCAccess
     internal static class ExternalLinks
     {
         internal static void Leaving(string what) =>
-            A.Say("Opening " + what + ". The game stays open: Alt Tab returns to it.", force: true);
+            A.Say(KCAccess.Core.Loc.F("Opening {0}. The game stays open: Alt Tab returns to it.", what), force: true);
     }
 
     [HarmonyPatch(typeof(MainMenuMode), nameof(MainMenuMode.OnClickedDiscord))]
-    internal static class Patch_Discord { private static void Prefix() => ExternalLinks.Leaving("the Kingdoms and Castles Discord in your web browser"); }
+    internal static class Patch_Discord { private static void Prefix() => ExternalLinks.Leaving(KCAccess.Core.Loc.T("the Kingdoms and Castles Discord in your web browser")); }
 
     [HarmonyPatch(typeof(MainMenuMode), nameof(MainMenuMode.OnClickedTwitter))]
-    internal static class Patch_Twitter { private static void Prefix() => ExternalLinks.Leaving("Lion Shield on Twitter in your web browser"); }
+    internal static class Patch_Twitter { private static void Prefix() => ExternalLinks.Leaving(KCAccess.Core.Loc.T("Lion Shield on Twitter in your web browser")); }
 
     [HarmonyPatch(typeof(MainMenuMode), nameof(MainMenuMode.OnClickedTwitch))]
-    internal static class Patch_Twitch { private static void Prefix() => ExternalLinks.Leaving("Lion Shield on Twitch in your web browser"); }
+    internal static class Patch_Twitch { private static void Prefix() => ExternalLinks.Leaving(KCAccess.Core.Loc.T("Lion Shield on Twitch in your web browser")); }
 
     [HarmonyPatch(typeof(MainMenuMode), nameof(MainMenuMode.OnClickedSendSaveToDev))]
-    internal static class Patch_SendSave { private static void Prefix() => ExternalLinks.Leaving("the instructions for sending a save to the developers in your web browser"); }
+    internal static class Patch_SendSave { private static void Prefix() => ExternalLinks.Leaving(KCAccess.Core.Loc.T("the instructions for sending a save to the developers in your web browser")); }
 
     [HarmonyPatch(typeof(GameState), nameof(GameState.OnClickedOpenWebpage))]
     internal static class Patch_OpenWebpage
@@ -409,15 +409,15 @@ namespace KCAccess
         {
             string host = url;
             try { host = new System.Uri(url).Host.Replace("www.", ""); } catch { }
-            ExternalLinks.Leaving("a web page, " + host + ", in your web browser");
+            ExternalLinks.Leaving(KCAccess.Core.Loc.F("a web page, {0}, in your web browser", host));
         }
     }
 
     [HarmonyPatch(typeof(StoreInfo), nameof(StoreInfo.OnClickedStore))]
-    internal static class Patch_Store { private static void Prefix() => ExternalLinks.Leaving("the Lion Shield shop in your web browser"); }
+    internal static class Patch_Store { private static void Prefix() => ExternalLinks.Leaving(KCAccess.Core.Loc.T("the Lion Shield shop in your web browser")); }
 
     [HarmonyPatch(typeof(OpenInFileBrowser), nameof(OpenInFileBrowser.Open))]
-    internal static class Patch_OpenFolder { private static void Prefix() => ExternalLinks.Leaving("the folder in File Explorer"); }
+    internal static class Patch_OpenFolder { private static void Prefix() => ExternalLinks.Leaving(KCAccess.Core.Loc.T("the folder in File Explorer")); }
 }
 
 namespace KCAccess

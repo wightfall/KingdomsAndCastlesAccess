@@ -32,20 +32,20 @@ namespace KCAccess.Game
             switch (c.Type)
             {
                 case ResourceType.Water:
-                    if (c.deepWater) return c.saltWater ? "deep sea" : "deep water";
-                    return c.saltWater ? "shallow sea" : "shallow water";
+                    if (c.deepWater) return c.saltWater ? Loc.T("deep sea") : Loc.T("deep water");
+                    return c.saltWater ? Loc.T("shallow sea") : Loc.T("shallow water");
                 case ResourceType.Wood:
-                    return c.TreeAmount > 0 ? "forest" : "grass";
-                case ResourceType.Stone: return "stone deposit";
-                case ResourceType.UnusableStone: return "rock";
-                case ResourceType.IronDeposit: return "iron deposit";
-                case ResourceType.EmptyCave: return "empty cave";
-                case ResourceType.WolfDen: return "wolf den";
-                case ResourceType.WitchHut: return "witch hut";
+                    return c.TreeAmount > 0 ? Loc.T("forest") : Loc.T("grass");
+                case ResourceType.Stone: return Loc.T("stone deposit");
+                case ResourceType.UnusableStone: return Loc.T("rock");
+                case ResourceType.IronDeposit: return Loc.T("iron deposit");
+                case ResourceType.EmptyCave: return Loc.T("empty cave");
+                case ResourceType.WolfDen: return Loc.T("wolf den");
+                case ResourceType.WitchHut: return Loc.T("witch hut");
                 default:
-                    if (c.TreeAmount > 0) return "forest";
-                    if (TreeSystem.inst != null && TreeSystem.inst.AnimCount(c) > 0) return "grass, tree growing or falling";
-                    return "grass";
+                    if (c.TreeAmount > 0) return Loc.T("forest");
+                    if (TreeSystem.inst != null && TreeSystem.inst.AnimCount(c) > 0) return Loc.T("grass, tree growing or falling");
+                    return Loc.T("grass");
             }
         }
 
@@ -54,10 +54,10 @@ namespace KCAccess.Game
             if (IsWater(c)) return string.Empty;
             switch (c.GetEffectiveFertility())
             {
-                case 0: return "barren";
-                case 1: return "fertile";
-                case 2: return "very fertile";
-                default: return "irrigated very fertile";
+                case 0: return Loc.T("barren");
+                case 1: return Loc.T("fertile");
+                case 2: return Loc.T("very fertile");
+                default: return Loc.T("irrigated very fertile");
             }
         }
 
@@ -92,7 +92,7 @@ namespace KCAccess.Game
                 }
                 counts[name]++;
             }
-            foreach (var n in order) result.Add(counts[n] > 1 ? n + ", stacked " + counts[n] + " high" : n);
+            foreach (var n in order) result.Add(counts[n] > 1 ? n + ", " + Loc.F("stacked {0} high", counts[n]) : n);
             return result;
         }
 
@@ -100,14 +100,14 @@ namespace KCAccess.Game
         internal static string BuildingSummary(Building b, bool brief)
         {
             var parts = new List<string> { b.FriendlyName };
-            if (!b.IsBuilt()) parts.Add("under construction " + TextUtil.Percent(Mathf.Clamp01(b.constructionProgress)));
+            if (!b.IsBuilt()) parts.Add(Loc.F("under construction {0}", TextUtil.Percent(Mathf.Clamp01(b.constructionProgress))));
             else
             {
-                if (b.Life < 0.999f && b.Life > 0f) parts.Add("damaged, " + TextUtil.Percent(b.Life) + " health");
-                if (!b.Open) parts.Add("closed");
+                if (b.Life < 0.999f && b.Life > 0f) parts.Add(Loc.F("damaged, {0} health", TextUtil.Percent(b.Life)));
+                if (!b.Open) parts.Add(Loc.T("closed"));
                 if (!brief && b.WorkersForFullYield > 0 && b.CategoryName != "house")
                 {
-                    parts.Add(b.WorkersAllocated + " of " + b.WorkersForFullYield + " workers");
+                    parts.Add(Loc.F("{0} of {1} workers", b.WorkersAllocated, b.WorkersForFullYield));
                 }
             }
             if (!brief && b.IsBuilt())
@@ -119,7 +119,7 @@ namespace KCAccess.Game
             if (team != 0)
             {
                 var rel = World.inst.RelationBetween(0, team);
-                parts.Add(rel == World.Relations.Enemy ? "enemy" : "foreign");
+                parts.Add(rel == World.Relations.Enemy ? Loc.T("enemy") : Loc.T("foreign"));
             }
             return TextUtil.Join(", ", parts);
         }
@@ -148,9 +148,9 @@ namespace KCAccess.Game
             if (c.landMassIdx < 0) return string.Empty;
             if (Player.inst.LandMassIsAPlayerLandMass(c.landMassIdx)) return string.Empty;
             var owner = World.GetLandmassOwner(c.landMassIdx);
-            if (owner == null) return IsWater(c) || Player.inst.keep == null ? string.Empty : "unclaimed land";
+            if (owner == null) return IsWater(c) || Player.inst.keep == null ? string.Empty : Loc.T("unclaimed land");
             string name = c.landMassIdx < Player.inst.LandMassNames.Count ? Player.inst.LandMassNames[c.landMassIdx] : null;
-            return string.IsNullOrEmpty(name) ? "foreign kingdom" : name + " kingdom";
+            return string.IsNullOrEmpty(name) ? Loc.T("foreign kingdom") : Loc.F("{0} kingdom", name);
         }
 
         internal static bool OnFire(Cell c)
@@ -197,7 +197,7 @@ namespace KCAccess.Game
                 var m = SiegeMonster.monsters.data[i];
                 if (m == null) continue;
                 Vector3 p = m.GetPos();
-                if ((int)p.x == c.x && (int)p.z == c.z) result.Add("ogre");
+                if ((int)p.x == c.x && (int)p.z == c.z) result.Add(Loc.T("ogre"));
             }
             if (DragonSpawn.inst != null)
             {
@@ -237,25 +237,31 @@ namespace KCAccess.Game
                 wolves++;
                 if (w.status == WolfDen.Status.Chase || w.status == WolfDen.Status.Attack) hunting++;
             }
-            if (wolves > 0) result.Add(TextUtil.Plural(wolves, "wolf", "wolves") + (hunting > 0 ? ", hunting" : string.Empty));
+            if (wolves > 0) result.Add(Loc.P(wolves, "{0} wolf", "{0} wolves") + (hunting > 0 ? ", " + Loc.T("hunting") : string.Empty));
             return result;
         }
 
         private static bool Enemy(int team) => team != 0 && World.inst.RelationBetween(0, team) == World.Relations.Enemy;
 
-        private static string Selected(ISelectable s) => GameUI.inst != null && s != null && GameUI.inst.IsSelected(s) ? ", selected" : string.Empty;
+        /// <summary>", selected" in the player's language, added to the names of selected units.</summary>
+        internal static string SelectedSuffix => ", " + Loc.T("selected");
+
+        /// <summary>A unit name without the ", selected" mark.</summary>
+        internal static string WithoutSelected(string name) => name == null ? null : name.Replace(SelectedSuffix, string.Empty);
+
+        private static string Selected(ISelectable s) => GameUI.inst != null && s != null && GameUI.inst.IsSelected(s) ? SelectedSuffix : string.Empty;
 
         /// <summary>"your dragon" (from a dragon nest), "wild dragon" (an attacking one) or "enemy dragon".</summary>
         internal static string DragonName(Dragon d)
         {
-            if (d.teamId == 0) return "your dragon" + Selected(d);
-            if (d.teamId == -1) return "wild dragon";
-            return UnitText.Owner(false, Enemy(d.teamId)) + "dragon";
+            if (d.teamId == 0) return Loc.T("your dragon") + Selected(d);
+            if (d.teamId == -1) return Loc.T("wild dragon");
+            return UnitText.Owned(false, Enemy(d.teamId), Loc.T("dragon"));
         }
 
-        internal static string CatapultName(SiegeCatapult sc) => UnitText.Owner(sc.TeamID() == 0, Enemy(sc.TeamID())) + "siege catapult" + Selected(sc);
+        internal static string CatapultName(SiegeCatapult sc) => UnitText.Owned(sc.TeamID() == 0, Enemy(sc.TeamID()), Loc.T("siege catapult")) + Selected(sc);
 
-        internal static string CartName(TransportCart cart) => UnitText.Owner(cart.TeamID() == 0, Enemy(cart.TeamID())) + "transport cart" + Selected(cart);
+        internal static string CartName(TransportCart cart) => UnitText.Owned(cart.TeamID() == 0, Enemy(cart.TeamID()), Loc.T("transport cart")) + Selected(cart);
 
         /// <summary>Any unit the player can select and send somewhere.</summary>
         internal static string UnitName(IMoveableUnit u)
@@ -266,9 +272,9 @@ namespace KCAccess.Game
                 case SiegeCatapult sc: return CatapultName(sc);
                 case Dragon d: return DragonName(d);
                 case ShipBase s: return ShipName(s);
-                case SiegeMonster _: return "ogre";
-                case DragonPuppet _: return "your dragon";
-                default: return "unit";
+                case SiegeMonster _: return Loc.T("ogre");
+                case DragonPuppet _: return Loc.T("your dragon");
+                default: return Loc.T("unit");
             }
         }
 
@@ -279,18 +285,17 @@ namespace KCAccess.Game
             switch (s.type)
             {
                 case ShipBase.ShipType.Merchant:
-                case ShipBase.ShipType.PlayerMerchant: kind = "merchant ship"; break;
-                case ShipBase.ShipType.Fishing: kind = "fishing ship"; break;
-                case ShipBase.ShipType.TroopTransport: kind = "troop ship"; break;
-                case ShipBase.ShipType.VikingTroopTransport: kind = "viking ship"; break;
-                case ShipBase.ShipType.OgreTroopTransport: kind = "ogre ship"; break;
-                case ShipBase.ShipType.SeedShip: kind = "seed ship"; break;
-                default: kind = "transport ship"; break;
+                case ShipBase.ShipType.PlayerMerchant: kind = Loc.T("merchant ship"); break;
+                case ShipBase.ShipType.Fishing: kind = Loc.T("fishing ship"); break;
+                case ShipBase.ShipType.TroopTransport: kind = Loc.T("troop ship"); break;
+                case ShipBase.ShipType.VikingTroopTransport: kind = Loc.T("viking ship"); break;
+                case ShipBase.ShipType.OgreTroopTransport: kind = Loc.T("ogre ship"); break;
+                case ShipBase.ShipType.SeedShip: kind = Loc.T("seed ship"); break;
+                default: kind = Loc.T("transport ship"); break;
             }
             if (s.type == ShipBase.ShipType.Merchant || s.type == ShipBase.ShipType.PlayerMerchant) return kind;
-            string who = s.teamID == 0 ? "your " : (World.inst.RelationBetween(0, s.teamID) == World.Relations.Enemy ? "enemy " : "foreign ");
             bool selected = GameUI.inst != null && s is ISelectable sel && GameUI.inst.IsSelected(sel);
-            return who + kind + (selected ? ", selected" : string.Empty);
+            return UnitText.Owned(s.teamID == 0, s.teamID != 0 && World.inst.RelationBetween(0, s.teamID) == World.Relations.Enemy, kind) + (selected ? SelectedSuffix : string.Empty);
         }
 
         internal static string Units_ArmyName(UnitSystem.Army a)
@@ -298,46 +303,45 @@ namespace KCAccess.Game
             string type;
             switch (a.armyType)
             {
-                case UnitSystem.ArmyType.Archer: type = "archers"; break;
-                case UnitSystem.ArmyType.Thief: type = "thieves"; break;
-                case UnitSystem.ArmyType.Envoy: type = "envoy"; break;
-                case UnitSystem.ArmyType.Settler: type = "settlers"; break;
-                case UnitSystem.ArmyType.Elite: type = "elite soldiers"; break;
-                default: type = "soldiers"; break;
+                case UnitSystem.ArmyType.Archer: type = Loc.T("archers"); break;
+                case UnitSystem.ArmyType.Thief: type = Loc.T("thieves"); break;
+                case UnitSystem.ArmyType.Envoy: type = Loc.T("envoy"); break;
+                case UnitSystem.ArmyType.Settler: type = Loc.T("settlers"); break;
+                case UnitSystem.ArmyType.Elite: type = Loc.T("elite soldiers"); break;
+                default: type = Loc.T("soldiers"); break;
             }
-            string who = a.teamId == 0 ? "your " : (World.inst.RelationBetween(0, a.teamId) == World.Relations.Enemy ? "enemy " : "foreign ");
             bool selected = GameUI.inst != null && GameUI.inst.IsSelected(a);
-            return who + type + (selected ? ", selected" : string.Empty);
+            return UnitText.Owned(a.teamId == 0, a.teamId != 0 && World.inst.RelationBetween(0, a.teamId) == World.Relations.Enemy, type) + (selected ? SelectedSuffix : string.Empty);
         }
 
         /// <summary>Description spoken while moving the cursor.</summary>
         internal static string Brief(Cell c, bool verbose)
         {
-            if (c == null) return "outside the map";
-            if (!Explored(c)) return "unexplored";
+            if (c == null) return Loc.T("outside the map");
+            if (!Explored(c)) return Loc.T("unexplored");
             var parts = new List<string>();
-            if (OnFire(c)) parts.Add("on fire");
+            if (OnFire(c)) parts.Add(Loc.T("on fire"));
             parts.AddRange(Units(c));
             var structures = Structures(c);
             parts.AddRange(structures);
             string terrain = Terrain(c);
             if (c.Type == ResourceType.Wood || c.TreeAmount > 0)
             {
-                if (c.TreeAmount > 0) terrain = "forest, " + TextUtil.Plural(c.TreeAmount, "tree");
+                if (c.TreeAmount > 0) terrain = Loc.T("forest") + ", " + Loc.P(c.TreeAmount, "{0} tree", "{0} trees");
             }
             if (structures.Count == 0 || c.Type != ResourceType.None) parts.Add(terrain);
-            if (c.TreeAmount > 0 && GameUI.inst != null && GameUI.inst.GetClearCutterJob(c) != null) parts.Add("marked for chopping");
+            if (c.TreeAmount > 0 && GameUI.inst != null && GameUI.inst.GetClearCutterJob(c) != null) parts.Add(Loc.T("marked for chopping"));
             if (verbose && !IsWater(c) && c.Type == ResourceType.None) parts.Add(Fertility(c)); // soil only matters on open ground
             int villagers = VillagerCount(c);
             if (villagers > 0)
             {
                 int sick = SickCount(c);
-                parts.Add(TextUtil.Plural(villagers, "villager") + (sick > 0 ? ", " + sick + " sick" : string.Empty));
+                parts.Add(Loc.P(villagers, "{0} villager", "{0} villagers") + (sick > 0 ? ", " + Loc.F("{0} sick", sick) : string.Empty));
             }
             if (IsWater(c))
             {
                 int fish = FishAt(c);
-                if (fish > 0) parts.Add(TextUtil.Plural(fish, "fish", "fish"));
+                if (fish > 0) parts.Add(Loc.P(fish, "{0} fish", "{0} fish"));
             }
             if (verbose)
             {
@@ -352,24 +356,24 @@ namespace KCAccess.Game
         /// <summary>Everything about a tile (I key).</summary>
         internal static string Full(Cell c)
         {
-            if (c == null) return "outside the map";
-            var parts = new List<string> { "Tile " + c.x + ", " + c.z };
+            if (c == null) return Loc.T("outside the map");
+            var parts = new List<string> { Loc.F("Tile {0}, {1}", c.x, c.z) };
             if (!Explored(c))
             {
-                parts.Add("unexplored");
+                parts.Add(Loc.T("unexplored"));
                 return TextUtil.Sentences(parts.ToArray());
             }
             parts.Add(Brief(c, verbose: true));
             if (!IsWater(c))
             {
-                parts.Add(c.RoadCoverage > 0 || c.RoadConnectCoverage > 0 ? "inside road coverage" : "outside road coverage");
-                if (c.IrrigationCoverage > 0) parts.Add("irrigated");
+                parts.Add(c.RoadCoverage > 0 || c.RoadConnectCoverage > 0 ? Loc.T("inside road coverage") : Loc.T("outside road coverage"));
+                if (c.IrrigationCoverage > 0) parts.Add(Loc.T("irrigated"));
             }
-            if (c.wolfTerritory) parts.Add("wolf territory");
-            if (c.Danger > 0) parts.Add("dangerous area");
+            if (c.wolfTerritory) parts.Add(Loc.T("wolf territory"));
+            if (c.Danger > 0) parts.Add(Loc.T("dangerous area"));
             foreach (var b in c.OccupyingStructure)
             {
-                if (b != null && b.IsBuilt() && b.WorkersForFullYield > 0 && b.CategoryName != "house") parts.Add(b.FriendlyName + ": " + b.WorkersAllocated + " of " + b.WorkersForFullYield + " workers");
+                if (b != null && b.IsBuilt() && b.WorkersForFullYield > 0 && b.CategoryName != "house") parts.Add(b.FriendlyName + ": " + Loc.F("{0} of {1} workers", b.WorkersAllocated, b.WorkersForFullYield));
             }
             return TextUtil.Sentences(parts.ToArray());
         }
@@ -471,8 +475,8 @@ namespace KCAccess.Game
         /// <summary>Name, age, job and current thought of a villager (what the villager panel shows).</summary>
         internal static string VillagerSummary(Villager v)
         {
-            if (v == null) return "villager";
-            var parts = new List<string> { string.IsNullOrEmpty(v.name) ? "villager" : v.name };
+            if (v == null) return Loc.T("villager");
+            var parts = new List<string> { string.IsNullOrEmpty(v.name) ? Loc.T("villager") : v.name };
             try
             {
                 parts.Add(string.Format(I2.Loc.ScriptLocalization.PersonUIYearsOld, Mathf.FloorToInt(v.timeAlive / Weather.inst.TimeInYear())));
@@ -482,11 +486,11 @@ namespace KCAccess.Game
                 // age is optional
             }
             string job = v.job != null ? TextUtil.Clean(v.job.GetDescription() ?? string.Empty) : string.Empty;
-            parts.Add(job.Length > 0 ? job : "no job");
-            if (v.Residence == null) parts.Add("homeless");
-            if (v.sick) parts.Add("sick with plague");
+            parts.Add(job.Length > 0 ? job : Loc.T("no job"));
+            if (v.Residence == null) parts.Add(Loc.T("homeless"));
+            if (v.sick) parts.Add(Loc.T("sick with plague"));
             string thought = TextUtil.Clean(v.GetThought() ?? string.Empty);
-            if (thought.Length > 0) parts.Add("thinks: " + thought);
+            if (thought.Length > 0) parts.Add(Loc.F("thinks: {0}", thought));
             return string.Join(", ", parts.ToArray());
         }
     }

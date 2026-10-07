@@ -25,14 +25,14 @@ namespace KCAccess.Game
 
         internal static string Describe(InWorldExclamation e)
         {
-            if (e == null) return "alert";
-            if (e.GetComponentInParent<Keep>() != null) return "your advisors have news at the keep";
+            if (e == null) return Loc.T("alert");
+            if (e.GetComponentInParent<Keep>() != null) return Loc.T("your advisors have news at the keep");
             var envoy = e.GetComponentInParent<Envoy>();
-            if (envoy != null) return "an envoy from " + EnvoyWatch.KingdomOf(envoy) + " waits to speak with you";
-            if (e.GetComponentInParent<TransportCart>() != null) return "a transport cart has stopped and needs orders";
-            if (e.GetComponentInParent<WitchHut>() != null) return "the witch hut";
-            if (e.GetComponentInParent<ShipBase>() != null) return "a ship needs attention";
-            return "something needs your attention";
+            if (envoy != null) return Loc.F("an envoy from {0} waits to speak with you", EnvoyWatch.KingdomOf(envoy));
+            if (e.GetComponentInParent<TransportCart>() != null) return Loc.T("a transport cart has stopped and needs orders");
+            if (e.GetComponentInParent<WitchHut>() != null) return Loc.T("the witch hut");
+            if (e.GetComponentInParent<ShipBase>() != null) return Loc.T("a ship needs attention");
+            return Loc.T("something needs your attention");
         }
 
         internal static GridPos PosOf(InWorldExclamation e)
@@ -52,7 +52,7 @@ namespace KCAccess.Game
             {
                 if (!known.Add(e)) continue;
                 A.Cue(Cue.Notify);
-                A.SayQueued(TextUtil.Capitalize(Describe(e)) + ", " + Directions.Relative(MapController.Inst.CursorPos, PosOf(e)) + KeyHelp.Resolve(". {Alert} responds."));
+                A.SayQueued(TextUtil.Capitalize(Describe(e)) + ", " + Directions.Relative(MapController.Inst.CursorPos, PosOf(e)) + ". " + KeyHelp.Resolve(Loc.T("{Alert} responds.")));
             }
         }
 
@@ -63,7 +63,7 @@ namespace KCAccess.Game
             if (active.Count == 0)
             {
                 A.Cue(Cue.Error);
-                A.Say("No alerts right now", force: true);
+                A.Say(Loc.T("No alerts right now"), force: true);
                 return;
             }
             var origin = MapController.Inst.CursorPos;
@@ -75,7 +75,7 @@ namespace KCAccess.Game
                 if (d < bestD) { bestD = d; best = e; }
             }
             A.Cue(Cue.Activate);
-            A.Say("Responding: " + Describe(best), force: true);
+            A.Say(Loc.F("Responding: {0}", Describe(best)), force: true);
             best.Click();
         }
     }

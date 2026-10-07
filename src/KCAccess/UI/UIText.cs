@@ -155,6 +155,15 @@ namespace KCAccess.UI
             return world;
         }
 
+        /// <summary>Label of a control without any text ("unlabelled" in the player's language).</summary>
+        internal static string Unlabelled => Loc.T("unlabelled");
+
+        /// <summary>Value of an empty text field ("blank" in the player's language).</summary>
+        internal static string Blank => Loc.T("blank");
+
+        /// <summary>Role word of a plain button ("button" in the player's language).</summary>
+        internal static string ButtonRole => Loc.T("button");
+
         /// <summary>Spoken label for a selectable.</summary>
         private static readonly HashSet<string> GenericWords = new HashSet<string> { "accept", "on", "off", "yes", "no", "enabled", "disabled", "toggle", "label", "new text", "text" };
 
@@ -208,7 +217,7 @@ namespace KCAccess.UI
             if (outer != null && outer.enabled)
             {
                 string outerLabel = LabelOf(outer);
-                if (!string.IsNullOrEmpty(outerLabel) && outerLabel != "unlabelled") return outerLabel;
+                if (!string.IsNullOrEmpty(outerLabel) && outerLabel != Unlabelled) return outerLabel;
             }
 
             // 3. A text right next to the control (toggle / slider / dropdown / input labels).
@@ -272,7 +281,7 @@ namespace KCAccess.UI
             int paren = n.IndexOf(" (");
             if (paren > 0) n = n.Substring(0, paren);
             n = n.Replace("Button", "").Replace("Btn", "").Trim();
-            if (n.Length == 0) return "unlabelled";
+            if (n.Length == 0) return Unlabelled;
             return TextUtil.Humanize(n);
         }
 
@@ -372,8 +381,8 @@ namespace KCAccess.UI
             switch (s)
             {
                 case Toggle t:
-                    if (t.group != null) return t.isOn ? "selected" : "not selected";
-                    return t.isOn ? "checked" : "not checked";
+                    if (t.group != null) return t.isOn ? Loc.T("selected") : Loc.T("not selected");
+                    return t.isOn ? Loc.T("checked") : Loc.T("not checked");
                 case Slider sl:
                     return SliderValue(sl);
                 case Scrollbar sb:
@@ -383,9 +392,9 @@ namespace KCAccess.UI
                 case TMP_Dropdown td:
                     return td.options.Count > td.value && td.value >= 0 ? TextUtil.Clean(td.options[td.value].text) : string.Empty;
                 case InputField inf:
-                    return string.IsNullOrEmpty(inf.text) ? "blank" : (inf.contentType == InputField.ContentType.Password ? "password" : inf.text);
+                    return string.IsNullOrEmpty(inf.text) ? Blank : (inf.contentType == InputField.ContentType.Password ? Loc.T("password") : inf.text);
                 case TMP_InputField tinf:
-                    return string.IsNullOrEmpty(tinf.text) ? "blank" : (tinf.contentType == TMP_InputField.ContentType.Password ? "password" : tinf.text);
+                    return string.IsNullOrEmpty(tinf.text) ? Blank : (tinf.contentType == TMP_InputField.ContentType.Password ? Loc.T("password") : tinf.text);
             }
             return string.Empty;
         }
@@ -411,14 +420,14 @@ namespace KCAccess.UI
         {
             switch (s)
             {
-                case Toggle t: return t.group != null ? "radio button" : "check box";
-                case Slider sl: return IsReadOnlySlider(sl) ? "progress bar" : "slider";
-                case Scrollbar _: return "scroll bar";
-                case Dropdown _: return "combo box";
-                case TMP_Dropdown _: return "combo box";
-                case InputField _: return "edit";
-                case TMP_InputField _: return "edit";
-                default: return "button";
+                case Toggle t: return t.group != null ? Loc.T("radio button") : Loc.T("check box");
+                case Slider sl: return IsReadOnlySlider(sl) ? Loc.T("progress bar") : Loc.T("slider");
+                case Scrollbar _: return Loc.T("scroll bar");
+                case Dropdown _: return Loc.T("combo box");
+                case TMP_Dropdown _: return Loc.T("combo box");
+                case InputField _: return Loc.T("edit");
+                case TMP_InputField _: return Loc.T("edit");
+                default: return ButtonRole;
             }
         }
 

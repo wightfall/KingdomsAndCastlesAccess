@@ -48,6 +48,7 @@ namespace KCAccess
         internal static ConfigEntry<bool> CfgTwitchChat;
         internal static ConfigEntry<bool> CfgCaptions;
         internal static ConfigEntry<bool> CfgStreamFile;
+        internal static ConfigEntry<string> CfgLanguage;
 
         /// <summary>The mod's key bindings (rebindable in the mod settings, Ctrl+Shift+O).</summary>
         internal static readonly KCAccess.Core.Bindings Keys = new KCAccess.Core.Bindings();
@@ -82,8 +83,11 @@ namespace KCAccess
             KeyHelp.KeyNameOf = Keys.Spoken; // help texts name the player's own keys
             CfgLogKeys = Config.Bind("Debug", "KeyLog", true, "Write every key press (key name only), with the modifier state seen by the game and by Windows, to the BepInEx log (for keyboard bug reports).");
             CfgLogSpeech = Config.Bind("Speech", "LogSpeech", true, "Write everything spoken to the BepInEx log (useful for bug reports).");
+            CfgLanguage = Config.Bind("Language", "Language", "auto", "Language the mod speaks: auto follows the game's language (English when there is no file for it), en is English, any other value is the name of a file in BepInEx/plugins/KCAccess/Languages without .txt, for example th. Easier to change in the game: Ctrl+Shift+O.");
 
             string pluginDir = Path.GetDirectoryName(Info.Location);
+            Loc.Use(null);
+            ModLanguage.Init(pluginDir);
             prism = new PrismSpeech();
             Prism = prism;
             if (prism.Initialize(pluginDir)) Log.LogInfo("Prism " + prism.Version + " ready, backend: " + prism.Name);

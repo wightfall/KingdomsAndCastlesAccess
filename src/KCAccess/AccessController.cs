@@ -59,8 +59,8 @@ namespace KCAccess
             }
             if (lostFocusAt < 0f || Time.unscaledTime - lostFocusAt < 1f || !Plugin.Loaded) return;
             lostFocusAt = -1f;
-            string where = modal != null ? modal.Title : panel != null ? panel.Title : (GameState.inst != null && GameState.inst.IsPlayMode() ? "the map" : null);
-            A.Say("Back in the game" + (where != null ? ", " + where : string.Empty), force: true);
+            string where = modal != null ? modal.Title : panel != null ? panel.Title : (GameState.inst != null && GameState.inst.IsPlayMode() ? Loc.T("the map") : null);
+            A.Say(where != null ? Loc.F("Back in the game, {0}", where) : Loc.T("Back in the game"), force: true);
         }
 
         /// <summary>
@@ -79,6 +79,7 @@ namespace KCAccess
             if (Plugin.CfgLogKeys.Value) Diagnostics.LogKeys();
             try
             {
+                ModLanguage.Tick();
                 Tick();
             }
             catch (Exception e)
@@ -166,7 +167,7 @@ namespace KCAccess
                     Game.MapController.Inst.MenuMapMode = true;
                     Game.MapController.Inst.CenterOnStart();
                     A.Cue(Cue.Open);
-                    A.Say(KCAccess.Core.KeyHelp.Resolve("Exploring the map. Arrow keys move, {TileInfo} describes a tile, {PrevCategory} and {NextCategory} choose a scan category, {PrevItem} and {NextItem} choose a target, {Walk} walks to it, {JumpTarget} jumps there, {Beacon} turns on a sound beacon. Control M or Escape returns to the menu."));
+                    A.Say(KCAccess.Core.KeyHelp.Resolve(Loc.T("Exploring the map. Arrow keys move, {TileInfo} describes a tile, {PrevCategory} and {NextCategory} choose a scan category, {PrevItem} and {NextItem} choose a target, {Walk} walks to it, {JumpTarget} jumps there, {Beacon} turns on a sound beacon. Control M or Escape returns to the menu.")));
                     return;
                 }
                 bool mapInMenu = !playing && Game.MapController.Inst.MenuMapMode;
@@ -266,7 +267,7 @@ namespace KCAccess
             if (modal == null)
             {
                 bool play = GameState.inst != null && GameState.inst.IsPlayMode();
-                A.Say(play ? "Accessibility reset. Back on the map." : "Accessibility reset.", force: true);
+                A.Say(play ? Loc.T("Accessibility reset. Back on the map.") : Loc.T("Accessibility reset."), force: true);
                 if (play) Game.MapController.Inst.OnReturnToMap();
             }
         }
@@ -483,19 +484,19 @@ namespace KCAccess
             {
                 string report = Diagnostics.KeyboardReport();
                 Plugin.Log.LogInfo("[report] " + report);
-                A.Say(report + ". Written to the BepInEx log.", force: true);
+                A.Say(report + ". " + Loc.T("Written to the BepInEx log."), force: true);
                 return true;
             }
             if (KInput.Pressed("Redetect"))
             {
                 bool ok = A.Redetect();
-                A.Say(ok ? "Speech: " + A.BackendName : "No screen reader found, using log only", force: true);
+                A.Say(ok ? Loc.F("Speech: {0}", A.BackendName) : Loc.T("No screen reader found, using log only"), force: true);
                 return true;
             }
             if (KInput.Pressed("Mute"))
             {
                 Plugin.CfgCues.Value = !Plugin.CfgCues.Value;
-                A.Say(Plugin.CfgCues.Value ? "Sound cues on" : "Sound cues off", force: true);
+                A.Say(Plugin.CfgCues.Value ? Loc.T("Sound cues on") : Loc.T("Sound cues off"), force: true);
                 return true;
             }
             return false;

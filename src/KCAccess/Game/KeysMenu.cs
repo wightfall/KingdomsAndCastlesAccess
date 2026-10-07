@@ -10,6 +10,7 @@ namespace KCAccess.Game
     internal sealed class KeysMenu : ListMenu
     {
         private readonly bool fromMap;
+        private readonly System.Collections.Generic.HashSet<Entry> headers = new System.Collections.Generic.HashSet<Entry>();
 
         internal KeysMenu(bool fromMap)
         {
@@ -18,20 +19,21 @@ namespace KCAccess.Game
 
         public override string HelpId => "Keys";
 
-        protected override string Title => "Key list. Up and Down read one key at a time, Page Up and Page Down jump between groups, Escape closes. Sound previews are at the end";
+        protected override string Title => Loc.T("Key list. Up and Down read one key at a time, Page Up and Page Down jump between groups, Escape closes. Sound previews are at the end");
 
         protected override void Build()
         {
+            headers.Clear();
             foreach (var section in KeyHelp.Sections)
             {
-                Add(section.Title + ", " + TextUtil.Plural(section.Lines.Count, "key"));
+                headers.Add(Add(Loc.T(section.Title) + ", " + Loc.P(section.Lines.Count, "{0} key", "{0} keys")));
                 foreach (var line in section.Lines) Add(line.ToString());
             }
-            Add("Sound cues, " + TextUtil.Plural(System.Linq.Enumerable.Count(CueLibrary.All), "sound") + ". Enter plays the sound under the cursor");
+            headers.Add(Add(Loc.P(System.Linq.Enumerable.Count(CueLibrary.All), "Sound cues, {0} sound. Enter plays the sound under the cursor", "Sound cues, {0} sounds. Enter plays the sound under the cursor")));
             foreach (Cue cue in CueLibrary.All)
             {
                 var c = cue;
-                Add("Sound: " + CueLibrary.Name(c) + ". " + CueLibrary.Meaning(c), () => Preview(c));
+                Add(Loc.F("Sound: {0}. {1}", CueLibrary.Name(c), CueLibrary.Meaning(c)), () => Preview(c));
             }
         }
 
@@ -39,7 +41,7 @@ namespace KCAccess.Game
         {
             if (!Plugin.CfgCues.Value)
             {
-                A.Say(KeyHelp.Resolve("Sound cues are off. {Mute} turns them on."), force: true);
+                A.Say(KeyHelp.Resolve(Loc.T("Sound cues are off. {Mute} turns them on.")), force: true);
                 return;
             }
             if (cue == Cue.Beacon)
@@ -56,15 +58,14 @@ namespace KCAccess.Game
         {
             if (KInput.Plain(KeyCode.PageDown) || KInput.Plain(KeyCode.PageUp))
             {
-                // Group headers are the lines ending in "N keys" / the sound section header.
+                // Jump to the next group header (a key section or the sound section).
                 int dir = KInput.Down(KeyCode.PageDown) ? 1 : -1;
                 int i = List.Index;
                 for (int n = 0; n < List.Count; n++)
                 {
                     i += dir;
                     if (i < 0 || i >= List.Count) break;
-                    string t = List.Items[i].Text;
-                    if (!t.StartsWith("Sound: ") && !t.Contains(": "))
+                    if (headers.Contains(List.Items[i]))
                     {
                         List.SelectIndex(i);
                         Speak(NavResult.Moved);
@@ -72,7 +73,7 @@ namespace KCAccess.Game
                     }
                 }
                 A.Cue(Cue.Edge);
-                A.Say(dir > 0 ? "No more groups, this is the last" : "No more groups, this is the first");
+                A.Say(dir > 0 ? Loc.T("No more groups, this is the last") : Loc.T("No more groups, this is the first"));
                 return true;
             }
             return false;

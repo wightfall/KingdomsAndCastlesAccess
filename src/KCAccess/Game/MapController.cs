@@ -142,7 +142,7 @@ namespace KCAccess.Game
             cursor.Set(land.Value.X, land.Value.Z);
             UpdatePointer(follow: true);
             if (Cam.inst != null) Cam.inst.SetTrackingPos(CurrentCell.Center);
-            A.Say("Moved the cursor to the nearest land where you can build your keep: " + CellInfo.Brief(CurrentCell, false));
+            A.Say(Loc.F("Moved the cursor to the nearest land where you can build your keep: {0}", CellInfo.Brief(CurrentCell, false)));
             return true;
         }
 
@@ -171,9 +171,9 @@ namespace KCAccess.Game
             Nav.ClearTarget();
             UpdatePointer(follow: Player.inst.keep == null);
             string intro = Player.inst.keep == null
-                ? KCAccess.Core.KeyHelp.Resolve("Your kingdom begins. Build your keep first: press {BuildMenu}, choose the keep in the Castle category, then move to a good spot near fertile land, trees and stone ({Survey} surveys the area around the cursor), and press Enter. Press F1 for help.")
-                : KCAccess.Core.KeyHelp.Resolve("Kingdom loaded. Press F1 for help, {Status} for status.")+"";
-            A.Say(intro + " Cursor at " + CellInfo.Brief(CurrentCell, false));
+                ? KCAccess.Core.KeyHelp.Resolve(Loc.T("Your kingdom begins. Build your keep first: press {BuildMenu}, choose the keep in the Castle category, then move to a good spot near fertile land, trees and stone ({Survey} surveys the area around the cursor), and press Enter. Press F1 for help."))
+                : KCAccess.Core.KeyHelp.Resolve(Loc.T("Kingdom loaded. Press F1 for help, {Status} for status."));
+            A.Say(intro + " " + Loc.F("Cursor at {0}", CellInfo.Brief(CurrentCell, false)));
         }
 
         internal void OnResume()
@@ -181,7 +181,7 @@ namespace KCAccess.Game
             EnsureInit();
             enteredPlayAt = Time.unscaledTime;
             UpdatePointer(follow: false);
-            A.Say("Resumed. " + CellInfo.Brief(CurrentCell, false));
+            A.Say(Loc.T("Resumed.") + " " + CellInfo.Brief(CurrentCell, false));
         }
 
         private float enteredPlayAt;
@@ -189,7 +189,7 @@ namespace KCAccess.Game
         internal void OnReturnToMap()
         {
             if (Time.unscaledTime - enteredPlayAt < 1.5f) return;
-            A.Say("Map, " + CellInfo.Brief(CurrentCell, false));
+            A.Say(Loc.F("Map, {0}", CellInfo.Brief(CurrentCell, false)));
         }
 
         /// <summary>Called every frame while the map has the keyboard.</summary>
@@ -211,7 +211,7 @@ namespace KCAccess.Game
                     KInput.Consume(KeyCode.Escape);
                     MenuMapMode = false;
                     A.Cue(Cue.Close);
-                    A.Say("Back to map setup menu");
+                    A.Say(Loc.T("Back to map setup menu"));
                     return;
                 }
             }
@@ -234,13 +234,13 @@ namespace KCAccess.Game
                         VirtualPointer.Inst?.Click();
                         A.Cue(Cue.Activate);
                         // Say what was painted and how big the brush is (the game shows both only on screen).
-                        A.Say("Painted " + TextUtil.Humanize(edit.brushMode.ToString()).ToLowerInvariant() + ", brush size " + Mathf.RoundToInt(edit.radius + 1f) + ", at " + cursor.Pos);
+                        A.Say(Loc.F("Painted {0}, brush size {1}, at {2}", Loc.T(TextUtil.Humanize(edit.brushMode.ToString()).ToLowerInvariant()), Mathf.RoundToInt(edit.radius + 1f), cursor.Pos));
                         return;
                     }
                     if (edit != null)
                     {
                         A.Cue(Cue.Error);
-                        A.Say("No map editor brush is selected. Control M returns to the menu, where the brushes are.");
+                        A.Say(Loc.T("No map editor brush is selected. Control M returns to the menu, where the brushes are."));
                         return;
                     }
                 }
@@ -268,7 +268,7 @@ namespace KCAccess.Game
             {
                 int n = cursor.MoveUntilChange(dx, dz, (x, z) => CellInfo.Signature(World.inst.GetCellData(x, z)));
                 moved = n > 0;
-                if (moved) A.Say(TextUtil.Plural(n, "tile") + ", " + CellInfo.Brief(CurrentCell, Plugin.CfgVerboseCells.Value), force: true);
+                if (moved) A.Say(Loc.P(n, "{0} tile", "{0} tiles") + ", " + CellInfo.Brief(CurrentCell, Plugin.CfgVerboseCells.Value), force: true);
             }
             else
             {
@@ -278,7 +278,7 @@ namespace KCAccess.Game
             if (!moved)
             {
                 A.Cue(Cue.Edge);
-                A.Say("edge of the map");
+                A.Say(Loc.T("edge of the map"));
                 return true;
             }
             StepCue(CurrentCell);
@@ -314,22 +314,22 @@ namespace KCAccess.Game
         {
             switch (b)
             {
-                case GameUI.CursorBrushes.General: return "Spawn knights";
-                case GameUI.CursorBrushes.ArcherGeneral: return "Spawn archers";
-                case GameUI.CursorBrushes.Settlers: return "Spawn settlers";
-                case GameUI.CursorBrushes.Envoy: return "Spawn envoy";
-                case GameUI.CursorBrushes.Catapult: return "Spawn catapult";
-                case GameUI.CursorBrushes.Viking: return "Spawn vikings";
-                case GameUI.CursorBrushes.EliteViking: return "Spawn stronger vikings";
-                case GameUI.CursorBrushes.Ogre: return "Spawn ogre";
-                case GameUI.CursorBrushes.Villager: return "Spawn peasants";
-                case GameUI.CursorBrushes.SmallDragon: return "Spawn dragon";
-                case GameUI.CursorBrushes.SiegeDragon: return "Spawn siege dragon";
-                case GameUI.CursorBrushes.LargeDragon: return "Spawn momma dragon";
-                case GameUI.CursorBrushes.Delete: return "Removal tool";
-                case GameUI.CursorBrushes.Fire: return "Create fire";
-                case GameUI.CursorBrushes.Trees: return "Create trees";
-                default: return TextUtil.Humanize(b.ToString()) + " stack";
+                case GameUI.CursorBrushes.General: return Loc.T("Spawn knights");
+                case GameUI.CursorBrushes.ArcherGeneral: return Loc.T("Spawn archers");
+                case GameUI.CursorBrushes.Settlers: return Loc.T("Spawn settlers");
+                case GameUI.CursorBrushes.Envoy: return Loc.T("Spawn envoy");
+                case GameUI.CursorBrushes.Catapult: return Loc.T("Spawn catapult");
+                case GameUI.CursorBrushes.Viking: return Loc.T("Spawn vikings");
+                case GameUI.CursorBrushes.EliteViking: return Loc.T("Spawn stronger vikings");
+                case GameUI.CursorBrushes.Ogre: return Loc.T("Spawn ogre");
+                case GameUI.CursorBrushes.Villager: return Loc.T("Spawn peasants");
+                case GameUI.CursorBrushes.SmallDragon: return Loc.T("Spawn dragon");
+                case GameUI.CursorBrushes.SiegeDragon: return Loc.T("Spawn siege dragon");
+                case GameUI.CursorBrushes.LargeDragon: return Loc.T("Spawn momma dragon");
+                case GameUI.CursorBrushes.Delete: return Loc.T("Removal tool");
+                case GameUI.CursorBrushes.Fire: return Loc.T("Create fire");
+                case GameUI.CursorBrushes.Trees: return Loc.T("Create trees");
+                default: return Loc.F("{0} stack", TextUtil.Humanize(b.ToString()));
             }
         }
 
@@ -383,7 +383,7 @@ namespace KCAccess.Game
             }
             if (KInput.Pressed("Coordinates"))
             {
-                A.Say("Cursor at " + cursor.Pos.X + ", " + cursor.Pos.Z + ". Map is " + cursor.Width + " by " + cursor.Height + ".", force: true);
+                A.Say(Loc.F("Cursor at {0}, {1}. Map is {2} by {3}.", cursor.Pos.X, cursor.Pos.Z, cursor.Width, cursor.Height), force: true);
                 return true;
             }
             if (KInput.Pressed("PrevCategory") || KInput.Pressed("NextCategory"))
@@ -401,7 +401,7 @@ namespace KCAccess.Game
                     if (targetHints < 3 && Plugin.CfgHints.Value)
                     {
                         targetHints++;
-                        A.SayQueued(KCAccess.Core.KeyHelp.Resolve("Target set, the cursor stays here. {JumpTarget} jumps there, {Walk} walks there."));
+                        A.SayQueued(KCAccess.Core.KeyHelp.Resolve(Loc.T("Target set, the cursor stays here. {JumpTarget} jumps there, {Walk} walks there.")));
                     }
                 }
                 return true;
@@ -411,7 +411,7 @@ namespace KCAccess.Game
                 if (!Nav.Target.HasValue)
                 {
                     A.Cue(Cue.Error);
-                    A.Say(KCAccess.Core.KeyHelp.Resolve("No target. Choose one with {PrevCategory}, {NextCategory} and {PrevItem} or {NextItem}."));
+                    A.Say(KCAccess.Core.KeyHelp.Resolve(Loc.T("No target. Choose one with {PrevCategory}, {NextCategory} and {PrevItem} or {NextItem}.")));
                 }
                 else
                 {
@@ -459,7 +459,7 @@ namespace KCAccess.Game
             if (KInput.Pressed("LastNotification"))
             {
                 var n = GameEvents.Log.Count > 0 ? GameEvents.Log.Items[0] : null;
-                A.Say(n != null ? n.Describe() : "No notifications yet", force: true);
+                A.Say(n != null ? n.Describe() : Loc.T("No notifications yet"), force: true);
                 return true;
             }
             if (KInput.Pressed("Keep"))
@@ -467,13 +467,13 @@ namespace KCAccess.Game
                 if (Player.inst.keep != null)
                 {
                     var c = Player.inst.keep.GetComponent<Building>().GetCell();
-                    A.Say("Keep");
+                    A.Say(Loc.T("Keep"));
                     JumpTo(new GridPos(c.x, c.z));
                 }
                 else
                 {
                     A.Cue(Cue.Error);
-                    A.Say("You have no keep yet");
+                    A.Say(Loc.T("You have no keep yet"));
                 }
                 return true;
             }
@@ -483,10 +483,10 @@ namespace KCAccess.Game
                 var cell = b != null ? b.GetCell() : GameUI.inst.GetCellSelected();
                 if (cell != null)
                 {
-                    A.Say("Selection");
+                    A.Say(Loc.T("Selection"));
                     JumpTo(new GridPos(cell.x, cell.z));
                 }
-                else A.Say("Nothing selected");
+                else A.Say(Loc.T("Nothing selected"));
                 return true;
             }
             if (KInput.Plain(KeyCode.F5))
@@ -534,12 +534,12 @@ namespace KCAccess.Game
                     if (!bp.HasValue)
                     {
                         A.Cue(Cue.Error);
-                        A.Say("Bookmark " + i + " is empty", force: true);
+                        A.Say(Loc.F("Bookmark {0} is empty", i), force: true);
                     }
                     else
                     {
-                        Nav.SetTarget(bp.Value, "bookmark " + i);
-                        A.Say("Target bookmark " + i + ", " + Directions.Relative(cursor.Pos, bp.Value), force: true);
+                        Nav.SetTarget(bp.Value, Loc.F("bookmark {0}", i));
+                        A.Say(Loc.F("Target bookmark {0}, {1}", i, Directions.Relative(cursor.Pos, bp.Value)), force: true);
                     }
                     return true;
                 }
@@ -569,17 +569,17 @@ namespace KCAccess.Game
                     Plugin.Log.LogWarning("Could not save bookmarks: " + e.Message);
                 }
                 A.Cue(Cue.Placed);
-                A.Say("Bookmark " + slot + " set at " + cursor.Pos, force: true);
+                A.Say(Loc.F("Bookmark {0} set at {1}", slot, cursor.Pos), force: true);
                 return true;
             }
             var p = bookmarks.Get(KingdomKey, slot);
             if (!p.HasValue)
             {
                 A.Cue(Cue.Error);
-                A.Say("Bookmark " + slot + " is empty. Control Shift " + slot + " stores the cursor position.", force: true);
+                A.Say(Loc.F("Bookmark {0} is empty. Control Shift {0} stores the cursor position.", slot), force: true);
                 return true;
             }
-            A.Say("Bookmark " + slot);
+            A.Say(Loc.F("Bookmark {0}", slot));
             JumpTo(p.Value);
             return true;
         }
@@ -598,7 +598,7 @@ namespace KCAccess.Game
                 KInput.Consume(KeyCode.Escape);
                 ui.CancelWaitToPlace();
                 A.Cue(Cue.Close);
-                A.Say("Placement ended");
+                A.Say(Loc.T("Placement ended"));
                 return;
             }
             if (KInput.Plain(KeyCode.Escape) && ui.brushMode != GameUI.CursorBrushes.None)
@@ -619,8 +619,8 @@ namespace KCAccess.Game
             {
                 // The game's chop shortcut works on the selected tile and stays silent when it cannot.
                 var sel = ui.GetCellSelected();
-                if (sel == null) A.Say(KeyHelp.Resolve("Select a forest tile with Enter first, then press C. For a large area use chop trees mode, {ChopMode}."));
-                else if (sel.TreeAmount == 0) A.Say("No trees on the selected tile");
+                if (sel == null) A.Say(KeyHelp.Resolve(Loc.T("Select a forest tile with Enter first, then press C. For a large area use chop trees mode, {ChopMode}.")));
+                else if (sel.TreeAmount == 0) A.Say(Loc.T("No trees on the selected tile"));
             }
             if (KInput.Pressed("BuildMenu"))
             {
@@ -630,7 +630,7 @@ namespace KCAccess.Game
             if (KInput.Plain(KeyCode.U))
             {
                 A.Cue(Cue.Error);
-                A.Say("U would hide the game interface, which makes every panel unreadable, so the mod blocks it.");
+                A.Say(Loc.T("U would hide the game interface, which makes every panel unreadable, so the mod blocks it."));
                 return;
             }
             if (KInput.Down(KeyCode.F6) && !KInput.Ctrl && !KInput.Alt)
@@ -639,12 +639,12 @@ namespace KCAccess.Game
                 {
                     // The interface was hidden (by the game's U key or another mod): bring it back first.
                     ui.gameObject.SetActive(true);
-                    A.Say("The game interface was hidden; shown again.");
+                    A.Say(Loc.T("The game interface was hidden; shown again."));
                 }
                 if (!AccessController.Inst.FocusPanel(KInput.Shift ? -1 : 1))
                 {
                     A.Cue(Cue.Error);
-                    A.Say("No panel is open");
+                    A.Say(Loc.T("No panel is open"));
                 }
                 return;
             }
@@ -691,7 +691,7 @@ namespace KCAccess.Game
                 // The game rotates on R itself; announce afterwards.
                 validityCheckFrame = Time.frameCount + 2;
                 lastValidity = (PlacementValidationResult)(-1);
-                A.Say("Rotated");
+                A.Say(Loc.T("Rotated"));
             }
         }
 
@@ -713,7 +713,7 @@ namespace KCAccess.Game
                 if (result.HasValue && result.Value != PlacementValidationResult.Valid && ui.CurrPlacementMode.PlacementCount() <= 1)
                 {
                     A.Cue(Cue.PlaceInvalid);
-                    A.Say("Cannot build here: " + Explain(result.Value));
+                    A.Say(Loc.F("Cannot build here: {0}", Explain(result.Value)));
                     return;
                 }
                 vp.Click();
@@ -723,7 +723,7 @@ namespace KCAccess.Game
             {
                 vp.Click();
                 A.Cue(Cue.Activate);
-                A.Say(BrushName(ui.brushMode) + " at " + cursor.Pos);
+                A.Say(Loc.F("{0} at {1}", BrushName(ui.brushMode), cursor.Pos));
                 return;
             }
             if (ui.currCursorMode is DockRouteCursorMode)
@@ -759,7 +759,7 @@ namespace KCAccess.Game
                 {
                     vp.Press();
                     A.Cue(Cue.Open);
-                    A.Say("Start point set at " + cursor.Pos + ". Move to the end point and press Enter to build, Escape to cancel.");
+                    A.Say(Loc.F("Start point set at {0}. Move to the end point and press Enter to build, Escape to cancel.", cursor.Pos));
                 }
                 else
                 {
@@ -774,7 +774,7 @@ namespace KCAccess.Game
                 {
                     areaStart = cursor.Pos;
                     A.Cue(Cue.Open);
-                    A.Say("Area corner set. Move to the opposite corner and press Enter.");
+                    A.Say(Loc.T("Area corner set. Move to the opposite corner and press Enter."));
                 }
                 else FinishArea();
                 return;
@@ -797,7 +797,7 @@ namespace KCAccess.Game
             var mode = ui.currCursorMode;
             mode.HandleDragPrimaryUp(minX, minZ, maxX, maxZ, returnedToOriginal: false);
             A.Cue(Cue.Activate);
-            string size = (maxX - minX) + " by " + (maxZ - minZ) + " tiles";
+            string size = Loc.F("{0} by {1} tiles", maxX - minX, maxZ - minZ);
             if (mode is ChopCursorMode || mode is ChopCancelCursorMode)
             {
                 int trees = 0;
@@ -807,11 +807,12 @@ namespace KCAccess.Game
                         var c = World.inst.GetCellData(x, z);
                         if (c != null && c.TreeAmount > 0) trees++;
                     }
-                A.Say(trees == 0 ? "No trees in this " + size + " area"
-                    : (mode is ChopCursorMode ? TextUtil.Plural(trees, "tile") + " of trees marked for chopping in " : "Chopping cancelled on " + TextUtil.Plural(trees, "tile") + " of trees in ") + size);
+                A.Say(trees == 0 ? Loc.F("No trees in this {0} area", size)
+                    : mode is ChopCursorMode ? Loc.P(trees, "{0} tile of trees marked for chopping in {1}", "{0} tiles of trees marked for chopping in {1}", size)
+                    : Loc.P(trees, "Chopping cancelled on {0} tile of trees in {1}", "Chopping cancelled on {0} tiles of trees in {1}", size));
                 return;
             }
-            A.Say("Applied to " + size);
+            A.Say(Loc.F("Applied to {0}", size));
         }
 
         /// <summary>Select the building or tile under the cursor (like a mouse click, but deterministic).</summary>
@@ -822,7 +823,7 @@ namespace KCAccess.Game
             if (!CellInfo.Explored(cell))
             {
                 A.Cue(Cue.Error);
-                A.Say("Unexplored");
+                A.Say(Loc.T("Unexplored"));
                 return;
             }
             Building b = null;
@@ -893,7 +894,7 @@ namespace KCAccess.Game
                     if (idx < 0)
                     {
                         A.Cue(Cue.Edge);
-                        A.Say("Everything on this tile is already selected");
+                        A.Say(Loc.T("Everything on this tile is already selected"));
                         return;
                     }
                 }
@@ -906,15 +907,15 @@ namespace KCAccess.Game
                 A.Cue(Cue.Activate);
                 int selected = 0;
                 foreach (var s in ui.selectedObjs) if (s is IMoveableUnit) selected++;
-                string what = CellInfo.UnitName(unit).Replace(", selected", "");
-                A.Say((add ? "Added " + what + ", " + TextUtil.Plural(selected, "unit") + " selected" : "Selected " + what)
-                    + KeyHelp.Resolve(". Move the cursor and press {MoveSoldiers} to send them there. F6 opens the army panel."));
+                string what = CellInfo.WithoutSelected(CellInfo.UnitName(unit));
+                A.Say((add ? Loc.P(selected, "Added {1}, {0} unit selected", "Added {1}, {0} units selected", what) : Loc.F("Selected {0}", what))
+                    + ". " + KeyHelp.Resolve(Loc.T("Move the cursor and press {MoveSoldiers} to send them there. F6 opens the army panel.")));
                 return;
             }
             if (add)
             {
                 A.Cue(Cue.Error);
-                A.Say("No soldiers of yours here to add to the selection");
+                A.Say(Loc.T("No soldiers of yours here to add to the selection"));
                 return;
             }
             // Ships: merchants open the trade window, your own ships can then be sent with M.
@@ -937,11 +938,11 @@ namespace KCAccess.Game
                 A.Cue(Cue.Activate);
                 bool merchant = ship.type == ShipBase.ShipType.Merchant || ship.type == ShipBase.ShipType.PlayerMerchant;
                 string how;
-                if (merchant) how = ". F6 opens the trade window.";
-                else if (ship.teamID != 0) how = ".";
-                else if (ship is ILogisticTransport) how = ". F6 opens its route panel: each stop with its cargo, and {MoveSoldiers} on a stop moves it to the cursor.";
-                else how = ". {MoveSoldiers} sends it to the cursor, F6 opens its panel.";
-                A.Say("Selected " + CellInfo.ShipName(ship).Replace(", selected", "") + KeyHelp.Resolve(how));
+                if (merchant) how = Loc.T("F6 opens the trade window.");
+                else if (ship.teamID != 0) how = null;
+                else if (ship is ILogisticTransport) how = Loc.T("F6 opens its route panel: each stop with its cargo, and {MoveSoldiers} on a stop moves it to the cursor.");
+                else how = Loc.T("{MoveSoldiers} sends it to the cursor, F6 opens its panel.");
+                A.Say(Loc.F("Selected {0}", CellInfo.WithoutSelected(CellInfo.ShipName(ship))) + ". " + (how != null ? KeyHelp.Resolve(how) : string.Empty));
                 return;
             }
             // Transport carts drive routes between stockpiles, markets and other buildings; selecting one opens its route.
@@ -956,7 +957,7 @@ namespace KCAccess.Game
                     ui.ClearSelection();
                     ui.AddToSelection(cart);
                     A.Cue(Cue.Activate);
-                    A.Say("Selected " + CellInfo.CartName(cart).Replace(", selected", "") + KeyHelp.Resolve(". F6 opens its route panel: each stop with its cargo, and {MoveSoldiers} on a stop moves it to the cursor."));
+                    A.Say(Loc.F("Selected {0}", CellInfo.WithoutSelected(CellInfo.CartName(cart))) + ". " + KeyHelp.Resolve(Loc.T("F6 opens its route panel: each stop with its cargo, and {MoveSoldiers} on a stop moves it to the cursor.")));
                     return;
                 }
             }
@@ -971,11 +972,11 @@ namespace KCAccess.Game
                 ui.ClearUIForClick();
                 ui.SelectPerson(v);
                 A.Cue(Cue.Activate);
-                A.Say("Selected " + CellInfo.VillagerSummary(v) + (villagers.Count > 1 ? ". " + (vi % villagers.Count + 1) + " of " + villagers.Count + " here, Shift Enter for the next" : string.Empty) + ". F6 for details.");
+                A.Say(Loc.F("Selected {0}", CellInfo.VillagerSummary(v)) + (villagers.Count > 1 ? ". " + Loc.F("{0} of {1} here, Shift Enter for the next", vi % villagers.Count + 1, villagers.Count) : string.Empty) + ". " + Loc.T("F6 for details."));
                 return;
             }
             A.Cue(Cue.Error);
-            A.Say("No soldiers, catapults, dragons, ships, carts or villagers here");
+            A.Say(Loc.T("No soldiers, catapults, dragons, ships, carts or villagers here"));
         }
 
         private void MoveUnits()
@@ -985,8 +986,8 @@ namespace KCAccess.Game
             {
                 A.Cue(Cue.Error);
                 A.Say(ui.currCursorMode is DockRouteCursorMode
-                    ? KeyHelp.Resolve("Ships and carts follow their route. F6 opens the route panel; {MoveSoldiers} on a stop moves that stop to the cursor.")
-                    : "No soldiers selected. Use Shift Enter on soldiers to select them.");
+                    ? KeyHelp.Resolve(Loc.T("Ships and carts follow their route. F6 opens the route panel; {MoveSoldiers} on a stop moves that stop to the cursor."))
+                    : Loc.T("No soldiers selected. Use Shift Enter on soldiers to select them."));
                 return;
             }
             var cell = CurrentCell;
@@ -1004,16 +1005,16 @@ namespace KCAccess.Game
             {
                 if (h is IMoveableUnit mu && !ui.IsSelected(h) && mu.TeamID() != 0 && World.inst.RelationBetween(0, mu.TeamID()) == World.Relations.Enemy)
                 {
-                    target = "Attacking " + CellInfo.UnitName(mu);
+                    target = Loc.F("Attacking {0}", CellInfo.UnitName(mu));
                     break;
                 }
             }
             var b = ui.highlightBuilding;
             if (target == null && b != null && b.TeamID() != 0)
-                target = (World.inst.RelationBetween(0, b.TeamID()) == World.Relations.Enemy ? "Attacking " : "Going to ") + CellInfo.BuildingSummary(b, brief: true);
+                target = World.inst.RelationBetween(0, b.TeamID()) == World.Relations.Enemy ? Loc.F("Attacking {0}", CellInfo.BuildingSummary(b, brief: true)) : Loc.F("Going to {0}", CellInfo.BuildingSummary(b, brief: true));
             ui.MoveUnitsToPosition(cell.Center);
             A.Cue(Cue.Activate);
-            A.Say(target ?? "Moving to " + cursor.Pos);
+            A.Say(target ?? Loc.F("Moving to {0}", cursor.Pos));
         }
 
         internal void SpeakSelection(bool detailed)
@@ -1025,17 +1026,17 @@ namespace KCAccess.Game
             {
                 text = CellInfo.BuildingSummary(b, brief: false);
                 if (detailed) text = TextUtil.Sentences(text, b.Description);
-                text = TextUtil.Sentences(text, "F6 for the building panel");
+                text = TextUtil.Sentences(text, Loc.T("F6 for the building panel"));
             }
             else if (ui.GetCellSelected() != null)
             {
-                text = TextUtil.Sentences("Selected tile", CellInfo.Brief(ui.GetCellSelected(), true), "F6 for tile actions");
+                text = TextUtil.Sentences(Loc.T("Selected tile"), CellInfo.Brief(ui.GetCellSelected(), true), Loc.T("F6 for tile actions"));
             }
             else if (ui.IsUnitSelected())
             {
-                text = KeyHelp.Resolve("Soldiers selected. {MoveSoldiers} moves them to the cursor.");
+                text = KeyHelp.Resolve(Loc.T("Soldiers selected. {MoveSoldiers} moves them to the cursor."));
             }
-            else text = "Nothing selected";
+            else text = Loc.T("Nothing selected");
             A.Say(text, force: true);
         }
 
@@ -1068,13 +1069,13 @@ namespace KCAccess.Game
                 if (problems.Count >= 3 || c == null) return;
                 string what = null;
                 if (c.Type != ResourceType.None) what = CellInfo.Terrain(c);
-                else if (c.TreeAmount > 0) what = "trees";
-                else if (TreeSystem.inst != null && TreeSystem.inst.AnimCount(c) > 0) what = "a tree growing or being felled";
+                else if (c.TreeAmount > 0) what = Loc.T("trees");
+                else if (TreeSystem.inst != null && TreeSystem.inst.AnimCount(c) > 0) what = Loc.T("a tree growing or being felled");
                 else if (c.OccupyingStructure.Count > 0 && c.TopMostStructure != null) what = c.TopMostStructure.FriendlyName;
                 if (what == null) return;
                 problems.Add(what + " " + Directions.Offset(x - origin.X, z - origin.Z));
             });
-            return problems.Count == 0 ? string.Empty : "blocked by " + string.Join(", ", problems.ToArray());
+            return problems.Count == 0 ? string.Empty : Loc.F("blocked by {0}", string.Join(", ", problems.ToArray()));
         }
 
         private static GridPos? NearestCoveredFreeTile(GridPos at, int maxRadius)
@@ -1106,7 +1107,7 @@ namespace KCAccess.Game
             if (r == PlacementValidationResult.OutsideOfTerritory || r == PlacementValidationResult.RoadCoverage)
             {
                 var near = NearestCoveredFreeTile(cursor.Pos, 15);
-                if (near.HasValue) text += ". Nearest free tile inside road coverage: " + Directions.Relative(cursor.Pos, near.Value);
+                if (near.HasValue) text += ". " + Loc.F("Nearest free tile inside road coverage: {0}", Directions.Relative(cursor.Pos, near.Value));
             }
             if (r == PlacementValidationResult.MustBeOnFlatLand || r == PlacementValidationResult.ExistingStructure || r == PlacementValidationResult.RoadNotOnLand)
             {
@@ -1131,8 +1132,8 @@ namespace KCAccess.Game
                 A.Cue(Cue.PlaceValid);
                 // Towers: the range rings (which grow on castle walls) are drawn only; V tells them.
                 string range = always ? CellInfo.RangeText(GameUI.inst.CurrPlacementMode.GetHoverBuilding(), placed: true) : null;
-                if (always) A.Say("Can build here" + (range != null ? ", " + range : string.Empty), force: true);
-                else if (changed) A.SayQueued("can build");
+                if (always) A.Say(Loc.T("Can build here") + (range != null ? ", " + range : string.Empty), force: true);
+                else if (changed) A.SayQueued(Loc.T("can build"));
             }
             else
             {
@@ -1145,7 +1146,7 @@ namespace KCAccess.Game
                 int ok = 0;
                 foreach (var b in GameUI.inst.CurrPlacementMode.buildings)
                     if (b != null && World.inst.CanPlace(b) == PlacementValidationResult.Valid) ok++;
-                A.SayQueued(TextUtil.Plural(count, "piece") + " planned" + (ok < count ? ", " + ok + " can be built" : string.Empty));
+                A.SayQueued(Loc.P(count, "{0} piece planned", "{0} pieces planned") + (ok < count ? ", " + Loc.F("{0} can be built", ok) : string.Empty));
             }
         }
 
@@ -1182,8 +1183,8 @@ namespace KCAccess.Game
                     if (!wasPlacing && !again && Time.unscaledTime - placedSayTime > 0.5f)
                     {
                         UpdatePointer(follow: true);
-                        string size = hover != null && (hover.size.x > 1 || hover.size.z > 1) ? " The cursor is the south west corner, the building covers " + (int)hover.size.x + " by " + (int)hover.size.z + " tiles." : string.Empty;
-                        A.SayQueued("Placing " + name + "." + size + " Move with arrows, Enter to build, R to rotate, Escape to cancel.");
+                        string size = hover != null && (hover.size.x > 1 || hover.size.z > 1) ? " " + Loc.F("The cursor is the south west corner, the building covers {0} by {1} tiles.", (int)hover.size.x, (int)hover.size.z) : string.Empty;
+                        A.SayQueued(Loc.F("Placing {0}.", name) + size + " " + Loc.T("Move with arrows, Enter to build, R to rotate, Escape to cancel."));
                     }
                 }
                 if (validityCheckFrame > 0 && Time.frameCount >= validityCheckFrame)
@@ -1199,7 +1200,7 @@ namespace KCAccess.Game
                 if (Time.unscaledTime - placedSayTime > 0.3f && !ui.WaitingToPlaceAgain())
                 {
                     A.Cue(Cue.Close);
-                    A.Say("Placement ended");
+                    A.Say(Loc.T("Placement ended"));
                 }
                 lastSelected = ui.GetBuildingSelected();
             }
@@ -1208,14 +1209,14 @@ namespace KCAccess.Game
 
             // Escape (game key) clears the selection: say so, since nothing visible tells a blind player.
             bool hasSelection = ui.GetBuildingSelected() != null || ui.GetCellSelected() != null || ui.IsUnitSelected() || (ui.personUI != null && ui.personUI.Visible);
-            if (hadSelection && !hasSelection && !placing && Time.unscaledTime - placedSayTime > 0.5f && Time.unscaledTime - Patch_Demolish.LastDemolishTime > 1f) A.Say("Selection cleared");
+            if (hadSelection && !hasSelection && !placing && Time.unscaledTime - placedSayTime > 0.5f && Time.unscaledTime - Patch_Demolish.LastDemolishTime > 1f) A.Say(Loc.T("Selection cleared"));
             hadSelection = hasSelection;
 
             if (ui.brushMode != lastBrush)
             {
                 lastBrush = ui.brushMode;
-                if (ui.brushMode == GameUI.CursorBrushes.None) A.Say("Brush off");
-                else A.Say("Brush: " + BrushName(ui.brushMode) + ". Enter applies it at the cursor, Escape turns the brush off.");
+                if (ui.brushMode == GameUI.CursorBrushes.None) A.Say(Loc.T("Brush off"));
+                else A.Say(Loc.F("Brush: {0}. Enter applies it at the cursor, Escape turns the brush off.", BrushName(ui.brushMode)));
             }
 
             var mode = ui.currCursorMode;
@@ -1223,9 +1224,9 @@ namespace KCAccess.Game
             {
                 lastCursorMode = mode;
                 areaStart = null;
-                if (mode == null || mode == ui.consoleCursorMode) A.Say("Normal mode");
+                if (mode == null || mode == ui.consoleCursorMode) A.Say(Loc.T("Normal mode"));
                 else if (mode is DockRouteCursorMode) A.SayQueued(Routes.ModeIntro());
-                else A.Say(CursorModeName(mode) + ". Enter on a tile applies it, Shift Enter marks an area. Escape returns to normal mode.");
+                else A.Say(Loc.F("{0}. Enter on a tile applies it, Shift Enter marks an area. Escape returns to normal mode.", CursorModeName(mode)));
             }
         }
 
@@ -1237,18 +1238,18 @@ namespace KCAccess.Game
             {
                 lastPlacedName = name;
                 A.Cue(Cue.Placed);
-                string what = pieces > 1 ? name + ", " + pieces + " pieces" : name;
+                string what = pieces > 1 ? Loc.F("{0}, {1} pieces", name, pieces) : name;
                 if (skipped != null) what += ", " + skipped;
                 bool again = GameUI.inst != null && GameUI.inst.CanPlaceAgain();
-                A.Say("Placed " + what + (again ? ". Move to place another, Escape to stop." : "."));
+                A.Say(Loc.F("Placed {0}.", what) + (again ? " " + Loc.T("Move to place another, Escape to stop.") : string.Empty));
                 if (name == GameState.inst.GetPlaceableByUniqueName("keep")?.FriendlyName)
-                    A.SayQueued(KeyHelp.Resolve("Next build roads out from your keep: {BuildMenu}, Town category, Road. Other buildings must be inside road coverage. {TileInfo} on a tile tells you whether it is inside road coverage."));
+                    A.SayQueued(KeyHelp.Resolve(Loc.T("Next build roads out from your keep: {BuildMenu}, Town category, Road. Other buildings must be inside road coverage. {TileInfo} on a tile tells you whether it is inside road coverage.")));
             }
             else
             {
                 var r = CurrentValidity();
                 A.Cue(Cue.PlaceInvalid);
-                A.Say("Not built" + (r.HasValue && r.Value != PlacementValidationResult.Valid ? ": " + Explain(r.Value) : string.Empty));
+                A.Say(r.HasValue && r.Value != PlacementValidationResult.Valid ? Loc.F("Not built: {0}", Explain(r.Value)) : Loc.T("Not built"));
             }
         }
 
@@ -1256,12 +1257,12 @@ namespace KCAccess.Game
         {
             switch (m)
             {
-                case ChopCursorMode _: return "Chop trees mode";
-                case ChopCancelCursorMode _: return "Cancel chopping mode";
-                case DemolishCursorMode _: return "Demolish mode";
-                case RebuildCursorMode _: return "Rebuild mode";
-                case DockRouteCursorMode _: return "Ship route mode";
-                default: return TextUtil.Humanize(m.GetType().Name.Replace("CursorMode", "")) + " mode";
+                case ChopCursorMode _: return Loc.T("Chop trees mode");
+                case ChopCancelCursorMode _: return Loc.T("Cancel chopping mode");
+                case DemolishCursorMode _: return Loc.T("Demolish mode");
+                case RebuildCursorMode _: return Loc.T("Rebuild mode");
+                case DockRouteCursorMode _: return Loc.T("Ship route mode");
+                default: return Loc.F("{0} mode", TextUtil.Humanize(m.GetType().Name.Replace("CursorMode", "")));
             }
         }
     }

@@ -69,7 +69,7 @@ namespace KCAccess
                 Dump(canvas.transform, 0, sb, activeOnly);
             }
             File.WriteAllText(DumpPath, sb.ToString());
-            A.Say("UI dumped");
+            A.Say(KCAccess.Core.Loc.T("UI dumped"));
         }
 
         private static void Dump(Transform t, int depth, StringBuilder sb, bool activeOnly)

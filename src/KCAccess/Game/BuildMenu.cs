@@ -13,8 +13,8 @@ namespace KCAccess.Game
     {
         private static readonly Dictionary<string, string> CategoryNames = new Dictionary<string, string>
         {
-            { "Castle", "Castle" }, { "Town", "Town" }, { "AdvTown", "Advanced town" }, { "Food", "Food" },
-            { "Industry", "Industry" }, { "Maritime", "Maritime" }, { "Cemetery", "Cemeteries" }, { "Statue", "Statues" }, { "Park", "Parks" }
+            { "Castle", Loc.N("Castle") }, { "Town", Loc.N("Town") }, { "AdvTown", Loc.N("Advanced town") }, { "Food", Loc.N("Food") },
+            { "Industry", Loc.N("Industry") }, { "Maritime", Loc.N("Maritime") }, { "Cemetery", Loc.N("Cemeteries") }, { "Statue", Loc.N("Statues") }, { "Park", Loc.N("Parks") }
         };
 
         private static string lastCategory = "Castle";
@@ -48,12 +48,12 @@ namespace KCAccess.Game
             foreach (var t in BuildUI.inst.tabs) tabs.Add(t);
             if (tabs.Count == 0)
             {
-                A.Say("Build menu is not available");
+                A.Say(Loc.T("Build menu is not available"));
                 open = false;
                 return;
             }
             int idx = tabs.FindIndex(t => t.title == lastCategory);
-            OpenTab(idx < 0 ? 0 : idx, announceCategory: true, intro: "Build menu. ");
+            OpenTab(idx < 0 ? 0 : idx, announceCategory: true, intro: Loc.T("Build menu.") + " ");
         }
 
         private void OpenTab(int index, bool announceCategory, string intro = "")
@@ -86,21 +86,21 @@ namespace KCAccess.Game
             string text;
             if (locked)
             {
-                text = intro + catName + ", locked. " + LockReason(tab);
+                text = intro + Loc.F("{0}, locked.", catName) + " " + LockReason(tab);
             }
-            else if (items.Count == 0) text = intro + catName + ", empty";
-            else text = intro + (announceCategory ? catName + ", " + TextUtil.Plural(items.Count, "building") + ". " : string.Empty) + Describe(items.Current, brief: true);
+            else if (items.Count == 0) text = intro + Loc.F("{0}, empty", catName);
+            else text = intro + (announceCategory ? catName + ", " + Loc.P(items.Count, "{0} building", "{0} buildings") + ". " : string.Empty) + Describe(items.Current, brief: true);
             A.Say(text);
         }
 
-        private static string CategoryName(BuildTab tab) => CategoryNames.TryGetValue(tab.title, out var n) ? n : TextUtil.Humanize(tab.title);
+        private static string CategoryName(BuildTab tab) => CategoryNames.TryGetValue(tab.title, out var n) ? Loc.T(n) : TextUtil.Humanize(tab.title);
 
         private static string LockReason(BuildTab tab)
         {
-            if (Player.inst.FocusedLandMass == -1) return "Build your keep first.";
+            if (Player.inst.FocusedLandMass == -1) return Loc.T("Build your keep first.");
             var tip = tab.buildButton != null ? tab.buildButton.preqTipMessage : null;
             if (tip != null && !string.IsNullOrEmpty(tip.toolTipText) && tip.toolTipText != "missing tip") return TextUtil.Clean(tip.toolTipText);
-            return "Requires other buildings first.";
+            return Loc.T("Requires other buildings first.");
         }
 
         public void HandleInput()
@@ -175,7 +175,7 @@ namespace KCAccess.Game
             if (r == NavResult.Empty)
             {
                 A.Cue(Cue.Edge);
-                A.Say("empty");
+                A.Say(Loc.T("empty"));
                 return;
             }
             A.Cue(r == NavResult.HitEdge ? Cue.Edge : Cue.Navigate);
@@ -200,51 +200,51 @@ namespace KCAccess.Game
         {
             if (b == null) return string.Empty;
             var building = b.prefab;
-            if (IsSubMenuEntry(b, out var sub)) return building.FriendlyName + ", opens " + CategoryNames[sub] + " list";
+            if (IsSubMenuEntry(b, out var sub)) return building.FriendlyName + ", " + Loc.F("opens {0} list", Loc.T(CategoryNames[sub]));
             int lm = Player.inst.FocusedLandMass;
             bool canAfford = BuildInfoFloating.CanAfford(lm, building);
             bool ok = BuildInfoFloating.inst.CheckPrereqs(building, canAfford, b.PreReq, out var prereq);
             var parts = new List<string> { building.FriendlyName };
             parts.Add(CostText(building, lm));
-            parts.Add((int)building.size.x + " by " + (int)building.size.z);
-            if (lockedCategory) parts.Add("category locked");
-            else if (ok) parts.Add("available");
+            parts.Add(Loc.F("{0} by {1}", (int)building.size.x, (int)building.size.z));
+            if (lockedCategory) parts.Add(Loc.T("category locked"));
+            else if (ok) parts.Add(Loc.T("available"));
             else
             {
                 string why;
                 switch (prereq)
                 {
                     case BuildInfoFloating.SpecialBuildingPrereq.Building:
-                        why = "requires " + (b.PreReq != null ? b.PreReq.FriendlyName : "another building");
+                        why = Loc.F("requires {0}", b.PreReq != null ? b.PreReq.FriendlyName : Loc.T("another building"));
                         break;
                     case BuildInfoFloating.SpecialBuildingPrereq.ChamberOfWarOne:
-                        why = "you can only have one";
+                        why = Loc.T("you can only have one");
                         break;
                     case BuildInfoFloating.SpecialBuildingPrereq.ShipTwoDocks:
-                        why = "requires two docks";
+                        why = Loc.T("requires two docks");
                         break;
                     case BuildInfoFloating.SpecialBuildingPrereq.NotPlayerLandmass:
-                        why = "this island is not yours";
+                        why = Loc.T("this island is not yours");
                         break;
                     default:
-                        why = lm == -1 ? "build your keep first" : "cannot afford";
+                        why = lm == -1 ? Loc.T("build your keep first") : Loc.T("cannot afford");
                         break;
                 }
-                parts.Add("unavailable, " + why);
+                parts.Add(Loc.F("unavailable, {0}", why));
             }
-            if (building.dragPlacementMode == Building.DragPlacementMode.Path) parts.Add("built in lines with Shift Enter");
-            else if (building.dragPlacementMode == Building.DragPlacementMode.Rectangle) parts.Add("built in areas with Shift Enter");
+            if (building.dragPlacementMode == Building.DragPlacementMode.Path) parts.Add(Loc.T("built in lines with Shift Enter"));
+            else if (building.dragPlacementMode == Building.DragPlacementMode.Rectangle) parts.Add(Loc.T("built in areas with Shift Enter"));
             // Archer towers and ballistas: the game only shows this rule as a red placement hint.
-            if (building.CategoryName == World.projectileTopper) parts.Add("placed on top of castle blocks");
+            if (building.CategoryName == World.projectileTopper) parts.Add(Loc.T("placed on top of castle blocks"));
             if (!brief)
             {
                 parts.Add(building.Description);
-                if (building.CategoryName != "house" && building.CategoryName != "ship" && building.WorkersForFullYield > 0) parts.Add(TextUtil.Plural(building.WorkersForFullYield, "worker"));
+                if (building.CategoryName != "house" && building.CategoryName != "ship" && building.WorkersForFullYield > 0) parts.Add(Loc.P(building.WorkersForFullYield, "{0} worker", "{0} workers"));
                 var wage = building.GetComponent<WagePayer>();
                 if (wage != null)
                 {
                     float perYear = wage.GetGoldWage(Player.inst.PlayerLandmassOwner) * wage.PaydaysPerYear();
-                    parts.Add("wages " + perYear + " gold per year");
+                    parts.Add(Loc.F("wages {0} gold per year", perYear));
                 }
                 parts.Add(CellInfo.RangeText(building, placed: false));
             }
@@ -265,7 +265,7 @@ namespace KCAccess.Game
                 need[i] = cost.Get((FreeResourceType)i);
                 got[i] = have.Get((FreeResourceType)i);
             }
-            return "cost " + ResourceNames.Cost(names, need, lm == -1 ? null : got);
+            return Loc.F("cost {0}", ResourceNames.Cost(names, need, lm == -1 ? null : got));
         }
 
         private void Pick()
@@ -275,7 +275,7 @@ namespace KCAccess.Game
             if (tab.buildButton != null && !tab.buildButton.unlocked)
             {
                 A.Cue(Cue.Error);
-                A.Say("Locked. " + LockReason(tab));
+                A.Say(Loc.T("Locked.") + " " + LockReason(tab));
                 return;
             }
             var b = items.Current;

@@ -24,7 +24,7 @@ namespace KCAccess.Game
             }
         }
 
-        internal static string SeasonName() => Weather.inst != null ? (Weather.inst.season == Weather.Season.Winter ? "winter" : "summer") : string.Empty;
+        internal static string SeasonName() => Weather.inst != null ? (Weather.inst.season == Weather.Season.Winter ? Loc.T("winter") : Loc.T("summer")) : string.Empty;
 
         /// <summary>Villagers on the player's island.</summary>
         internal static int Population() => Landmass < 0 ? 0 : World.inst.GetVillagersForLandMass(Landmass).Count;
@@ -37,76 +37,76 @@ namespace KCAccess.Game
             {
                 switch (Weather.CurrentWeather)
                 {
-                    case Weather.WeatherType.NormalRain: weather = "raining"; break;
-                    case Weather.WeatherType.HeavyRain: weather = "heavy rain"; break;
-                    case Weather.WeatherType.Snow: weather = "snowing"; break;
-                    case Weather.WeatherType.LightningStorm: weather = "thunderstorm"; break;
+                    case Weather.WeatherType.NormalRain: weather = Loc.T("raining"); break;
+                    case Weather.WeatherType.HeavyRain: weather = Loc.T("heavy rain"); break;
+                    case Weather.WeatherType.Snow: weather = Loc.T("snowing"); break;
+                    case Weather.WeatherType.LightningStorm: weather = Loc.T("thunderstorm"); break;
                 }
             }
             catch
             {
                 // Weather type names differ between versions; leave it out.
             }
-            return TextUtil.Join(", ", "Year " + Player.inst.CurrYear, season, weather, SpeedLine());
+            return TextUtil.Join(", ", Loc.F("Year {0}", Player.inst.CurrYear), season, weather, SpeedLine());
         }
 
         internal static string SpeedLine()
         {
             if (TimeManager.inst == null) return string.Empty;
-            if (TimeManager.inst.IsPaused()) return "paused";
+            if (TimeManager.inst.IsPaused()) return Loc.T("paused");
             switch (TimeManager.inst.speedInUse)
             {
-                case 1: return "normal speed";
-                case 2: return "fast speed";
-                case 3: return "fastest speed";
-                default: return "speed " + TimeManager.inst.speedInUse;
+                case 1: return Loc.T("normal speed");
+                case 2: return Loc.T("fast speed");
+                case 3: return Loc.T("fastest speed");
+                default: return Loc.F("speed {0}", TimeManager.inst.speedInUse);
             }
         }
 
-        internal static string GoldLine() => "Gold " + Player.inst.PlayerLandmassOwner.Gold;
+        internal static string GoldLine() => Loc.F("Gold {0}", Player.inst.PlayerLandmassOwner.Gold);
 
         internal static string PopulationLine()
         {
-            if (Landmass < 0) return "No population yet";
+            if (Landmass < 0) return Loc.T("No population yet");
             int pop = Population();
             int idle = World.inst.AvailableWorkersOnLandMass(Landmass);
             int beds = Player.inst.TotalResidentialSlotsOnLandMass(Landmass);
             int homeless = Player.inst.Homeless != null ? Player.inst.Homeless.Count : 0;
-            string s = "Population " + pop + ", " + idle + " idle, " + TextUtil.Plural(beds, "bed");
-            if (homeless > 0) s += ", " + homeless + " homeless";
+            string s = Loc.F("Population {0}, {1} idle", pop, idle) + ", " + Loc.P(beds, "{0} bed", "{0} beds");
+            if (homeless > 0) s += ", " + Loc.F("{0} homeless", homeless);
             return s;
         }
 
         internal static string HappinessLine()
         {
             var h = Player.inst.HappinessForFocusedLandMass;
-            if (h == null) return "Happiness unknown";
-            string s = "Happiness " + h.currHappiness;
-            if (h.targetHappiness != h.currHappiness) s += ", trending to " + h.targetHappiness;
+            if (h == null) return Loc.T("Happiness unknown");
+            string s = Loc.F("Happiness {0}", h.currHappiness);
+            if (h.targetHappiness != h.currHappiness) s += ", " + Loc.F("trending to {0}", h.targetHappiness);
             return s;
         }
 
         internal static string HealthLine()
         {
             var h = Player.inst.HealthForFocusedLandMass;
-            return h == null ? "Health unknown" : "Health " + h.currHealth;
+            return h == null ? Loc.T("Health unknown") : Loc.F("Health {0}", h.currHealth);
         }
 
         internal static string FoodLine()
         {
             int wheat = Res(FreeResourceType.Wheat), apples = Res(FreeResourceType.Apples), fish = Res(FreeResourceType.Fish), pork = Res(FreeResourceType.Pork);
-            return "Food " + (wheat + apples + fish + pork) + ": wheat " + wheat + ", apples " + apples + ", fish " + fish + ", pork " + pork;
+            return Loc.F("Food {0}: wheat {1}, apples {2}, fish {3}, pork {4}", wheat + apples + fish + pork, wheat, apples, fish, pork);
         }
 
         internal static string MaterialsLine() =>
-            "Wood " + Res(FreeResourceType.Tree) + ", stone " + Res(FreeResourceType.Stone) + ", iron " + Res(FreeResourceType.IronOre)
-            + ", charcoal " + Res(FreeResourceType.Charcoal) + ", tools " + Res(FreeResourceType.Tools) + ", armaments " + Res(FreeResourceType.Armament);
+            Loc.F("Wood {0}, stone {1}, iron {2}, charcoal {3}, tools {4}, armaments {5}", Res(FreeResourceType.Tree), Res(FreeResourceType.Stone), Res(FreeResourceType.IronOre),
+                Res(FreeResourceType.Charcoal), Res(FreeResourceType.Tools), Res(FreeResourceType.Armament));
 
         internal static string TaxLine()
         {
-            if (Landmass < 0) return "Tax rate unknown";
+            if (Landmass < 0) return Loc.T("Tax rate unknown");
             int pct = (int)(Player.inst.GetTaxRate(Landmass) * 10f) * 2; // same formula as the game's tax display (TaxRateUI)
-            return "Tax rate " + pct + " percent";
+            return Loc.F("Tax rate {0} percent", pct);
         }
 
         internal static string ThreatLine()
@@ -116,7 +116,7 @@ namespace KCAccess.Game
             try
             {
                 if (ui.dragonNotification != null && ui.dragonNotification.Content != null && ui.dragonNotification.Content.activeInHierarchy)
-                    parts.Add("Dragons active");
+                    parts.Add(Loc.T("Dragons active"));
             }
             catch
             {
@@ -132,12 +132,12 @@ namespace KCAccess.Game
                         int vikings = 0;
                         var units = RaiderSystem.inst.unitData;
                         for (int i = 0; i < units.Count; i++) if (units[i].unit != null && !units[i].unit.IsBeingCarried()) vikings++;
-                        parts.Add("Viking raid in progress, " + TextUtil.Plural(vikings, "viking") + " left");
+                        parts.Add(Loc.P(vikings, "Viking raid in progress, {0} viking left", "Viking raid in progress, {0} vikings left"));
                     }
-                    else parts.Add("Next viking raid in " + TextUtil.Plural(RaiderSystem.inst.yearsUntilNextAttack + 1, "year"));
+                    else parts.Add(Loc.P(RaiderSystem.inst.yearsUntilNextAttack + 1, "Next viking raid in {0} year", "Next viking raid in {0} years"));
                 }
                 if (Player.inst.difficulty != 0 && DragonSpawn.inst != null && DragonSpawn.inst.AllowSpawning())
-                    parts.Add("Next dragon attack in " + TextUtil.Plural(DragonSpawn.inst.yearsUntilNextAttack + 1, "year"));
+                    parts.Add(Loc.P(DragonSpawn.inst.yearsUntilNextAttack + 1, "Next dragon attack in {0} year", "Next dragon attack in {0} years"));
             }
             catch
             {
@@ -150,7 +150,7 @@ namespace KCAccess.Game
                 var a = armies.data[i];
                 if (a != null && a.teamId != 0 && World.inst.RelationBetween(0, a.teamId) == World.Relations.Enemy) enemies++;
             }
-            if (enemies > 0) parts.Add(TextUtil.Plural(enemies, "enemy army", "enemy armies") + " on the map");
+            if (enemies > 0) parts.Add(Loc.P(enemies, "{0} enemy army on the map", "{0} enemy armies on the map"));
             int catapults = 0;
             var sieges = SiegeCatapultSystem.siegeCatapults;
             for (int i = 0; sieges != null && i < sieges.Count; i++)
@@ -158,8 +158,8 @@ namespace KCAccess.Game
                 var sc = sieges.data[i];
                 if (sc != null && sc.ValidToSelect() && sc.TeamID() != 0 && World.inst.RelationBetween(0, sc.TeamID()) == World.Relations.Enemy) catapults++;
             }
-            if (catapults > 0) parts.Add(TextUtil.Plural(catapults, "enemy siege catapult") + " on the map");
-            return parts.Count == 0 ? "No threats visible" : TextUtil.Join(". ", parts);
+            if (catapults > 0) parts.Add(Loc.P(catapults, "{0} enemy siege catapult on the map", "{0} enemy siege catapults on the map"));
+            return parts.Count == 0 ? Loc.T("No threats visible") : TextUtil.Join(". ", parts);
         }
 
         /// <summary>
@@ -178,9 +178,9 @@ namespace KCAccess.Game
                 string name = Twitch.Translate(term);
                 if (name.Length == 0) name = TextUtil.Humanize(e.GetType().Name.Replace("StreamerEffect_", "").Replace("ChamberOfWarEffect_", ""));
                 float left = e.Timer != null && e.Timer.Duration > 0f ? e.TimeRemaining() : -1f;
-                parts.Add(left > 0f ? name + ", " + TwitchText.Duration(Mathf.CeilToInt(left)) + " left" : name);
+                parts.Add(left > 0f ? name + ", " + Loc.F("{0} left", TwitchText.Duration(Mathf.CeilToInt(left))) : name);
             }
-            return parts.Count == 0 ? null : "Active effects: " + string.Join("; ", parts.ToArray());
+            return parts.Count == 0 ? null : Loc.F("Active effects: {0}", string.Join("; ", parts.ToArray()));
         }
     }
 
@@ -189,7 +189,7 @@ namespace KCAccess.Game
     {
         public override string HelpId => "Status";
 
-        protected override string Title => "Kingdom status";
+        protected override string Title => Loc.T("Kingdom status");
 
         protected override void Build()
         {
@@ -199,18 +199,18 @@ namespace KCAccess.Game
             Add(Status.HappinessLine, () => SpeakExplanation(() => HappinessUI.inst.GetHappinessExplanation()));
             Add(Status.HealthLine, () => SpeakExplanation(() => GameUI.inst.islandInfoUI.GetComponentInChildren<HealthUI>(true).GetHappinessExplanation()));
             Add(Status.FoodLine, () => Examine(GameUI.inst.islandInfoUI.GetComponentInChildren<FoodInfo>(true)));
-            Add(() => "Wood " + Status.Res(FreeResourceType.Tree), () => Examine(GameUI.inst.islandInfoUI.GetComponentInChildren<WoodInfo>(true)));
-            Add(() => "Stone " + Status.Res(FreeResourceType.Stone), () => Examine(GameUI.inst.islandInfoUI.GetComponentInChildren<StoneInfo>(true)));
-            Add(() => "Iron " + Status.Res(FreeResourceType.IronOre), () => Examine(GameUI.inst.islandInfoUI.GetComponentInChildren<IronInfo>(true)));
-            Add(() => "Charcoal " + Status.Res(FreeResourceType.Charcoal), () => Examine(GameUI.inst.islandInfoUI.GetComponentInChildren<CharcoalInfo>(true)));
-            Add(() => "Tools " + Status.Res(FreeResourceType.Tools), () => Examine(GameUI.inst.islandInfoUI.GetComponentInChildren<ToolInfo>(true)));
-            Add(() => "Armaments " + Status.Res(FreeResourceType.Armament), () => Examine(GameUI.inst.islandInfoUI.GetComponentInChildren<ArmamentInfo>(true)));
+            Add(() => Loc.F("Wood {0}", Status.Res(FreeResourceType.Tree)), () => Examine(GameUI.inst.islandInfoUI.GetComponentInChildren<WoodInfo>(true)));
+            Add(() => Loc.F("Stone {0}", Status.Res(FreeResourceType.Stone)), () => Examine(GameUI.inst.islandInfoUI.GetComponentInChildren<StoneInfo>(true)));
+            Add(() => Loc.F("Iron {0}", Status.Res(FreeResourceType.IronOre)), () => Examine(GameUI.inst.islandInfoUI.GetComponentInChildren<IronInfo>(true)));
+            Add(() => Loc.F("Charcoal {0}", Status.Res(FreeResourceType.Charcoal)), () => Examine(GameUI.inst.islandInfoUI.GetComponentInChildren<CharcoalInfo>(true)));
+            Add(() => Loc.F("Tools {0}", Status.Res(FreeResourceType.Tools)), () => Examine(GameUI.inst.islandInfoUI.GetComponentInChildren<ToolInfo>(true)));
+            Add(() => Loc.F("Armaments {0}", Status.Res(FreeResourceType.Armament)), () => Examine(GameUI.inst.islandInfoUI.GetComponentInChildren<ArmamentInfo>(true)));
             Add(Status.TaxLine);
             Add(Status.ThreatLine);
             Add(Problems.SummaryLine);
-            if (Status.EffectsLine() != null) Add(() => Status.EffectsLine() ?? "No active effects");
+            if (Status.EffectsLine() != null) Add(() => Status.EffectsLine() ?? Loc.T("No active effects"));
             if (Twitch.Enabled) Add(Twitch.StatusLine, () => { Close(announce: false); Twitch.OpenSettings(); });
-            Add("Press Enter on gold, food, a material, happiness or health for the detailed report. F6 from the map reaches the kingdom overview panel with the tax buttons.");
+            Add(() => Loc.T("Press Enter on gold, food, a material, happiness or health for the detailed report. F6 from the map reaches the kingdom overview panel with the tax buttons."));
         }
 
         private static void SpeakExplanation(Func<string> get)
@@ -221,7 +221,7 @@ namespace KCAccess.Game
             }
             catch (Exception e)
             {
-                A.Say("Report not available");
+                A.Say(Loc.T("Report not available"));
                 Plugin.Log.LogWarning("Explanation failed: " + e.Message);
             }
         }
@@ -231,7 +231,7 @@ namespace KCAccess.Game
         {
             if (info == null)
             {
-                A.Say("Report not available");
+                A.Say(Loc.T("Report not available"));
                 return;
             }
             AccessController.Inst.StartCoroutine(ExamineRoutine(info));
@@ -246,7 +246,7 @@ namespace KCAccess.Game
             var field = info.GetType().GetField("Text");
             if (field != null && field.GetValue(info) is TMPro.TMP_Text t && t.gameObject.activeInHierarchy) text = t.text;
             if (string.IsNullOrEmpty(text) && info.info != null) text = UI.UIText.JoinTexts(UI.UIText.VisibleTexts(info.info.transform));
-            A.Say(string.IsNullOrEmpty(text) ? "Report not available" : text, force: true);
+            A.Say(string.IsNullOrEmpty(text) ? Loc.T("Report not available") : text, force: true);
             info.OnPointerExit();
         }
     }
