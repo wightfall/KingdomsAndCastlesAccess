@@ -7,7 +7,12 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Product>KCAccess Setup</Product>
     <Description>Installs and updates the KCAccess screen reader mod for Kingdoms and Castles</Description>
+    <!-- Loc.cs is shared with the mod; INSTALLER makes its types internal here. -->
+    <DefineConstants>$(DefineConstants);INSTALLER</DefineConstants>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\KCAccess.Core\Loc.cs" Link="Loc.cs" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
   </ItemGroup>

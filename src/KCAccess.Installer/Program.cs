@@ -35,6 +35,17 @@ namespace KCAccess.Installer
                 Environment.Exit(QuietInstall(options));
                 return;
             }
+            try
+            {
+                string exeDir = System.IO.Path.GetDirectoryName(Application.ExecutablePath);
+                string game = options.GameDir != null && SteamLibrary.IsGameFolder(options.GameDir) ? options.GameDir
+                    : SteamLibrary.IsGameFolder(exeDir) ? exeDir : SteamLibrary.FindGame(SteamLibrary.SteamRoots());
+                InstallerLanguage.Init(game);
+            }
+            catch (Exception)
+            {
+                // English
+            }
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new MainForm(options));

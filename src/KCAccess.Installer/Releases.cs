@@ -92,7 +92,7 @@ namespace KCAccess.Installer
 
         public static string Show(Version v)
         {
-            if (v == null) return "not installed";
+            if (v == null) return KCAccess.Core.Loc.T("not installed");
             v = Normalize(v);
             return v.Revision > 0 ? v.ToString(4) : v.ToString(3);
         }
