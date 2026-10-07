@@ -138,6 +138,8 @@ namespace KCAccess.Core
             new BindingDef("Beacon", "Target beacon on or off", "Shift+N", BindingScope.Map),
             new BindingDef("ChopMode", "Chop trees mode on or off", "Shift+C", BindingScope.Map),
             new BindingDef("Validity", "While placing: why the spot is valid or not", "V", BindingScope.Map),
+            new BindingDef("StackMore", "Castle blocks: build one more level with each placement", "Shift+PageUp", BindingScope.Map),
+            new BindingDef("StackLess", "Castle blocks: build one level fewer with each placement", "Shift+PageDown", BindingScope.Map),
             new BindingDef("MoveSoldiers", "Send selected soldiers to the cursor", "M", BindingScope.Map),
             new BindingDef("Alert", "Respond to the nearest alert (exclamation mark: advisor news, waiting envoy, stopped cart, ship)", "Ctrl+E", BindingScope.Map),
         };

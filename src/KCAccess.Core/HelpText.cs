@@ -48,6 +48,7 @@ namespace KCAccess.Core
             { "Placement",
                 "Placing a building. Move with the arrow keys, the building follows the cursor and you hear whether the spot is valid. " +
                 "Enter places it. R rotates. {Validity} reads why the spot is invalid. For roads, walls and fields press Shift Enter to mark a start point, move to the end point, then press Enter to build the whole line or area. " +
+                "Castle blocks stack on the blocks already on a tile, and you hear the level; {StackMore} and {StackLess} set how many levels each Enter or line builds. " +
                 "Escape cancels placement." },
             { "Map",
                 "Kingdom map. Arrow keys move the cursor one tile, Shift plus arrows moves 5 tiles, Control plus arrows jumps to where the terrain changes. " +

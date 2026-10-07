@@ -54,6 +54,8 @@ namespace KCAccess.Tests
             Assert.Contains("R rotates", placing);
             Assert.Contains("Shift Enter marks the start", placing);
             Assert.DoesNotContain("build menu", placing);
+            Assert.DoesNotContain("stack", placing);
+            Assert.Contains("Shift Page Up and Shift Page Down set how many levels", KeyHelp.MapHelp(new MapState { Placing = true, CastleBlock = true }));
 
             string plain = KeyHelp.MapHelp(new MapState());
             Assert.DoesNotContain("Delete", plain);   // nothing selected

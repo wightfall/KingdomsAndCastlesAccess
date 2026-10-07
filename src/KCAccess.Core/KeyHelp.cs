@@ -26,6 +26,7 @@ namespace KCAccess.Core
         public bool HasKeep = true;
         public bool Placing;
         public bool LinePlacement;    // roads, walls, fields
+        public bool CastleBlock;      // placing a castle block (stackable)
         public bool CursorMode;       // chop / demolish / rebuild ...
         public bool RouteMode;        // editing a ship or cart route (its panel is open)
         public bool Brush;            // creative mode brush
@@ -154,6 +155,7 @@ namespace KCAccess.Core
                 K("Shift Enter", "for roads, walls and fields: mark the start, Enter at the end builds the line or area"),
                 K("R", "rotate"),
                 K("{Validity}", "why the spot is valid or not"),
+                K("{StackMore} and {StackLess}", "castle blocks: build more or fewer levels on top of each other with each Enter or line"),
                 K("Escape", "stop placing")),
             new KeySection("Build menu",
                 K("Left and Right arrows", "category"),
@@ -217,6 +219,7 @@ namespace KCAccess.Core
             {
                 p.Add("Placing a building. Arrow keys move it and you hear whether the spot is valid. Enter builds here, R rotates, {Validity} says why the spot is valid or not");
                 if (s.LinePlacement) p.Add("Shift Enter marks the start of a line or area, move to the end, then Enter builds all of it");
+                if (s.CastleBlock) p.Add("Castle blocks stack: on a tile with blocks the new one goes on top, and you hear its level. {StackMore} and {StackLess} set how many levels each Enter or line builds");
                 p.Add("Escape stops placing");
                 return Resolve(string.Join(". ", p) + ".");
             }

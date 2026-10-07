@@ -17,6 +17,7 @@ namespace KCAccess.Game
         private readonly GridCursor cursor = new GridCursor(1, 1);
         private readonly Scanner scanner = new Scanner();
         internal readonly Navigator Nav = new Navigator();
+        internal readonly CastleStacker Stacker = new CastleStacker();
         private bool initialized;
 
         /// <summary>Exploring the generated map from the map setup screen (Ctrl+M).</summary>
@@ -50,6 +51,7 @@ namespace KCAccess.Game
             {
                 var hover = ui.CurrPlacementMode.GetHoverBuilding();
                 st.LinePlacement = hover != null && hover.dragPlacementMode != Building.DragPlacementMode.None;
+                st.CastleBlock = CastleStacker.IsCastleBlock(hover);
             }
             st.RouteMode = ui.currCursorMode is DockRouteCursorMode;
             st.CursorMode = ui.currCursorMode != null && ui.currCursorMode != ui.consoleCursorMode && !st.RouteMode;
@@ -160,7 +162,10 @@ namespace KCAccess.Game
             hadSelection = false;
             areaStart = null;
             lastValidity = (PlacementValidationResult)(-1);
+            lastLevel = -1;
             validityCheckFrame = -1;
+            Stacker.Stop();
+            Stacker.ClearLine();
             if (GameUI.inst != null)
             {
                 lastCursorMode = GameUI.inst.currCursorMode;
@@ -200,7 +205,8 @@ namespace KCAccess.Game
             if (vp != null)
             {
                 vp.Tick();
-                if (vp.KeyboardActive) vp.Target = CurrentCell != null ? CurrentCell.Center : Vector3.zero;
+                Stacker.Tick();
+                if (vp.KeyboardActive) vp.Target = Stacker.PointerOverride ?? (CurrentCell != null ? CurrentCell.Center : Vector3.zero);
             }
             if (!MenuMapMode) TrackGameState();
 
@@ -305,7 +311,7 @@ namespace KCAccess.Game
             if (vp != null)
             {
                 vp.KeyboardActive = true;
-                vp.Target = c.Center;
+                vp.Target = Stacker.PointerOverride ?? c.Center;
             }
             if (follow && Plugin.CfgCameraFollow.Value && Cam.inst != null) Cam.inst.SetDesiredTrackingPos(c.Center);
         }
@@ -671,6 +677,15 @@ namespace KCAccess.Game
                 SpeakValidity(always: true);
                 return;
             }
+            if (KInput.Pressed("StackMore") || KInput.Pressed("StackLess"))
+            {
+                string said = Stacker.Setting.Change(KInput.Pressed("StackMore") ? 1 : -1);
+                var hover = IsPlacing ? ui.CurrPlacementMode.GetHoverBuilding() : null;
+                if (CastleStacker.IsCastleBlock(hover)) said += ", here " + CastleStack.Where(CastleStacker.BlocksOn(CurrentCell), Stacker.Setting.Levels);
+                else if (!IsPlacing) said += ". It applies when you place stone or wooden walls from the Castle category";
+                A.Say(said, force: true);
+                return;
+            }
             if (KInput.Pressed("Alert"))
             {
                 Alerts.RespondNearest();
@@ -702,10 +717,16 @@ namespace KCAccess.Game
             var vp = VirtualPointer.Inst;
             var cell = CurrentCell;
             UpdatePointer(follow: false);
+            if (Stacker.Active)
+            {
+                Stacker.Interrupt();
+                return;
+            }
             if (IsPlacing)
             {
                 if (vp.IsHeld)
                 {
+                    Stacker.Placing(cursor.Pos, line: true);
                     vp.Release();
                     return;
                 }
@@ -716,6 +737,7 @@ namespace KCAccess.Game
                     A.Say("Cannot build here: " + Explain(result.Value));
                     return;
                 }
+                Stacker.Placing(cursor.Pos, line: false);
                 vp.Click();
                 return;
             }
@@ -753,16 +775,23 @@ namespace KCAccess.Game
             var ui = GameUI.inst;
             var vp = VirtualPointer.Inst;
             UpdatePointer(follow: false);
+            if (Stacker.Active)
+            {
+                Stacker.Interrupt();
+                return;
+            }
             if (IsPlacing)
             {
                 if (!vp.IsHeld)
                 {
+                    Stacker.LineStarted(cursor.Pos);
                     vp.Press();
                     A.Cue(Cue.Open);
                     A.Say("Start point set at " + cursor.Pos + ". Move to the end point and press Enter to build, Escape to cancel.");
                 }
                 else
                 {
+                    Stacker.Placing(cursor.Pos, line: true);
                     vp.Release();
                 }
                 return;
@@ -1100,6 +1129,14 @@ namespace KCAccess.Game
             return null;
         }
 
+        /// <summary>Why the held building cannot go where the pointer is, or null when it can.</summary>
+        internal string InvalidReason()
+        {
+            if (!IsPlacing) return null;
+            var r = CurrentValidity();
+            return r.HasValue && r.Value != PlacementValidationResult.Valid ? Explain(r.Value) : null;
+        }
+
         private string Explain(PlacementValidationResult r)
         {
             string text = PlacementText.Explain(r.ToString());
@@ -1117,6 +1154,7 @@ namespace KCAccess.Game
         }
 
         private string lastPlacedName;
+        private int lastLevel = -1;
         private int targetHints;
         private bool waitingAgainLastFrame;
 
@@ -1126,13 +1164,23 @@ namespace KCAccess.Game
             if (!r.HasValue) return;
             bool changed = r.Value != lastValidity;
             lastValidity = r.Value;
+            // Castle blocks go on top of the blocks already on the tile: say which level (the game only shows it).
+            var held = GameUI.inst.CurrPlacementMode.GetHoverBuilding();
+            string level = null;
+            if (CastleStacker.IsCastleBlock(held))
+            {
+                int below = CastleStacker.BlocksOn(CurrentCell);
+                if (always || changed || below != lastLevel) level = CastleStack.Where(below, Stacker.Setting.Levels);
+                lastLevel = below;
+            }
             if (r.Value == PlacementValidationResult.Valid)
             {
                 A.Cue(Cue.PlaceValid);
                 // Towers: the range rings (which grow on castle walls) are drawn only; V tells them.
-                string range = always ? CellInfo.RangeText(GameUI.inst.CurrPlacementMode.GetHoverBuilding(), placed: true) : null;
-                if (always) A.Say("Can build here" + (range != null ? ", " + range : string.Empty), force: true);
-                else if (changed) A.SayQueued("can build");
+                string range = always ? CellInfo.RangeText(held, placed: true) : null;
+                if (always) A.Say("Can build here" + (level != null ? ", " + level : string.Empty) + (range != null ? ", " + range : string.Empty), force: true);
+                else if (changed) A.SayQueued("can build" + (level != null ? ", " + level : string.Empty));
+                else if (level != null) A.SayQueued(level);
             }
             else
             {
@@ -1176,6 +1224,7 @@ namespace KCAccess.Game
                 {
                     lastHeldName = name;
                     lastValidity = (PlacementValidationResult)(-1);
+                    lastLevel = -1;
                     validityCheckFrame = Time.frameCount + 2;
                     // "Place another" picks the same building up again: the player already knows, stay quiet.
                     bool again = name == lastPlacedName && waitingAgainLastFrame;
@@ -1184,9 +1233,11 @@ namespace KCAccess.Game
                         UpdatePointer(follow: true);
                         string size = hover != null && (hover.size.x > 1 || hover.size.z > 1) ? " The cursor is the south west corner, the building covers " + (int)hover.size.x + " by " + (int)hover.size.z + " tiles." : string.Empty;
                         A.SayQueued("Placing " + name + "." + size + " Move with arrows, Enter to build, R to rotate, Escape to cancel.");
+                        if (CastleStacker.IsCastleBlock(hover) && Stacker.Setting.Levels > 1)
+                            A.SayQueued(KeyHelp.Resolve(TextUtil.Plural(Stacker.Setting.Levels, "level") + " with each placement; {StackMore} and {StackLess} change it."));
                     }
                 }
-                if (validityCheckFrame > 0 && Time.frameCount >= validityCheckFrame)
+                if (validityCheckFrame > 0 && Time.frameCount >= validityCheckFrame && !Stacker.Active)
                 {
                     validityCheckFrame = -1;
                     SpeakValidity(always: false);
@@ -1194,6 +1245,7 @@ namespace KCAccess.Game
             }
             else if (wasPlacing)
             {
+                if (!ui.WaitingToPlaceAgain()) Stacker.ClearLine();
                 var vp = VirtualPointer.Inst;
                 if (vp != null && vp.IsHeld) vp.Release();
                 if (Time.unscaledTime - placedSayTime > 0.3f && !ui.WaitingToPlaceAgain())
@@ -1233,9 +1285,10 @@ namespace KCAccess.Game
         internal void OnPlacementAccepted(bool success, string name, int pieces, string skipped = null)
         {
             placedSayTime = Time.unscaledTime;
+            if (success && pieces > 0) lastPlacedName = name;
+            if (Stacker.OnAccepted(success, name, pieces, skipped)) return;
             if (success && pieces > 0)
             {
-                lastPlacedName = name;
                 A.Cue(Cue.Placed);
                 string what = pieces > 1 ? name + ", " + pieces + " pieces" : name;
                 if (skipped != null) what += ", " + skipped;
