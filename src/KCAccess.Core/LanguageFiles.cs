@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -121,45 +121,75 @@ namespace KCAccess.Core
         }
 
         /// <summary>
-        /// Three-way merge of the player's file with a new shipped file. Keys missing in the player's file are appended;
-        /// a translation the player never changed (still equal to <paramref name="previousShipped"/>, or blank) takes the
-        /// new shipped translation; translations the player changed are kept, and so are comments, order and the player's
-        /// own keys. Returns <paramref name="user"/> unchanged when there is nothing to do.
+        /// Three-way merge of the player's file with a new shipped file. The result follows the shipped file's layout
+        /// (its sections and order), so texts a mod update adds sit in their proper section. A translation the player
+        /// never changed (still equal to <paramref name="previousShipped"/>, or blank when there is no previous file)
+        /// takes the new shipped one; translations the player changed are kept. The player's own lines and comments
+        /// that the shipped file does not have are kept in a section at the end. Returns <paramref name="user"/>
+        /// unchanged when there is nothing to do.
         /// </summary>
         public static string Merge(string user, string shipped, string previousShipped)
         {
-            var newer = LocTable.Parse(shipped);
+            var mine = LocTable.Parse(user ?? string.Empty);
             var old = previousShipped != null ? LocTable.Parse(previousShipped) : null;
-            var lines = LocTable.SplitLines(user ?? string.Empty);
             bool bom = !string.IsNullOrEmpty(user) && user[0] == '﻿';
-            var seen = new HashSet<string>(StringComparer.Ordinal);
-            bool changed = false;
-            for (int i = 0; i < lines.Count; i++)
+            var lines = new List<string>();
+            var known = new HashSet<string>(StringComparer.Ordinal);
+            var shippedComments = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var line in LocTable.SplitLines((shipped ?? string.Empty).TrimStart('﻿')))
             {
-                if (!LocTable.TrySplit(lines[i], out var key, out var value)) continue;
-                seen.Add(key);
-                string fresh = newer.Raw(key);
-                if (fresh == null || fresh == value) continue;
-                // The player's own translation wins; without a previous shipped file only blank translations are filled.
-                string before = old != null ? old.Raw(key) ?? string.Empty : string.Empty;
-                if (value != before) continue;
-                lines[i] = LocTable.Line(key, fresh);
-                changed = true;
+                if (!LocTable.TrySplit(line, out var key, out var fresh))
+                {
+                    lines.Add(line);
+                    shippedComments.Add(line.Trim());
+                    continue;
+                }
+                known.Add(key);
+                string have = mine.Raw(key);
+                string value = fresh;
+                if (have != null)
+                {
+                    bool changedByPlayer = old != null ? have != (old.Raw(key) ?? string.Empty) : have.Length > 0;
+                    if (changedByPlayer) value = have;
+                }
+                lines.Add(LocTable.Line(key, value));
             }
-            var added = new List<string>();
-            foreach (var key in newer.Keys)
-                if (!seen.Contains(key)) added.Add(LocTable.Line(key, newer.Raw(key)));
-            if (added.Count > 0)
+            // The player's own lines: keys this version does not ship, and comments they wrote.
+            var own = new List<string>();
+            foreach (var line in LocTable.SplitLines((user ?? string.Empty).TrimStart('﻿')))
+            {
+                string t = line.Trim();
+                if (LocTable.TrySplit(line, out var key, out _))
+                {
+                    if (!known.Contains(key)) own.Add(line);
+                }
+                else if (t.StartsWith("#", StringComparison.Ordinal) && !shippedComments.Contains(t) && !IsGeneratedComment(t)) own.Add(line);
+            }
+            if (own.Count > 0)
             {
                 while (lines.Count > 0 && lines[lines.Count - 1].Trim().Length == 0) lines.RemoveAt(lines.Count - 1);
                 lines.Add(string.Empty);
-                lines.Add("# Texts added by a mod update:");
-                lines.AddRange(added);
-                lines.Add(string.Empty);
-                changed = true;
+                lines.Add(OwnSection);
+                lines.AddRange(own);
             }
-            if (!changed) return user;
-            return (bom ? "﻿" : string.Empty) + string.Join("\r\n", lines.ToArray());
+            string result = string.Join("\r\n", lines.ToArray());
+            if (Normalize(result) == Normalize(user)) return user;
+            return (bom ? "﻿" : string.Empty) + result;
+        }
+
+        public const string OwnSection = "# ===== Your own lines (kept by mod updates) =====";
+
+        /// <summary>Comments the mod itself wrote (sections, update markers of older versions, the header).</summary>
+        private static bool IsGeneratedComment(string t) =>
+            t == OwnSection || t.StartsWith("# Language:", StringComparison.Ordinal) || t.StartsWith("# Game language:", StringComparison.Ordinal)
+            || t.StartsWith("# =====", StringComparison.Ordinal) || t.StartsWith("# src/", StringComparison.Ordinal)
+            || t == "# Texts added by a mod update:";
+
+        private static string Normalize(string s)
+        {
+            var parts = LocTable.SplitLines((s ?? string.Empty).TrimStart('﻿'));
+            while (parts.Count > 0 && parts[parts.Count - 1].Trim().Length == 0) parts.RemoveAt(parts.Count - 1);
+            return string.Join("\n", parts.ToArray());
         }
 
         /// <summary>Every language file the player can choose (not the template), sorted by name.</summary>

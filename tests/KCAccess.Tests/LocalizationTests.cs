@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -50,10 +50,43 @@ namespace KCAccess.Tests
             foreach (var file in SourceFiles())
             {
                 string rel = file.Substring(root.Length + 1).Replace('\\', '/');
+                string category = Category(rel);
                 foreach (var key in ExtractFrom(StripComments(File.ReadAllText(file))))
-                    if (seen.Add(key)) result.Add(new KeyValuePair<string, string>(rel, key));
+                    if (seen.Add(key)) result.Add(new KeyValuePair<string, string>(category, key));
             }
-            return result;
+            // Group by category in the order players meet them (stable: source order inside a category).
+            var ordered = new List<KeyValuePair<string, string>>();
+            foreach (var c in Categories)
+                foreach (var kv in result)
+                    if (kv.Key == c[0]) ordered.Add(kv);
+            foreach (var kv in result)
+                if (!Array.Exists(Categories, c => c[0] == kv.Key)) ordered.Add(kv);
+            return ordered;
+        }
+
+        /// <summary>Section names of the language files (what a translator looks for) and the source files in them.</summary>
+        public static readonly string[][] Categories =
+        {
+            new[] { "Speech, screens and menus", "AccessController", "UINavigator", "UIText", "Special", "ScreenDetector", "GameScreens", "ListMenu", "NavList", "TextUtil", "SteamOverlay", "Diagnostics", "DialoguePatches", "Plugin", "KeyboardGuard", "OsKeyboard" },
+            new[] { "Help and key lists", "HelpText", "KeyHelp", "KeysMenu", "Bindings" },
+            new[] { "Mod settings, languages and sound cues", "ModSettingsMenu", "ModLanguage", "Cues", "AudioCues" },
+            new[] { "Map, tiles and cursor", "MapController", "CellInfo", "AreaSurvey", "GridMath", "ResourceNames", "VirtualPointer" },
+            new[] { "Scanner, navigation and problems", "Scanner", "Navigator", "Navigation", "Problems", "Alerts", "Thoughts" },
+            new[] { "Building and castle walls", "BuildMenu", "PlacementText", "CastleStacker", "CastleStack" },
+            new[] { "Kingdom status, notifications and events", "StatusMenu", "GameEvents", "NotificationLog", "LogBrowser", "GamePatches" },
+            new[] { "Army, ships, carts, routes and diplomacy", "UnitText", "Routes", "Diplomacy" },
+            new[] { "Controller", "ControllerMap", "ControllerInput" },
+            new[] { "Streaming and Twitch", "Streaming" },
+            new[] { "Setup program", "KCAccess.Installer/" },
+        };
+
+        public static string Category(string relPath)
+        {
+            string name = Path.GetFileNameWithoutExtension(relPath);
+            foreach (var c in Categories)
+                for (int i = 1; i < c.Length; i++)
+                    if (c[i].EndsWith("/") ? relPath.Contains(c[i]) : name == c[i]) return c[0];
+            return "Other";
         }
 
         /// <summary>Removes whole-line // and /// comments (examples in documentation are not texts).</summary>
@@ -216,7 +249,7 @@ namespace KCAccess.Tests
                 if (kv.Key != file)
                 {
                     file = kv.Key;
-                    sb.Append("\r\n# ").Append(file).Append("\r\n");
+                    sb.Append("\r\n# ===== ").Append(file).Append(" =====\r\n");
                 }
                 sb.Append(LocTable.Line(kv.Value, value(kv.Value))).Append("\r\n");
             }
@@ -471,6 +504,19 @@ namespace KCAccess.Tests
             Assert.Equal("mine", merged.Raw("A"));
             Assert.Equal("neu {0}", merged.Raw("New {0}"));
             Assert.True(text.IndexOf("A = mine", StringComparison.Ordinal) < text.IndexOf("New {0}", StringComparison.Ordinal));
+        }
+
+        [Fact]
+        public void OldAppendedBlocksMoveIntoTheShippedSections()
+        {
+            string user = "# Language: X\n# src/KCAccess/Game/Map.cs\nA = mine\n\n# Texts added by a mod update:\nB = b1\n";
+            string shipped = "# Language: X\n\n# ===== Map =====\nA = a1\nB = b1\n\n# ===== Build =====\nC = c1\n";
+            string text = LanguageFiles.Merge(user, shipped, "# Language: X\nA = a1\nB = b1\n");
+            Assert.DoesNotContain("Texts added by a mod update", text);
+            Assert.DoesNotContain("# src/", text);
+            Assert.True(text.IndexOf("# ===== Build =====", StringComparison.Ordinal) < text.IndexOf("C = c1", StringComparison.Ordinal));
+            Assert.Equal("mine", LocTable.Parse(text).Raw("A"));
+            Assert.DoesNotContain(LanguageFiles.OwnSection, text);
         }
 
         [Fact]
