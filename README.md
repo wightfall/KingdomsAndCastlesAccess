@@ -136,6 +136,7 @@ mouse drag), Left / Right change how many workers are allowed.
 | Alt+1 … 9 | Make a bookmark the navigation target |
 | Any arrow / Escape | Stop an auto-walk |
 | V | While placing: why the spot is (in)valid; for towers also their shooting range, which grows with every castle level they stand on |
+| Shift+Page Up / Shift+Page Down | Castle blocks (stone and wooden walls): build more / fewer levels on top of each other with each Enter or Shift+Enter line (1 to 10). The mod repeats the placement at the same tiles until the levels are built or the game refuses (for example wooden walls reach their height limit), then says how many levels and pieces were built. Enter or Escape stops early |
 | M | Send the selected soldiers (also siege catapults and your dragons) to the cursor; on a route stop in a ship or cart panel: move the stop to the cursor |
 | Ctrl+E | Respond to the nearest alert (the game's exclamation marks): advisor news at the keep, a foreign envoy waiting to speak, a stopped transport cart, a ship needing orders |
 

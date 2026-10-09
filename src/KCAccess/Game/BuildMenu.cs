@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Assets.Code;
 using KCAccess.Core;
 using UnityEngine;
@@ -251,7 +251,7 @@ namespace KCAccess.Game
             return TextUtil.Join(", ", parts);
         }
 
-        private static string CostText(Building building, int lm)
+        internal static string CostText(Building building, int lm)
         {
             ResourceAmount cost = building.GetCost(Player.inst.PlayerLandmassOwner);
             ResourceAmount have = BuildInfoFloating.GetResourceAvailableForBuilding(lm, building);
