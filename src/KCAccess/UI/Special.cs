@@ -390,6 +390,34 @@ namespace KCAccess.UI
                 return Loc.T("Choose banner, button");
             if (item.IsControl && StreamerUI.inst != null && item.Go.transform.IsChildOf(StreamerUI.inst.transform) && UIText.LabelOf(item.Control) == "Toggle Visible")
                 return Game.Twitch.SettingsVisible ? Loc.T("Hide the Twitch voting settings, button") : Loc.T("Show the Twitch voting settings, button");
+            // Route panel: the run / pause toggles have no text (the status next to them, "Waiting", was read as their name),
+            // and the cycle slider's value is only shown as text ("as fast as possible", "every 2 years").
+            var route = GameUI.inst != null ? GameUI.inst.shipLogisticsUI : null;
+            if (route != null && route.gameObject.activeInHierarchy && item.Control != null)
+            {
+                string status = route.statusText != null ? TextUtil.Clean(UIText.TextOf(route.statusText)) : string.Empty;
+                if (item.Control == route.play || item.Control == route.pause)
+                {
+                    var tg = (Toggle)item.Control;
+                    string name = item.Control == route.play ? Loc.T("Run the route") : Loc.T("Pause the route");
+                    return name + ", " + Loc.T("radio button") + ", " + (tg.isOn ? Loc.T("selected") : Loc.T("not selected"))
+                        + (TextUtil.HasContent(status) ? ". " + Loc.F("Now: {0}", status) : string.Empty);
+                }
+                if (item.Control == route.routeCycleSlider && route.routeEveryYearsText != null)
+                    return Loc.F("Run this route: {0}, slider. Left and Right change it", TextUtil.Clean(UIText.TextOf(route.routeEveryYearsText)));
+            }
+            // Army panel stance buttons have no text of their own; their name is the start of the tooltip
+            // ("Hold Stance: Unit will remain stationary ...").
+            if (item.Control is Toggle stance && UnitUI.inst != null
+                && (stance == UnitUI.inst.unitAttackBehaviorHold || stance == UnitUI.inst.unitAttackBehaviorAttack || stance == UnitUI.inst.unitAttackBehaviorPursue))
+            {
+                string tip = UIText.TooltipOf(item.Go) ?? string.Empty;
+                int colon = tip.IndexOf(':');
+                string name = colon > 0 ? tip.Substring(0, colon).Trim() : tip;
+                if (name.Length == 0)
+                    name = stance == UnitUI.inst.unitAttackBehaviorHold ? Loc.T("Hold stance") : stance == UnitUI.inst.unitAttackBehaviorAttack ? Loc.T("Attack stance") : Loc.T("Pursue stance");
+                return name + ", " + Loc.T("radio button") + ", " + (stance.isOn ? Loc.T("selected") : Loc.T("not selected")); // the navigator adds the tooltip
+            }
             // Kingdom overview: the island name field is greyed out until its Edit button is pressed.
             var region = item.IsControl ? item.Go.GetComponentInParent<RegionNameUI>() : null;
             if (region != null && region.regionNameInput != null && item.Go == region.regionNameInput.gameObject)

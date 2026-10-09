@@ -1,4 +1,4 @@
-using Assets.Code;
+﻿using Assets.Code;
 using Assets;
 using System.Collections.Generic;
 using KCAccess.Core;
@@ -1081,6 +1081,14 @@ namespace KCAccess.Game
         private static GridPos? NearestCoveredFreeTile(GridPos at, int maxRadius)
         {
             var w = World.inst;
+            // Same rule as World.IsTouchingTerritory: roads need road-connect coverage, everything else road coverage,
+            // on every tile the building covers (the cursor is its south west corner).
+            var pending = GameUI.inst != null && GameUI.inst.CurrPlacementMode != null ? GameUI.inst.CurrPlacementMode.GetHoverBuilding() : null;
+            bool path = pending != null && pending.CategoryName == "path" && pending.UniqueName != "garden";
+            int sx = pending != null ? Mathf.Max(1, Mathf.RoundToInt(pending.size.x)) : 1;
+            int sz = pending != null ? Mathf.Max(1, Mathf.RoundToInt(pending.size.z)) : 1;
+            bool rotated = pending != null && Mathf.RoundToInt(pending.transform.eulerAngles.y / 90f) % 2 != 0;
+            if (rotated) { int t = sx; sx = sz; sz = t; }
             for (int r = 1; r <= maxRadius; r++)
             {
                 GridPos? best = null;
@@ -1090,8 +1098,16 @@ namespace KCAccess.Game
                     {
                         if (Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dz)) != r) continue;
                         var c = w.GetCellData(at.X + dx, at.Z + dz);
-                        if (c == null || c.Type != ResourceType.None || c.TreeAmount > 0 || c.OccupyingStructure.Count > 0) continue;
-                        if (c.RoadCoverage <= 0 && c.RoadConnectCoverage <= 0) continue;
+                        if (c == null) continue;
+                        bool ok = true;
+                        for (int fx = 0; fx < sx && ok; fx++)
+                            for (int fz = 0; fz < sz && ok; fz++)
+                            {
+                                var f = w.GetCellData(c.x + fx, c.z + fz);
+                                ok = f != null && f.Type == ResourceType.None && f.TreeAmount <= 0 && f.OccupyingStructure.Count == 0
+                                    && (path ? f.RoadConnectCoverage > 0 : f.RoadCoverage > 0);
+                            }
+                        if (!ok) continue;
                         var p = new GridPos(c.x, c.z);
                         double d = Directions.Euclid(at, p);
                         if (d < bestD) { bestD = d; best = p; }
