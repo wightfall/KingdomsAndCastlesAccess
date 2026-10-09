@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using KCAccess.Core;
 using UnityEngine;
 using UnityEngine.UI;
@@ -334,6 +334,33 @@ namespace KCAccess.UI
         }
 
         /// <summary>Custom spoken description, or null to use the default.</summary>
+        /// <summary>The language list's entry for a game language (labels are native names: "Deutsch, ( German )").</summary>
+        private static Button LanguageButton(ChangeLanguage cl, string i2Name)
+        {
+            switch (i2Name)
+            {
+                case "English": return cl.englishButton;
+                case "German": return cl.germanButton;
+                case "French": return cl.frenchButton;
+                case "Simplified Chinese": return cl.sChineseButton;
+                case "Traditional Chinese": return cl.tChineseButton;
+                case "Dutch": return cl.dutchButton;
+                case "Japanese": return cl.japeneseButton;
+                case "Romanian": return cl.romanianButton;
+                case "Portuguese (Brazil)": return cl.brazilianPortugueseButton;
+                case "Spanish": return cl.spanishButton;
+                case "Korean": return cl.koreanButton;
+                case "Italian": return cl.italianButton;
+                case "Polish": return cl.polishButton;
+                case "Russian": return cl.russianButton;
+                case "Norwegian": return cl.norwegianButton;
+                case "Ukrainian": return cl.ukrainianButton;
+                case "Swedish": return cl.swedishButton;
+                case "Turkish": return cl.turkishButton;
+                default: return null;
+            }
+        }
+
         internal static string Describe(UIItem item)
         {
             if (item == null || item.Go == null) return null;
@@ -363,6 +390,16 @@ namespace KCAccess.UI
                 return Loc.T("Choose banner, button");
             if (item.IsControl && StreamerUI.inst != null && item.Go.transform.IsChildOf(StreamerUI.inst.transform) && UIText.LabelOf(item.Control) == "Toggle Visible")
                 return Game.Twitch.SettingsVisible ? Loc.T("Hide the Twitch voting settings, button") : Loc.T("Show the Twitch voting settings, button");
+            // Kingdom overview: the island name field is greyed out until its Edit button is pressed.
+            var region = item.IsControl ? item.Go.GetComponentInParent<RegionNameUI>() : null;
+            if (region != null && region.regionNameInput != null && item.Go == region.regionNameInput.gameObject)
+            {
+                string name = TextUtil.Clean(region.regionNameInput.text);
+                if (region.regionNameInput.interactable) return Loc.F("Island name, edit, {0}", name);
+                return Loc.F("Island name: {0}", name) + (region.editButton != null && region.editButton.gameObject.activeInHierarchy ? ". " + Loc.T("The next button renames it") : string.Empty);
+            }
+            if (region != null && region.editButton != null && item.Go == region.editButton.gameObject)
+                return Loc.T("Rename island, button");
             if (item.IsControl && item.Go.GetComponent<ChangeLanguage>() is ChangeLanguage cl)
                 return Loc.F("Language: {0}, button, Enter opens the list", TextUtil.Clean(UIText.TextOf(cl.languageButtonText)))
                        + (ModLanguage.ActiveModOnly ? ". " + Loc.F("Screen reader language: {0}", ModLanguage.ActiveName) : string.Empty);
@@ -540,8 +577,10 @@ namespace KCAccess.UI
                 var list = lang.dropdownList.transform;
                 A.Cue(Cue.Open);
                 A.Say(Loc.T("Language list. Up and Down choose, Enter switches the game to that language. Languages marked screen reader only change only what the mod says."), force: true);
+                var currentButton = LanguageButton(lang, current);
                 nav.RequestFocus(g => g.transform.IsChildOf(list) && g.GetComponent<Button>() != null
-                    && (modButton != null ? g.name == modButton : UIText.LabelOf(g.GetComponent<Button>()).StartsWith(current)));
+                    && (modButton != null ? g.name == modButton
+                        : currentButton != null ? g == currentButton.gameObject : UIText.LabelOf(g.GetComponent<Button>()).StartsWith(current)));
                 return true;
             }
             var keyBtn = item.IsControl ? item.Go.GetComponentInParent<KeyButton>() : null;

@@ -296,6 +296,7 @@ namespace KCAccess
             }
             if (next.SameAs(modal))
             {
+                modal.Title = next.Title; // the mod language may have changed since the screen opened
                 if (Nav.Root == null) Nav.SetRoot(next.Root, next.Title, announce: false); // recover a cleared navigator
                 return;
             }
