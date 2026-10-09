@@ -80,10 +80,19 @@ namespace KCAccess.UI
             return false;
         }
 
+        /// <summary>Name of a great library technology in the game's language (the research window's term "SU_" + upgrade).</summary>
+        internal static string UpgradeName(Player.UpgradeType upgrade)
+        {
+            string id = upgrade.ToString();
+            string t = null;
+            try { t = I2.Loc.LocalizationManager.GetTranslation("SU_" + id); } catch { }
+            return TextUtil.HasContent(t) ? TextUtil.Clean(t) : TextUtil.Humanize(id);
+        }
+
         private static string ResearchDescription(Transform row, Player.UpgradeType upgrade)
         {
             string name = TextUtil.Clean(UIText.TextOf(row.GetChild(0).GetComponent<TMPro.TMP_Text>()));
-            if (string.IsNullOrEmpty(name)) name = TextUtil.Humanize(upgrade.ToString());
+            if (string.IsNullOrEmpty(name)) name = UpgradeName(upgrade);
             if (row.childCount > 3 && row.GetChild(3).gameObject.activeSelf) return name + ", " + Loc.T("already researched");
             var b = GameUI.inst.GetBuildingSelected();
             var lib = b != null ? b.GetComponent<GreatLibrary>() : null;

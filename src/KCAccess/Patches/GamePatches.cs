@@ -321,6 +321,70 @@ namespace KCAccess
 
 namespace KCAccess
 {
+    /// <summary>
+    /// Finished research at the great library only changed the research window (if it was open): say what was learned.
+    /// </summary>
+    [HarmonyPatch(typeof(GreatLibrary), nameof(GreatLibrary.Tick))]
+    internal static class Patch_ResearchDone
+    {
+        private static void Prefix(GreatLibrary __instance, out Player.UpgradeType __state) => __state = __instance.research;
+
+        private static void Postfix(GreatLibrary __instance, Player.UpgradeType __state)
+        {
+            // Cancelling happens elsewhere (CancelResearch), so here a research that ended was completed.
+            if (__state == Player.UpgradeType.None || __instance.research != Player.UpgradeType.None) return;
+            try
+            {
+                var b = __instance.GetComponent<Building>();
+                if (b == null || b.TeamID() != 0) return;
+                var cell = b.GetCell();
+                GameEvents.OnDone(KCAccess.Core.Loc.F("Research complete: {0}", KCAccess.UI.Special.UpgradeName(__state)),
+                    cell != null ? new KCAccess.Core.GridPos(cell.x, cell.z) : (KCAccess.Core.GridPos?)null);
+            }
+            catch (Exception e)
+            {
+                Plugin.Log.LogWarning("Research announcement failed: " + e.Message);
+            }
+        }
+    }
+
+    /// <summary>A barracks, archery range, siege workshop or keep finished a unit with only a sound effect: say it.</summary>
+    [HarmonyPatch(typeof(Barracks), nameof(Barracks.Tick))]
+    internal static class Patch_TrainingDone
+    {
+        private static void Prefix(Barracks __instance, out bool __state) => __state = __instance.training;
+
+        private static void Postfix(Barracks __instance, bool __state)
+        {
+            // Inside Tick, training only ends when the unit is complete (cancelling is CancelTraining).
+            if (!__state || __instance.training) return;
+            try
+            {
+                var b = __instance.GetComponent<Building>();
+                if (b == null || b.TeamID() != 0) return;
+                string unit;
+                switch (__instance.typeToMake)
+                {
+                    case Barracks.TypeToMake.Archers: unit = KCAccess.Core.Loc.T("archers"); break;
+                    case Barracks.TypeToMake.Envoy: unit = KCAccess.Core.Loc.T("envoy"); break;
+                    case Barracks.TypeToMake.Settler: unit = KCAccess.Core.Loc.T("settlers"); break;
+                    case Barracks.TypeToMake.Catapult: unit = KCAccess.Core.Loc.T("siege catapult"); break;
+                    default: unit = KCAccess.Core.Loc.T("soldiers"); break;
+                }
+                var cell = b.GetCell();
+                GameEvents.OnDone(KCAccess.Core.Loc.F("{0} ready at the {1}", KCAccess.Core.TextUtil.Capitalize(unit), b.FriendlyName),
+                    cell != null ? new KCAccess.Core.GridPos(cell.x, cell.z) : (KCAccess.Core.GridPos?)null);
+            }
+            catch (Exception e)
+            {
+                Plugin.Log.LogWarning("Training announcement failed: " + e.Message);
+            }
+        }
+    }
+}
+
+namespace KCAccess
+{
     /// <summary>Kingdom share (tourism) messages and share codes pop up over the screen without taking focus.</summary>
     [HarmonyPatch]
     internal static class Patch_TourismPopup

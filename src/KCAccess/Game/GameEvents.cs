@@ -18,6 +18,8 @@ namespace KCAccess.Game
         {
             lastSeason = null;
             lastSpeed = -1;
+            lastRaid = null;
+            lastDragonAttack = null;
             // Coming back from the pause menu (or save / settings / banner screens) is just a resume.
             var st = GameState.inst.mainMenuMode.GetState();
             bool freshWorld = st == MainMenuMode.State.NewMap || st == MainMenuMode.State.Load || st == MainMenuMode.State.Menu
@@ -34,9 +36,11 @@ namespace KCAccess.Game
         }
 
         private static Weather.WeatherType? lastWeather;
+        private static bool? lastRaid, lastDragonAttack;
 
         internal static void Tick()
         {
+            TrackAttacks();
             if (Weather.inst != null)
             {
                 var s = Weather.inst.season;
@@ -74,6 +78,27 @@ namespace KCAccess.Game
             }
         }
 
+        /// <summary>
+        /// The start of a viking raid or dragon attack has a banner (Patch_VikingBanner / Patch_DragonBanner), but its end
+        /// was only the battle music stopping: say when the last raider or attacking dragon is gone.
+        /// </summary>
+        private static void TrackAttacks()
+        {
+            try
+            {
+                bool raid = RaiderSystem.inst != null && RaiderSystem.inst.IsRaidInProgress();
+                if (lastRaid == true && !raid && Plugin.CfgAnnounceLog.Value) OnInfo(Loc.T("The viking raid is over."));
+                lastRaid = raid;
+                bool dragons = DragonSpawn.inst != null && DragonSpawn.inst.IsAttackInProgress();
+                if (lastDragonAttack == true && !dragons && Plugin.CfgAnnounceLog.Value) OnInfo(Loc.T("The dragon attack is over."));
+                lastDragonAttack = dragons;
+            }
+            catch (System.Exception)
+            {
+                // announcement only
+            }
+        }
+
         internal static void OnNotification(string id, string message, KingdomLog.LogStatus status, Vector3? pos)
         {
             if (id == "streamervote")
@@ -90,7 +115,8 @@ namespace KCAccess.Game
             int year = Player.inst != null ? Player.inst.CurrYear : 0;
             var n = Log.Add(message, sev, year, where);
             if (!Plugin.CfgAnnounceLog.Value || GameState.inst == null || !GameState.inst.IsPlayMode()) return;
-            if (!Plugin.CfgAnnounceSeasons.Value && System.Text.RegularExpressions.Regex.IsMatch(message ?? "", @"^\s*Year \d+\s*$")) return; // "Year 74" banners
+            // The new year banner ("Year 74", in the game's language) follows the seasons setting.
+            if (!Plugin.CfgAnnounceSeasons.Value && id == "year") return;
             A.Cue(sev == Severity.Danger ? Cue.Alert : (sev == Severity.Warning ? Cue.Error : Cue.Notify));
             A.SayQueued(n.Text + (where.HasValue ? ", " + Directions.Relative(MapController.Inst.CursorPos, where.Value) : string.Empty));
         }
@@ -100,6 +126,15 @@ namespace KCAccess.Game
             Log.Add(text, Severity.Danger, Player.inst != null ? Player.inst.CurrYear : 0);
             A.Cue(Cue.Alert);
             A.Say(text + " " + KCAccess.Core.KeyHelp.Resolve(Loc.T("{NextCategory} to the Threats category, then {NextItem} picks the nearest, {JumpTarget} jumps there.")), Priority.High);
+        }
+
+        /// <summary>Something the player started is finished (research, a trained unit); spoken with where it happened.</summary>
+        internal static void OnDone(string text, GridPos? where)
+        {
+            Log.Add(text, Severity.Info, Player.inst != null ? Player.inst.CurrYear : 0, where);
+            if (!Plugin.CfgAnnounceLog.Value) return;
+            A.Cue(Cue.Notify);
+            A.SayQueued(text + (where.HasValue ? ", " + Directions.Relative(MapController.Inst.CursorPos, where.Value) : string.Empty));
         }
 
         internal static void OnInfo(string text)
