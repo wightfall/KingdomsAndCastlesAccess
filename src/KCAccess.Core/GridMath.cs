@@ -91,28 +91,28 @@ namespace KCAccess.Core
 
     public static class Directions
     {
-        private static readonly string[] Names8 = { "north", "north east", "east", "south east", "south", "south west", "west", "north west" };
+        private static readonly string[] Names8 = { Loc.N("north"), Loc.N("north east"), Loc.N("east"), Loc.N("south east"), Loc.N("south"), Loc.N("south west"), Loc.N("west"), Loc.N("north west") };
 
         /// <summary>Compass name of the vector (dx east, dz north).</summary>
         public static string Compass8(int dx, int dz)
         {
-            if (dx == 0 && dz == 0) return "here";
+            if (dx == 0 && dz == 0) return Loc.T("here");
             double angle = Math.Atan2(dx, dz) * 180.0 / Math.PI; // 0 = north, 90 = east
             if (angle < 0) angle += 360.0;
             int idx = (int)Math.Round(angle / 45.0) % 8;
-            return Names8[idx];
+            return Loc.T(Names8[idx]);
         }
 
         /// <summary>"3 north, 2 east" style description of an offset.</summary>
         public static string Offset(int dx, int dz)
         {
-            if (dx == 0 && dz == 0) return "here";
+            if (dx == 0 && dz == 0) return Loc.T("here");
             var sb = new StringBuilder();
-            if (dz != 0) sb.Append(Math.Abs(dz)).Append(dz > 0 ? " north" : " south");
+            if (dz != 0) sb.Append(dz > 0 ? Loc.F("{0} north", Math.Abs(dz)) : Loc.F("{0} south", Math.Abs(dz)));
             if (dx != 0)
             {
                 if (sb.Length > 0) sb.Append(", ");
-                sb.Append(Math.Abs(dx)).Append(dx > 0 ? " east" : " west");
+                sb.Append(dx > 0 ? Loc.F("{0} east", Math.Abs(dx)) : Loc.F("{0} west", Math.Abs(dx)));
             }
             return sb.ToString();
         }
@@ -130,9 +130,9 @@ namespace KCAccess.Core
         public static string Relative(GridPos from, GridPos to)
         {
             int dx = to.X - from.X, dz = to.Z - from.Z;
-            if (dx == 0 && dz == 0) return "at the cursor";
+            if (dx == 0 && dz == 0) return Loc.T("at the cursor");
             int d = Distance(from, to);
-            return TextUtil.Plural(d, "tile") + " " + Compass8(dx, dz) + ", " + Offset(dx, dz);
+            return Loc.P(d, "{0} tile {1}", "{0} tiles {1}", Compass8(dx, dz)) + ", " + Offset(dx, dz);
         }
 
         /// <summary>Sorts positions by distance from origin (nearest first), stable by Z then X.</summary>

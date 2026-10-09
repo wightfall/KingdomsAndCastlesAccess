@@ -51,7 +51,7 @@ namespace KCAccess.Game
 
         internal string Describe(GridPos from)
         {
-            if (!Target.HasValue) return KCAccess.Core.KeyHelp.Resolve("No target. Choose one with {PrevCategory}, {NextCategory} and {PrevItem} or {NextItem}.");
+            if (!Target.HasValue) return KCAccess.Core.KeyHelp.Resolve(Loc.T("No target. Choose one with {PrevCategory}, {NextCategory} and {PrevItem} or {NextItem}."));
             return TargetLabel + ", " + Directions.Relative(from, Target.Value);
         }
 
@@ -60,13 +60,13 @@ namespace KCAccess.Game
             if (!Target.HasValue)
             {
                 A.Cue(Cue.Error);
-                A.Say(KCAccess.Core.KeyHelp.Resolve("No target for the beacon. Choose one with {PrevCategory}, {NextCategory} and {PrevItem} or {NextItem}."));
+                A.Say(KCAccess.Core.KeyHelp.Resolve(Loc.T("No target for the beacon. Choose one with {PrevCategory}, {NextCategory} and {PrevItem} or {NextItem}.")));
                 return;
             }
             BeaconOn = !BeaconOn;
             arrivedAnnounced = false;
             nextPing = 0f;
-            A.Say(BeaconOn ? "Beacon on. " + Describe(from) + ". Higher pitch means north, lower means south, left and right ear give west and east, faster pings mean closer." : "Beacon off", force: true);
+            A.Say(BeaconOn ? Loc.F("Beacon on. {0}. Higher pitch means north, lower means south, left and right ear give west and east, faster pings mean closer.", Describe(from)) : Loc.T("Beacon off"), force: true);
         }
 
         /// <summary>Called every frame on the map.</summary>
@@ -99,14 +99,14 @@ namespace KCAccess.Game
             if (!Target.HasValue)
             {
                 A.Cue(Cue.Error);
-                A.Say(KCAccess.Core.KeyHelp.Resolve("No target. Choose one with {PrevCategory}, {NextCategory} and {PrevItem} or {NextItem}."));
+                A.Say(KCAccess.Core.KeyHelp.Resolve(Loc.T("No target. Choose one with {PrevCategory}, {NextCategory} and {PrevItem} or {NextItem}.")));
                 return;
             }
             var from = map.CursorPos;
             var to = Target.Value;
             if (from == to)
             {
-                A.Say("Already at " + TargetLabel);
+                A.Say(Loc.F("Already at {0}", TargetLabel));
                 return;
             }
             List<GridPos> route;
@@ -123,16 +123,16 @@ namespace KCAccess.Game
                     var a = World.inst.GetCellData(from.X, from.Z);
                     var b = World.inst.GetCellData(to.X, to.Z);
                     string why;
-                    if (a != null && a.Type == ResourceType.Water) why = ". The cursor is on water; move onto land first.";
-                    else if (a != null && b != null && a.landMassIdx >= 0 && b.landMassIdx >= 0 && a.landMassIdx != b.landMassIdx) why = ". It is on another island, across water.";
-                    else why = ". It may be across water or behind walls.";
-                    A.Say("No walkable route to " + TargetLabel + why + KCAccess.Core.KeyHelp.Resolve(" {WalkStraight} walks in a straight line, {JumpTarget} jumps there."));
+                    if (a != null && a.Type == ResourceType.Water) why = Loc.T("The cursor is on water; move onto land first.");
+                    else if (a != null && b != null && a.landMassIdx >= 0 && b.landMassIdx >= 0 && a.landMassIdx != b.landMassIdx) why = Loc.T("It is on another island, across water.");
+                    else why = Loc.T("It may be across water or behind walls.");
+                    A.Say(Loc.F("No walkable route to {0}.", TargetLabel) + " " + why + " " + KCAccess.Core.KeyHelp.Resolve(Loc.T("{WalkStraight} walks in a straight line, {JumpTarget} jumps there.")));
                     return;
                 }
             }
             if (route.Count == 0)
             {
-                A.Say("Already next to " + TargetLabel);
+                A.Say(Loc.F("Already next to {0}", TargetLabel));
                 return;
             }
             walk = route;
@@ -141,7 +141,7 @@ namespace KCAccess.Game
             nextStep = Time.unscaledTime + 0.1f;
             lastSignature = CellInfo.Signature(World.inst.GetCellData(from.X, from.Z));
             A.Cue(Cue.Open);
-            A.Say((straight ? "Walking straight to " : "Walking to ") + TargetLabel + ", " + TextUtil.Plural(route.Count, "step") + ". Any arrow key or Escape stops.");
+            A.Say((straight ? Loc.F("Walking straight to {0}", TargetLabel) : Loc.F("Walking to {0}", TargetLabel)) + ", " + Loc.P(route.Count, "{0} step", "{0} steps") + ". " + Loc.T("Any arrow key or Escape stops."));
         }
 
         internal void StopWalk(bool announce)
@@ -151,7 +151,7 @@ namespace KCAccess.Game
             if (announce)
             {
                 A.Cue(Cue.Close);
-                A.Say("Walk stopped");
+                A.Say(Loc.T("Walk stopped"));
             }
         }
 
@@ -171,7 +171,7 @@ namespace KCAccess.Game
                 walk = null;
                 A.Cue(Cue.Placed);
                 bool exact = Target.HasValue && next == Target.Value;
-                A.Say((exact ? "Arrived at " : "Arrived next to ") + TargetLabel + ". " + CellInfo.Brief(cell, false), force: true);
+                A.Say((exact ? Loc.F("Arrived at {0}", TargetLabel) : Loc.F("Arrived next to {0}", TargetLabel)) + ". " + CellInfo.Brief(cell, false), force: true);
                 return;
             }
             // Speak only when the terrain changes, plus a progress note every 10 steps.
@@ -182,7 +182,7 @@ namespace KCAccess.Game
             }
             else if (walkIndex % 10 == 0)
             {
-                A.SayQueued(TextUtil.Plural(walk.Count - walkIndex, "step") + " to go");
+                A.SayQueued(Loc.P(walk.Count - walkIndex, "{0} step to go", "{0} steps to go"));
             }
         }
 

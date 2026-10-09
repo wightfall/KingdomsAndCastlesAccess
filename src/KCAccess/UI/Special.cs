@@ -52,9 +52,9 @@ namespace KCAccess.UI
             if (AdvisorUI.inst == null || !t.IsChildOf(AdvisorUI.inst.transform) || t.parent == null) return null;
             switch (t.parent.name)
             {
-                case "Food": return "Agriculture advisor";
-                case "City": return "City advisor";
-                case "Military": return "Military advisor";
+                case "Food": return Loc.T("Agriculture advisor");
+                case "City": return Loc.T("City advisor");
+                case "Military": return Loc.T("Military advisor");
                 default: return null;
             }
         }
@@ -84,12 +84,12 @@ namespace KCAccess.UI
         {
             string name = TextUtil.Clean(UIText.TextOf(row.GetChild(0).GetComponent<TMPro.TMP_Text>()));
             if (string.IsNullOrEmpty(name)) name = TextUtil.Humanize(upgrade.ToString());
-            if (row.childCount > 3 && row.GetChild(3).gameObject.activeSelf) return name + ", already researched";
+            if (row.childCount > 3 && row.GetChild(3).gameObject.activeSelf) return name + ", " + Loc.T("already researched");
             var b = GameUI.inst.GetBuildingSelected();
             var lib = b != null ? b.GetComponent<GreatLibrary>() : null;
-            string cost = lib != null ? ", costs " + lib.GetCost(upgrade) + " gold" : string.Empty;
+            string cost = lib != null ? ", " + Loc.F("costs {0} gold", lib.GetCost(upgrade)) : string.Empty;
             string tip = UIText.TooltipOf(row.gameObject);
-            return TextUtil.Join(", ", name + cost, "button, Enter starts the research", tip);
+            return TextUtil.Join(", ", name + cost, Loc.T("button, Enter starts the research"), tip);
         }
 
         /// <summary>Merchant buy / sell line: the resource is only an icon, so build the description from the row data.</summary>
@@ -97,10 +97,9 @@ namespace KCAccess.UI
         {
             string res = ResourceNames.Name(row.rtype.ToString());
             int order = row.GetOrderAmount();
-            string verb = row.buy ? "buy" : "sell";
-            return res + ": " + row.price + " gold each, " + row.availableAmount + " available, " + verb + " " + order
-                   + (order > 0 ? ", " + (row.buy ? "costs " : "earns ") + row.GetCost() + " gold" : string.Empty)
-                   + ". Left and Right change the amount by 1, Page Up and Page Down by 10";
+            return res + ": " + Loc.F("{0} gold each, {1} available", row.price, row.availableAmount) + ", " + (row.buy ? Loc.F("buy {0}", order) : Loc.F("sell {0}", order))
+                   + (order > 0 ? ", " + (row.buy ? Loc.F("costs {0} gold", row.GetCost()) : Loc.F("earns {0} gold", row.GetCost())) : string.Empty)
+                   + ". " + Loc.T("Left and Right change the amount by 1, Page Up and Page Down by 10");
         }
 
         /// <summary>
@@ -157,10 +156,10 @@ namespace KCAccess.UI
                 res = ResourceOfSprite(img.sprite);
                 if (res != null) break;
             }
-            return TextUtil.Capitalize(res ?? "resource");
+            return TextUtil.Capitalize(res ?? Loc.T("resource"));
         }
 
-        private static string NegotiationValue(Slider s) => (int)s.value + ", they are " + UnitText.NegotiationMood(s.value);
+        private static string NegotiationValue(Slider s) => (int)s.value + ", " + Loc.F("they are {0}", UnitText.NegotiationMood(s.value));
 
         /// <summary>Value spoken after a slider was changed, when the slider needs more than the number; null otherwise.</summary>
         internal static string SliderValue(Slider s) => NegotiationResource(s) != null ? NegotiationValue(s) : null;
@@ -182,7 +181,7 @@ namespace KCAccess.UI
                     var rt = root.transform;
                     string count = rt.childCount > 0 ? TextUtil.Clean(UIText.TextOf(rt.GetChild(rt.childCount - 1).GetComponent<TMPro.TMP_Text>())) : string.Empty;
                     bool selected = rt.childCount > 1 && rt.GetChild(1).gameObject.activeSelf && ui.currentTabSelected == (UnitUI.UnitTabs)i;
-                    return TextUtil.Join(", ", name, count, "tab", selected ? "selected" : null);
+                    return TextUtil.Join(", ", name, count, Loc.T("tab"), selected ? Loc.T("selected") : null);
                 }
             }
             if (ui.unitOptionContainer != null && go.transform.parent == ui.unitOptionContainer.transform)
@@ -190,7 +189,7 @@ namespace KCAccess.UI
                 int idx = go.transform.GetSiblingIndex();
                 var units = ui.units;
                 if (units != null && idx >= 0 && idx < units.Count && units.data[idx] != null)
-                    return TextUtil.Capitalize(Game.CellInfo.UnitName(units.data[idx]).Replace(", selected", "")) + ", button, Enter shows this unit's details";
+                    return TextUtil.Capitalize(Game.CellInfo.WithoutSelected(Game.CellInfo.UnitName(units.data[idx]))) + ", " + Loc.T("button, Enter shows this unit's details");
             }
             return null;
         }
@@ -256,7 +255,7 @@ namespace KCAccess.UI
         {
             var t = kb.myButton != null ? kb.myButton.GetComponentInChildren<TMPro.TMP_Text>() : null;
             string k = t != null ? TextUtil.Clean(UIText.TextOf(t)) : string.Empty;
-            return string.IsNullOrEmpty(k) ? "no key" : k.ToLowerInvariant().Replace("alpha", "");
+            return string.IsNullOrEmpty(k) ? Loc.T("no key") : k.ToLowerInvariant().Replace("alpha", "");
         }
 
         /// <summary>Runs every frame before anything else while a key binding is being changed.</summary>
@@ -271,7 +270,7 @@ namespace KCAccess.UI
                 capturingKeyButton.SetCurrentButton();
                 captureStarted = Time.unscaledTime;
                 A.Cue(Cue.Open);
-                A.Say("Press the new key for " + KeyAction(capturingKeyButton) + ". You can hold Control, Shift or Alt with it.", force: true);
+                A.Say(Loc.F("Press the new key for {0}. You can hold Control, Shift or Alt with it.", KeyAction(capturingKeyButton)), force: true);
                 return;
             }
             if (capturingKeyButton != null)
@@ -283,7 +282,7 @@ namespace KCAccess.UI
                     capturingKeyButton = null;
                     if (SettingsMenuUI.isListeningToKey) SettingsMenuUI.isListeningToKey = false;
                     A.Cue(Cue.Placed);
-                    A.Say(KeyAction(kb) + " is now " + KeyName(kb), force: true);
+                    A.Say(Loc.F("{0} is now {1}", KeyAction(kb), KeyName(kb)), force: true);
                 }
             }
         }
@@ -344,32 +343,33 @@ namespace KCAccess.UI
                 if (d != null) return d;
             }
             if (item.IsControl && item.Control is Slider ns && NegotiationResource(ns) is string nres)
-                return nres + " price, slider, " + NegotiationValue(ns);
+                return Loc.F("{0} price, slider, {1}", nres, NegotiationValue(ns));
             string unit = item.IsControl ? UnitPanelItem(item.Go) : null;
             if (unit != null) return unit;
             if (item.IsControl && item.Go.GetComponentInParent<PersonListItemUI>() is PersonListItemUI pli && pli.MagGlass != null && item.Control == pli.MagGlass)
             {
-                string who = pli.Description != null ? TextUtil.Clean(UIText.TextOf(pli.Description)) : "villager";
+                string who = pli.Description != null ? TextUtil.Clean(UIText.TextOf(pli.Description)) : Loc.T("villager");
                 bool hoh = pli.HeadOfHouseholdIcon != null && pli.HeadOfHouseholdIcon.activeSelf;
-                return who + (hoh ? ", head of household" : string.Empty) + ", button, Enter selects this villager";
+                return who + (hoh ? ", " + Loc.T("head of household") : string.Empty) + ", " + Loc.T("button, Enter selects this villager");
             }
             if (item.Go.name == "SummaryTitle" && item.Go.transform.parent != null && item.Go.transform.parent.GetComponent<FireRiskUI>() is FireRiskUI fr)
             {
                 string risk = fr.tooltip != null ? TextUtil.Clean(fr.tooltip.toolTipText ?? string.Empty) : string.Empty;
-                return UIText.TextOf(item.Go.GetComponent<TMPro.TMP_Text>()) + ": " + (risk.Length > 0 ? risk : "unknown");
+                return UIText.TextOf(item.Go.GetComponent<TMPro.TMP_Text>()) + ": " + (risk.Length > 0 ? risk : Loc.T("unknown"));
             }
             var row = RowFor(item.Go);
             if (row != null && item.Control == row.DisableToggle) return PriorityRow(row);
-            if (item.Control is Button && item.Go.GetComponentInParent<PickNameUI>() != null && UIText.LabelOf(item.Control) == "unlabelled")
-                return "Choose banner, button";
+            if (item.Control is Button && item.Go.GetComponentInParent<PickNameUI>() != null && UIText.LabelOf(item.Control) == UIText.Unlabelled)
+                return Loc.T("Choose banner, button");
             if (item.IsControl && StreamerUI.inst != null && item.Go.transform.IsChildOf(StreamerUI.inst.transform) && UIText.LabelOf(item.Control) == "Toggle Visible")
-                return (Game.Twitch.SettingsVisible ? "Hide" : "Show") + " the Twitch voting settings, button";
+                return Game.Twitch.SettingsVisible ? Loc.T("Hide the Twitch voting settings, button") : Loc.T("Show the Twitch voting settings, button");
             if (item.IsControl && item.Go.GetComponent<ChangeLanguage>() is ChangeLanguage cl)
-                return "Language: " + TextUtil.Clean(UIText.TextOf(cl.languageButtonText)) + ", button, Enter opens the list";
+                return Loc.F("Language: {0}, button, Enter opens the list", TextUtil.Clean(UIText.TextOf(cl.languageButtonText)))
+                       + (ModLanguage.ActiveModOnly ? ". " + Loc.F("Screen reader language: {0}", ModLanguage.ActiveName) : string.Empty);
             var kbd = item.IsControl ? item.Go.GetComponentInParent<KeyButton>() : null;
-            if (IsKeyRow(kbd)) return KeyAction(kbd) + ": " + KeyName(kbd) + ", button, Enter to change";
+            if (IsKeyRow(kbd)) return KeyAction(kbd) + ": " + KeyName(kbd) + ", " + Loc.T("button, Enter to change");
             if (item.IsControl && item.Go.name == "SeedInput" && !UIText.LabelOf(item.Control).ToLowerInvariant().Contains("seed"))
-                return "Map seed, edit, " + UIText.ValueOf(item.Control);
+                return Loc.F("Map seed, edit, {0}", UIText.ValueOf(item.Control));
             var mrow = item.Go.GetComponentInParent<ResourceLineItemUI>();
             if (mrow != null && item.Control != null && item.Control == mrow.orderAmt) return MerchantRow(mrow);
             if (item.IsControl && OrderRow(item.Go, out var orow, out var otype))
@@ -377,9 +377,9 @@ namespace KCAccess.UI
                 string res = ResourceNames.Name(otype.ToString());
                 string stored = TextUtil.Clean(UIText.TextOf(orow.GetChild(2).GetComponent<TMPro.TMP_Text>()));
                 if (item.Control is TMPro.TMP_InputField f)
-                    return res + ": " + stored + " stored, desired amount " + (string.IsNullOrEmpty(f.text) ? "0" : f.text) + ", edit, Enter to type a new amount";
+                    return res + ": " + Loc.F("{0} stored, desired amount {1}, edit, Enter to type a new amount", stored, string.IsNullOrEmpty(f.text) ? "0" : f.text);
                 if (item.Control is Toggle tg)
-                    return res + ": keep for transport only, check box, " + (tg.isOn ? "checked" : "not checked") + (UIText.TooltipOf(item.Go) is string tip ? ". " + tip : string.Empty);
+                    return res + ": " + Loc.F("keep for transport only, check box, {0}", tg.isOn ? Loc.T("checked") : Loc.T("not checked")) + (UIText.TooltipOf(item.Go) is string tip ? ". " + tip : string.Empty);
             }
             if (ResearchRow(item.Go, out var researchRow, out var upgrade)) return ResearchDescription(researchRow, upgrade);
             if (item.IsControl && item.Go.GetComponentInParent<RivalItemUI>() is RivalItemUI rival)
@@ -388,9 +388,9 @@ namespace KCAccess.UI
                 var all = RivalKingdomSettingsUI.inst != null ? RivalKingdomSettingsUI.inst.rivalItems : null;
                 if (all != null) for (int i = 0; i < all.Length; i++) if (all[i] == rival) slot = i + 1;
                 string rivalName = rival.rivalName != null ? TextUtil.Clean(UIText.TextOf(rival.rivalName)) : null;
-                if (item.Control == rival.enableButton) return "Add AI kingdom, slot " + slot + ", button";
-                if (item.Control == rival.removeButton) return "Remove AI kingdom " + (rivalName ?? string.Empty) + ", slot " + slot + ", button";
-                if (item.Control == rival.personalityDropdown) return "AI kingdom " + rivalName + " skill level, combo box, " + UIText.ValueOf(rival.personalityDropdown);
+                if (item.Control == rival.enableButton) return Loc.F("Add AI kingdom, slot {0}, button", slot);
+                if (item.Control == rival.removeButton) return Loc.F("Remove AI kingdom {0}, slot {1}, button", rivalName ?? string.Empty, slot);
+                if (item.Control == rival.personalityDropdown) return Loc.F("AI kingdom {0} skill level, combo box, {1}", rivalName, UIText.ValueOf(rival.personalityDropdown));
             }
             if (item.IsControl && item.Go.GetComponentInParent<Assets.Code.UI.Confirmation>() is Assets.Code.UI.Confirmation conf
                 && conf.GetComponentInParent<Assets.Code.UI.SaveLoadUI>() != null && conf.yesButton != null && item.Control == conf.yesButton)
@@ -398,15 +398,15 @@ namespace KCAccess.UI
                 // Save screen confirmations: say what "yes" does ("It's toast" = delete, or overwrite / load).
                 string yes = UIText.LabelOf(conf.yesButton);
                 string title = TextUtil.Clean(UIText.JoinTexts(UIText.VisibleTexts(conf.transform))).ToLowerInvariant();
-                if (title.Contains("delete")) return yes + ", yes, delete the save, button";
+                if (title.Contains("delete")) return yes + ", " + Loc.T("yes, delete the save, button");
             }
             if (item.IsControl && item.Go.GetComponentInParent<DemolishWarningUI>() != null)
             {
-                if (item.Go.name == "Yes") return "Yes, demolish, button";
-                if (item.Go.name == "No") return "No, cancel, button";
+                if (item.Go.name == "Yes") return Loc.T("Yes, demolish, button");
+                if (item.Go.name == "No") return Loc.T("No, cancel, button");
             }
             if (item.IsControl && item.Go.GetComponent<PixelCrushers.DialogueSystem.StandardUIContinueButtonFastForward>() != null)
-                return "Continue, button";
+                return Loc.T("Continue, button");
             var tile = item.Go.GetComponent<BannerTile>();
             if (tile != null)
             {
@@ -421,35 +421,36 @@ namespace KCAccess.UI
                     if (t == tile.transform) idx = count;
                 }
                 bool selected = ui != null && ui.highlightedTile == tile;
-                string group = ui != null && parent == ui.customBannerContainer ? "Custom banner " : (ui != null && parent == ui.workshopBannerContainer ? "Workshop banner " : "Banner ");
-                return group + idx + " of " + count + (selected ? ", selected" : string.Empty) + ". Enter selects it, then choose Accept";
+                string banner = ui != null && parent == ui.customBannerContainer ? Loc.F("Custom banner {0} of {1}", idx, count)
+                    : ui != null && parent == ui.workshopBannerContainer ? Loc.F("Workshop banner {0} of {1}", idx, count) : Loc.F("Banner {0} of {1}", idx, count);
+                return banner + (selected ? ", " + Loc.T("selected") : string.Empty) + ". " + Loc.T("Enter selects it, then choose Accept");
             }
             if (item.IsControl && item.Go.name == "FolderButton" && item.Go.GetComponentInParent<ChooseBannerUI>() != null)
-                return "Open custom banner folder, button";
+                return Loc.T("Open custom banner folder, button");
             string advisor = item.IsControl ? AdvisorName(item.Go.transform) : null;
-            if (advisor != null) return advisor + ", button, press Enter to hear their advice";
-            if (item.IsControl && AdvisorUI.inst != null && item.Go.transform.IsChildOf(AdvisorUI.inst.transform) && UIText.LabelOf(item.Control) == "unlabelled" || item.IsControl && AdvisorUI.inst != null && item.Go.transform.IsChildOf(AdvisorUI.inst.transform) && UIText.LabelOf(item.Control) == "Button")
-                return "Close, button";
+            if (advisor != null) return advisor + ", " + Loc.T("button, press Enter to hear their advice");
+            if (item.IsControl && AdvisorUI.inst != null && item.Go.transform.IsChildOf(AdvisorUI.inst.transform) && UIText.LabelOf(item.Control) == UIText.Unlabelled || item.IsControl && AdvisorUI.inst != null && item.Go.transform.IsChildOf(AdvisorUI.inst.transform) && UIText.LabelOf(item.Control) == "Button")
+                return Loc.T("Close, button");
             var info = item.Go.GetComponentInParent<InfoBase>();
             if (info != null && !item.IsControl)
             {
-                return TextUtil.Join(" ", ResourceName(info), UIText.JoinTexts(item.Texts)) + ", press Enter for the yearly report";
+                return TextUtil.Join(" ", ResourceName(info), UIText.JoinTexts(item.Texts)) + ", " + Loc.T("press Enter for the yearly report");
             }
             if (item.IsControl)
             {
                 string n = item.Go.name;
                 string value = UIText.JoinTexts(UIText.VisibleTexts(item.Go.transform));
-                if (n == "HappinessButton") return "Happiness " + value + ", button, shows what affects happiness";
-                if (n == "HealthButton") return "Health " + value + ", button";
-                if (n == "StructuralIntegrityButton") return "Building integrity " + value + ", button";
+                if (n == "HappinessButton") return Loc.F("Happiness {0}, button, shows what affects happiness", value);
+                if (n == "HealthButton") return Loc.F("Health {0}, button", value);
+                if (n == "StructuralIntegrityButton") return Loc.F("Building integrity {0}, button", value);
             }
             if (!item.IsControl && item.Go.name == "TotalText" && item.Go.GetComponentInParent<PopulationUI>() != null)
-                return "Population " + UIText.JoinTexts(item.Texts);
+                return Loc.F("Population {0}", UIText.JoinTexts(item.Texts));
             var tax = item.Go.GetComponentInParent<TaxRateUI>();
             if (tax != null && item.Control != null)
             {
-                string which = item.Control == tax.increase ? "Increase tax rate" : (item.Control == tax.decrease ? "Decrease tax rate" : null);
-                if (which != null) return TextUtil.Join(", ", which, Game.Status.TaxLine(), item.Control.interactable ? null : "unavailable, build a Treasure Room first, Castle category");
+                string which = item.Control == tax.increase ? Loc.T("Increase tax rate") : (item.Control == tax.decrease ? Loc.T("Decrease tax rate") : null);
+                if (which != null) return TextUtil.Join(", ", which, Game.Status.TaxLine(), item.Control.interactable ? null : Loc.T("unavailable, build a Treasure Room first, Castle category"));
             }
             return null;
         }
@@ -457,25 +458,25 @@ namespace KCAccess.UI
         private static string PriorityRow(BuildPriorityItem row)
         {
             bool on = row.DisableToggle.isOn;
-            string prio = on && !string.IsNullOrEmpty(row.Priority.text) ? "Priority " + row.Priority.text : "Disabled";
+            string prio = on && !string.IsNullOrEmpty(row.Priority.text) ? Loc.F("Priority {0}", row.Priority.text) : Loc.T("Disabled");
             string name = TextUtil.Clean(row.Name != null ? row.Name.text : row.Category.ToString());
             string filled = row.FilledWorkers != null ? TextUtil.Clean(row.FilledWorkers.text) : string.Empty;
             string allowed = row.AvailableWorkersInput != null ? row.AvailableWorkersInput.text : string.Empty;
-            return TextUtil.Join(", ", prio, name, filled.Length > 0 ? filled + " workers" : null, allowed.Length > 0 ? "allowed " + allowed + " of " + row.MaxAvailableJobs : null);
+            return TextUtil.Join(", ", prio, name, filled.Length > 0 ? Loc.F("{0} workers", filled) : null, allowed.Length > 0 ? Loc.F("allowed {0} of {1}", allowed, row.MaxAvailableJobs) : null);
         }
 
         private static string ResourceName(InfoBase info)
         {
             switch (info)
             {
-                case WoodInfo _: return "Wood";
-                case StoneInfo _: return "Stone";
-                case CharcoalInfo _: return "Charcoal";
-                case FoodInfo _: return "Food";
-                case IronInfo _: return "Iron";
-                case ToolInfo _: return "Tools";
-                case ArmamentInfo _: return "Armaments";
-                case GoldInfo _: return "Gold";
+                case WoodInfo _: return Loc.T("Wood");
+                case StoneInfo _: return Loc.T("Stone");
+                case CharcoalInfo _: return Loc.T("Charcoal");
+                case FoodInfo _: return Loc.T("Food");
+                case IronInfo _: return Loc.T("Iron");
+                case ToolInfo _: return Loc.T("Tools");
+                case ArmamentInfo _: return Loc.T("Armaments");
+                case GoldInfo _: return Loc.T("Gold");
                 default: return TextUtil.Humanize(info.GetType().Name.Replace("Info", ""));
             }
         }
@@ -507,7 +508,7 @@ namespace KCAccess.UI
                     else
                     {
                         A.Cue(Cue.Error);
-                        A.Say("This entry cannot be deleted");
+                        A.Say(Loc.T("This entry cannot be deleted"));
                     }
                     return true;
                 }
@@ -533,11 +534,14 @@ namespace KCAccess.UI
                 KInput.Consume(KeyCode.Return);
                 KInput.Consume(KeyCode.Space);
                 UINavigator.Click(item.Go);
+                ModLanguage.AddModOnlyButtons(lang);
                 string current = I2.Loc.LocalizationManager.CurrentLanguage;
+                string modButton = ModLanguage.ActiveModOnly ? ModLanguage.ButtonName(ModLanguage.ActiveCode) : null;
                 var list = lang.dropdownList.transform;
                 A.Cue(Cue.Open);
-                A.Say("Language list. Up and Down choose, Enter switches the game to that language", force: true);
-                nav.RequestFocus(g => g.transform.IsChildOf(list) && g.GetComponent<Button>() != null && UIText.LabelOf(g.GetComponent<Button>()).StartsWith(current));
+                A.Say(Loc.T("Language list. Up and Down choose, Enter switches the game to that language. Languages marked screen reader only change only what the mod says."), force: true);
+                nav.RequestFocus(g => g.transform.IsChildOf(list) && g.GetComponent<Button>() != null
+                    && (modButton != null ? g.name == modButton : UIText.LabelOf(g.GetComponent<Button>()).StartsWith(current)));
                 return true;
             }
             var keyBtn = item.IsControl ? item.Go.GetComponentInParent<KeyButton>() : null;
@@ -558,7 +562,7 @@ namespace KCAccess.UI
                     KInput.Consume(KeyCode.Space);
                     KInput.Consume(KeyCode.Return);
                     A.Cue(Cue.Error);
-                    A.Say("Not enough gold: costs " + lib.GetCost(up) + ", you have " + gold, force: true);
+                    A.Say(Loc.F("Not enough gold: costs {0}, you have {1}", lib.GetCost(up), gold), force: true);
                     return true;
                 }
                 return false; // normal click starts the research; the new state is read automatically
@@ -580,13 +584,13 @@ namespace KCAccess.UI
                     if (after == before)
                     {
                         A.Cue(Cue.Edge);
-                        string why = after == 0 ? "none" : (after >= mrow.availableAmount ? "all available" : "not enough gold for more");
+                        string why = after == 0 ? Loc.T("none") : (after >= mrow.availableAmount ? Loc.T("all available") : Loc.T("not enough gold for more"));
                         A.Say(after + ", " + why);
                     }
                     else
                     {
                         A.Cue(Cue.Value);
-                        A.Say(after + (after > 0 ? ", " + (mrow.buy ? "costs " : "earns ") + mrow.GetCost() + " gold" : string.Empty));
+                        A.Say(after + (after > 0 ? ", " + (mrow.buy ? Loc.F("costs {0} gold", mrow.GetCost()) : Loc.F("earns {0} gold", mrow.GetCost())) : string.Empty));
                     }
                     return true;
                 }
@@ -613,7 +617,7 @@ namespace KCAccess.UI
                 if (target < 0 || target >= parent.childCount)
                 {
                     A.Cue(Cue.Edge);
-                    A.Say(row.Priority.text.Length > 0 ? "Already priority " + row.Priority.text : "Cannot move further");
+                    A.Say(row.Priority.text.Length > 0 ? Loc.F("Already priority {0}", row.Priority.text) : Loc.T("Cannot move further"));
                     return true;
                 }
                 t.SetSiblingIndex(target);
@@ -631,7 +635,7 @@ namespace KCAccess.UI
                 int delta = KInput.Down(KeyCode.RightArrow) ? 1 : -1;
                 row.AddToAvailable(delta);
                 A.Cue(Cue.Value);
-                A.Say("allowed " + row.AvailableWorkersInput.text + " of " + row.MaxAvailableJobs);
+                A.Say(Loc.F("allowed {0} of {1}", row.AvailableWorkersInput.text, row.MaxAvailableJobs));
                 return true;
             }
             if (KInput.Plain(KeyCode.Return) || KInput.Plain(KeyCode.Space))
@@ -655,13 +659,13 @@ namespace KCAccess.UI
             var stop = item.Go.GetComponentInParent<LogisticsDestUI>();
             if (stop != null) return Game.Routes.Help(stop);
             if (item.Control is Slider ns && NegotiationResource(ns) != null)
-                return "On a price: Left and Right change it, the other kingdom's mood is said with it. Lower prices make them happier.";
+                return Loc.T("On a price: Left and Right change it, the other kingdom's mood is said with it. Lower prices make them happier.");
             if (item.Go.GetComponentInParent<ResourceLineItemUI>() != null)
-                return "On a trade line: Left and Right change the amount by 1, Page Up and Page Down by 10, Enter lets you type an amount. Then choose the complete transaction button.";
+                return Loc.T("On a trade line: Left and Right change the amount by 1, Page Up and Page Down by 10, Enter lets you type an amount. Then choose the complete transaction button.");
             if (item.Go.GetComponentInParent<Assets.Code.UI.SaveLoadOption>() != null)
-                return "On a saved game: Enter loads or overwrites it, Delete deletes it after a confirmation.";
+                return Loc.T("On a saved game: Enter loads or overwrites it, Delete deletes it after a confirmation.");
             if (RowFor(item.Go) != null)
-                return "On a job row: Space toggles the job on or off, Shift Up and Shift Down change its priority, Left and Right change how many workers are allowed.";
+                return Loc.T("On a job row: Space toggles the job on or off, Shift Up and Shift Down change its priority, Left and Right change how many workers are allowed.");
             return null;
         }
     }

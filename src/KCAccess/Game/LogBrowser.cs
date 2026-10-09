@@ -14,26 +14,26 @@ namespace KCAccess.Game
             if (!n.Where.HasValue)
             {
                 A.Cue(Cue.Error);
-                A.Say("This notification has no location");
+                A.Say(Loc.T("This notification has no location"));
                 return true;
             }
             MapController.Inst.Nav.SetTarget(n.Where.Value, n.Text);
             Close(announce: false);
             A.Cue(Cue.Close);
-            A.Say("Target set: " + MapController.Inst.Nav.Describe(MapController.Inst.CursorPos) + KCAccess.Core.KeyHelp.Resolve(". {Walk} walks there, {Beacon} turns on the beacon."));
+            A.Say(Loc.F("Target set: {0}", MapController.Inst.Nav.Describe(MapController.Inst.CursorPos)) + ". " + KCAccess.Core.KeyHelp.Resolve(Loc.T("{Walk} walks there, {Beacon} turns on the beacon.")));
             return true;
         }
 
         public override string HelpId => "Log";
 
-        protected override string Title => "Notifications, " + TextUtil.Plural(GameEvents.Log.Count, "message");
+        protected override string Title => Loc.P(GameEvents.Log.Count, "Notifications, {0} message", "Notifications, {0} messages");
 
         protected override void Build()
         {
             foreach (var n in GameEvents.Log.Items)
             {
                 var note = n;
-                string text = note.Describe() + (note.Where.HasValue ? ", has location" : string.Empty);
+                string text = note.Describe() + (note.Where.HasValue ? ", " + Loc.T("has location") : string.Empty);
                 Add(text, note.Where.HasValue ? () =>
                 {
                     Close(announce: false);

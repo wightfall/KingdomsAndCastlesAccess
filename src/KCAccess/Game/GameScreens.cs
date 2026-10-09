@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using KCAccess.Core;
 using KCAccess.UI;
 using UnityEngine;
 
@@ -16,26 +17,26 @@ namespace KCAccess.Game
 
             // Order matters: the first match is the one on top.
             ScreenInfo s;
-            if (Is(ui.demolishWarningUI, out s, "DemolishWarning", "Demolish warning")) return s;
-            if (Is(ui.levelUpUI, out s, "LevelUp", "Your town grew")) return s;
-            if (EffectBanner.inst != null && EffectBanner.inst.Showing() && Is(EffectBanner.inst, out s, "Banner", "Announcement"))
+            if (Is(ui.demolishWarningUI, out s, "DemolishWarning", Loc.T("Demolish warning"))) return s;
+            if (Is(ui.levelUpUI, out s, "LevelUp", Loc.T("Your town grew"))) return s;
+            if (EffectBanner.inst != null && EffectBanner.inst.Showing() && Is(EffectBanner.inst, out s, "Banner", Loc.T("Announcement")))
             {
                 string winner = Twitch.BannerTitle(); // a Twitch vote result: say who won first
                 if (winner != null) s.Title = winner;
                 return s;
             }
-            if (ui.survivalIntro != null && Is(ui.survivalIntro, out s, "SurvivalIntro", "Survival mode")) return s;
-            if (ui.survivalSuccess != null && Is(ui.survivalSuccess, out s, "SurvivalSuccess", "Survival success")) return s;
+            if (ui.survivalIntro != null && Is(ui.survivalIntro, out s, "SurvivalIntro", Loc.T("Survival mode"))) return s;
+            if (ui.survivalSuccess != null && Is(ui.survivalSuccess, out s, "SurvivalSuccess", Loc.T("Survival success"))) return s;
             // AdvisorUI.IsVisible() only checks the outer object, which stays active after Hide(); the real window is containerRect.
             if (AdvisorUI.inst != null && AdvisorUI.inst.containerRect != null && UIText.IsVisible(AdvisorUI.inst.containerRect.gameObject))
             {
-                return new ScreenInfo { Id = "Advisor", Title = "Advisors", Root = AdvisorUI.inst.containerRect, Modal = true };
+                return new ScreenInfo { Id = "Advisor", Title = Loc.T("Advisors"), Root = AdvisorUI.inst.containerRect, Modal = true };
             }
-            if (Is(ui.witchUI, out s, "Witch", "Witch hut")) return s;
-            if (ui.decreeUI != null && ui.decreeUI.Visible && Is(ui.decreeUI, out s, "Decrees", "Decrees")) return s;
-            if (ui.diplomacyUI != null && ui.diplomacyUI.Visible() && Is(ui.diplomacyUI, out s, "Diplomacy", "Diplomacy")) return s;
-            if (Is(ui.researchUI, out s, "Research", "Research")) return s;
-            if (ui.generalLargeUI != null && Is(ui.generalLargeUI, out s, "General", "General")) return s;
+            if (Is(ui.witchUI, out s, "Witch", Loc.T("Witch hut"))) return s;
+            if (ui.decreeUI != null && ui.decreeUI.Visible && Is(ui.decreeUI, out s, "Decrees", Loc.T("Decrees"))) return s;
+            if (ui.diplomacyUI != null && ui.diplomacyUI.Visible() && Is(ui.diplomacyUI, out s, "Diplomacy", Loc.T("Diplomacy"))) return s;
+            if (Is(ui.researchUI, out s, "Research", Loc.T("Research"))) return s;
+            if (ui.generalLargeUI != null && Is(ui.generalLargeUI, out s, "General", Loc.T("General"))) return s;
             // Confirmations shown on top of anything in play mode.
             foreach (var c in Object.FindObjectsOfType<Assets.Code.UI.Confirmation>())
             {
@@ -119,24 +120,24 @@ namespace KCAccess.Game
             var kingdom = new List<Transform>();
             AddIfVisible(kingdom, ui.islandInfoUI);
             if (TownNameUI.inst != null) AddIfVisible(kingdom, TownNameUI.inst);
-            if (kingdom.Count > 0) groups.Add(Group("Kingdom", "Kingdom overview", kingdom));
+            if (kingdom.Count > 0) groups.Add(Group("Kingdom", Loc.T("Kingdom overview"), kingdom));
 
             if (ui.creativeModeOptions != null && Player.inst != null && Player.inst.creativeMode)
             {
                 var creative = new List<Transform>();
                 AddIfVisible(creative, ui.creativeModeOptions.transform);
-                if (creative.Count > 0) groups.Add(Group("Creative", "Creative mode options", creative));
+                if (creative.Count > 0) groups.Add(Group("Creative", Loc.T("Creative mode options"), creative));
             }
 
             var twitch = Twitch.PanelRoots();
-            if (twitch.Count > 0) groups.Add(Group("Twitch", Twitch.SettingsVisible ? "Twitch voting" : "Twitch vote", twitch));
+            if (twitch.Count > 0) groups.Add(Group("Twitch", Twitch.SettingsVisible ? Loc.T("Twitch voting") : Loc.T("Twitch vote"), twitch));
 
             var toolbar = new List<Transform>();
             if (SpeedControlUI.inst != null) AddIfVisible(toolbar, SpeedControlUI.inst);
             if (ui.cursorModeButtonContainer != null) AddIfVisible(toolbar, ui.cursorModeButtonContainer);
             var header = GameObject.Find("HeaderUICanvas");
             if (header != null) AddIfVisible(toolbar, header.transform);
-            if (toolbar.Count > 0) groups.Add(Group("Toolbar", "Toolbar", toolbar));
+            if (toolbar.Count > 0) groups.Add(Group("Toolbar", Loc.T("Toolbar"), toolbar));
             return groups;
         }
 
@@ -148,10 +149,10 @@ namespace KCAccess.Game
             var ui = GameUI.inst;
             var b = ui.GetBuildingSelected();
             if (b != null) return b.FriendlyName;
-            if (ui.personUI != null && ui.personUI.Visible) return "Villager";
-            if (ui.unitUI != null && ui.unitUI.Visible) return "Army";
-            if (ui.GetCellSelected() != null) return "Tile";
-            return "Selection";
+            if (ui.personUI != null && ui.personUI.Visible) return Loc.T("Villager");
+            if (ui.unitUI != null && ui.unitUI.Visible) return Loc.T("Army");
+            if (ui.GetCellSelected() != null) return Loc.T("Tile");
+            return Loc.T("Selection");
         }
 
         private static void AddIfVisible(List<Transform> list, Component c)

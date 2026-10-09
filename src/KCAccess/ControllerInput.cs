@@ -151,8 +151,8 @@ namespace KCAccess
             if (n == lastCount) return;
             if (lastCount >= 0 || n > 0)
             {
-                if (n > lastCount && n > 0) A.Say("Controller connected" + (string.IsNullOrEmpty(name) ? "" : ": " + name) + ". Start gives help, hold Right Trigger and press Start for the controller layout in the key list.", Priority.High);
-                else if (n < lastCount) A.Say("Controller disconnected", Priority.High);
+                if (n > lastCount && n > 0) A.Say((string.IsNullOrEmpty(name) ? Loc.T("Controller connected.") : Loc.F("Controller connected: {0}.", name)) + " " + Loc.T("Start gives help, hold Right Trigger and press Start for the controller layout in the key list."), Priority.High);
+                else if (n < lastCount) A.Say(Loc.T("Controller disconnected"), Priority.High);
                 Plugin.Log.LogInfo("[pad] gamepads connected: " + n + (name != null ? " (" + name + ")" : ""));
             }
             lastCount = n;

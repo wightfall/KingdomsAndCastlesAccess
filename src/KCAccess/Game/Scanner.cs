@@ -21,7 +21,8 @@ namespace KCAccess.Game
 
         private static readonly string[] Categories =
         {
-            "Your buildings", "Construction sites", "Your soldiers and ships", "Alerts", "Problems", "Threats", "Stone", "Iron", "Fertile land", "Forests", "Fresh water", "Fishing grounds", "Foreign kingdoms", "Special places"
+            Loc.N("Your buildings"), Loc.N("Construction sites"), Loc.N("Your soldiers and ships"), Loc.N("Alerts"), Loc.N("Problems"), Loc.N("Threats"), Loc.N("Stone"), Loc.N("Iron"),
+            Loc.N("Fertile land"), Loc.N("Forests"), Loc.N("Fresh water"), Loc.N("Fishing grounds"), Loc.N("Foreign kingdoms"), Loc.N("Special places")
         };
 
         private int category;
@@ -31,7 +32,7 @@ namespace KCAccess.Game
         private GridPos lastOrigin;
         private float refreshedAt;
 
-        internal string CategoryName => Categories[category];
+        internal string CategoryName => Loc.T(Categories[category]);
 
         internal void ChangeCategory(int delta, GridPos origin)
         {
@@ -39,7 +40,7 @@ namespace KCAccess.Game
             stale = true;
             Refresh(origin);
             A.Cue(Cue.Navigate);
-            A.Say(CategoryName + ", " + (items.Count == 0 ? "none found" : TextUtil.Plural(items.Count, "item")));
+            A.Say(CategoryName + ", " + (items.Count == 0 ? Loc.T("none found") : Loc.P(items.Count, "{0} item", "{0} items")));
         }
 
         /// <summary>Move to the next / previous item. Returns it, or null when the category is empty.</summary>
@@ -60,7 +61,7 @@ namespace KCAccess.Game
             if (items.Count == 0)
             {
                 A.Cue(Cue.Edge);
-                A.Say(CategoryName + ", none found");
+                A.Say(CategoryName + ", " + Loc.T("none found"));
                 return null;
             }
             index += delta;
@@ -75,7 +76,7 @@ namespace KCAccess.Game
                 A.Cue(Cue.Wrap);
             }
             var it = items[index];
-            A.Say(it.Label + ", " + Directions.Relative(origin, it.Pos) + ", " + (index + 1) + " of " + items.Count);
+            A.Say(it.Label + ", " + Directions.Relative(origin, it.Pos) + ", " + Loc.F("{0} of {1}", index + 1, items.Count));
             return it;
         }
 
@@ -188,14 +189,14 @@ namespace KCAccess.Game
                             var m = SiegeMonster.monsters.data[i];
                             if (m == null) continue;
                             Vector3 p = m.GetPos();
-                            found.Add(new Item { Label = "ogre", Pos = new GridPos((int)p.x, (int)p.z) });
+                            found.Add(new Item { Label = Loc.T("ogre"), Pos = new GridPos((int)p.x, (int)p.z) });
                         }
                         // Wolves chasing or attacking someone (wandering ones stay near their den, listed below).
                         for (int i = 0; i < WolfDen.wolves.Count; i++)
                         {
                             var wolf = WolfDen.wolves.data[i];
                             if (wolf == null || wolf.IsInvalid() || (wolf.status != WolfDen.Status.Chase && wolf.status != WolfDen.Status.Attack)) continue;
-                            found.Add(new Item { Label = "hunting wolf", Pos = new GridPos((int)wolf.pos.x, (int)wolf.pos.z) });
+                            found.Add(new Item { Label = Loc.T("hunting wolf"), Pos = new GridPos((int)wolf.pos.x, (int)wolf.pos.z) });
                         }
                         if (FireManager.inst != null && FireManager.inst.fireContainer != null)
                         {
@@ -203,18 +204,18 @@ namespace KCAccess.Game
                             {
                                 if (!f.gameObject.activeInHierarchy) continue;
                                 Vector3 p = f.position;
-                                found.Add(new Item { Label = "fire", Pos = new GridPos((int)p.x, (int)p.z) });
+                                found.Add(new Item { Label = Loc.T("fire"), Pos = new GridPos((int)p.x, (int)p.z) });
                             }
                         }
-                        AddClusters(found, c => c.Type == ResourceType.WolfDen && CellInfo.Explored(c), n => "wolf den");
+                        AddClusters(found, c => c.Type == ResourceType.WolfDen && CellInfo.Explored(c), n => Loc.T("wolf den"));
                     }
                     break;
                 }
                 case "Stone":
-                    AddClusters(found, c => c.Type == ResourceType.Stone && CellInfo.Explored(c), n => "stone deposit, " + TextUtil.Plural(n, "tile"));
+                    AddClusters(found, c => c.Type == ResourceType.Stone && CellInfo.Explored(c), n => Loc.T("stone deposit") + ", " + Loc.P(n, "{0} tile", "{0} tiles"));
                     break;
                 case "Iron":
-                    AddClusters(found, c => c.Type == ResourceType.IronDeposit && CellInfo.Explored(c), n => "iron deposit, " + TextUtil.Plural(n, "tile"));
+                    AddClusters(found, c => c.Type == ResourceType.IronDeposit && CellInfo.Explored(c), n => Loc.T("iron deposit") + ", " + Loc.P(n, "{0} tile", "{0} tiles"));
                     break;
                 case "Problems":
                     foreach (var p in Problems.All()) found.Add(new Item { Label = p.Label, Pos = p.Pos });
@@ -223,7 +224,7 @@ namespace KCAccess.Game
                 {
                     var fc = FishSystem.inst != null ? FishSystem.inst.fishCells : null;
                     if (fc == null) break;
-                    AddClusters(found, c => CellInfo.FishAt(c) > 0 && CellInfo.Explored(c), n => "fishing ground, " + TextUtil.Plural(n, "tile"));
+                    AddClusters(found, c => CellInfo.FishAt(c) > 0 && CellInfo.Explored(c), n => Loc.T("fishing ground") + ", " + Loc.P(n, "{0} tile", "{0} tiles"));
                     break;
                 }
                 case "Alerts":
@@ -232,13 +233,13 @@ namespace KCAccess.Game
                 case "Fertile land":
                     // Open fertile ground where farms can go (no trees, rock, water or buildings).
                     AddClusters(found, c => c.Type == ResourceType.None && c.TreeAmount == 0 && c.OccupyingStructure.Count == 0 && c.GetEffectiveFertility() >= 1 && CellInfo.Explored(c),
-                        n => "open fertile land, " + TextUtil.Plural(n, "tile"), minSize: 4);
+                        n => Loc.T("open fertile land") + ", " + Loc.P(n, "{0} tile", "{0} tiles"), minSize: 4);
                     break;
                 case "Forests":
-                    AddClusters(found, c => c.TreeAmount > 0 && c.OccupyingStructure.Count == 0 && CellInfo.Explored(c), n => "forest, " + TextUtil.Plural(n, "tile"), minSize: 3);
+                    AddClusters(found, c => c.TreeAmount > 0 && c.OccupyingStructure.Count == 0 && CellInfo.Explored(c), n => Loc.T("forest") + ", " + Loc.P(n, "{0} tile", "{0} tiles"), minSize: 3);
                     break;
                 case "Fresh water":
-                    AddClusters(found, c => c.Type == ResourceType.Water && !c.saltWater && CellInfo.Explored(c), n => "fresh water, " + TextUtil.Plural(n, "tile"));
+                    AddClusters(found, c => c.Type == ResourceType.Water && !c.saltWater && CellInfo.Explored(c), n => Loc.T("fresh water") + ", " + Loc.P(n, "{0} tile", "{0} tiles"));
                     break;
                 case "Foreign kingdoms":
                 {
@@ -256,25 +257,25 @@ namespace KCAccess.Game
                     foreach (int lm in landmasses)
                     {
                         if (lm < 0) continue;
-                        string name = lm < Player.inst.LandMassNames.Count && !string.IsNullOrEmpty(Player.inst.LandMassNames[lm]) ? Player.inst.LandMassNames[lm] : "foreign kingdom";
+                        string name = lm < Player.inst.LandMassNames.Count && !string.IsNullOrEmpty(Player.inst.LandMassNames[lm]) ? Player.inst.LandMassNames[lm] : Loc.T("foreign kingdom");
                         var keeps = Player.inst.GetBuildingListForLandMass(lm, World.keepHash);
                         if (keeps != null && keeps.Count > 0 && keeps.data[0] != null && keeps.data[0].GetCell() != null)
                         {
                             var c = keeps.data[0].GetCell();
-                            found.Add(new Item { Label = name + " keep" + (CellInfo.Explored(c) ? string.Empty : ", unexplored"), Pos = new GridPos(c.x, c.z) });
+                            found.Add(new Item { Label = Loc.F("{0} keep", name) + (CellInfo.Explored(c) ? string.Empty : ", " + Loc.T("unexplored")), Pos = new GridPos(c.x, c.z) });
                         }
                         else
                         {
                             var centre = LandmassCentre(lm);
-                            if (centre.HasValue) found.Add(new Item { Label = name + " island, no keep yet", Pos = centre.Value });
+                            if (centre.HasValue) found.Add(new Item { Label = Loc.F("{0} island, no keep yet", name), Pos = centre.Value });
                         }
                     }
                     break;
                 }
                 case "Special places":
-                    AddClusters(found, c => c.Type == ResourceType.WitchHut && CellInfo.Explored(c), n => "witch hut");
-                    AddClusters(found, c => c.Type == ResourceType.EmptyCave && CellInfo.Explored(c), n => "cave");
-                    AddClusters(found, c => c.Type == ResourceType.WolfDen && CellInfo.Explored(c), n => "wolf den");
+                    AddClusters(found, c => c.Type == ResourceType.WitchHut && CellInfo.Explored(c), n => Loc.T("witch hut"));
+                    AddClusters(found, c => c.Type == ResourceType.EmptyCave && CellInfo.Explored(c), n => Loc.T("cave"));
+                    AddClusters(found, c => c.Type == ResourceType.WolfDen && CellInfo.Explored(c), n => Loc.T("wolf den"));
                     break;
             }
         }

@@ -58,12 +58,26 @@ namespace KCAccess.Installer
             return includeLoader;
         }
 
+        /// <summary>
+        /// Files of the player in Languages: their own copies (Languages/xx.txt) and the record of what they were merged
+        /// with (Languages/default/.base). The shipped Languages/default/*.txt are replaced by every install.
+        /// </summary>
+        public bool IsPlayerLanguageFile(string path)
+        {
+            string languages = Path.Combine(PluginDir, "Languages") + Path.DirectorySeparatorChar;
+            string full = Path.GetFullPath(path);
+            if (!full.StartsWith(languages, StringComparison.OrdinalIgnoreCase)) return false;
+            string rel = full.Substring(languages.Length);
+            if (rel.IndexOf(Path.DirectorySeparatorChar) < 0) return !string.Equals(rel, "template.txt", StringComparison.OrdinalIgnoreCase);
+            return rel.StartsWith("default" + Path.DirectorySeparatorChar + ".base" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+        }
+
         /// <summary>Combines safely: rejects entries that would escape the target folder ("../").</summary>
         public static string SafeCombine(string root, string entryPath)
         {
             string full = Path.GetFullPath(Path.Combine(root, entryPath.Replace('/', Path.DirectorySeparatorChar)));
             string rootFull = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
-            if (!full.StartsWith(rootFull, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Unsafe path in package: " + entryPath);
+            if (!full.StartsWith(rootFull, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException(KCAccess.Core.Loc.F("Unsafe path in package: {0}", entryPath));
             return full;
         }
 
@@ -82,16 +96,18 @@ namespace KCAccess.Installer
                 {
                     if (e.FullName.Replace('\\', '/').StartsWith("BepInEx/plugins/KCAccess/", StringComparison.OrdinalIgnoreCase)) hasMod = true;
                 }
-                if (!hasMod) throw new InvalidDataException("This package does not contain KCAccess.");
+                if (!hasMod) throw new InvalidDataException(KCAccess.Core.Loc.T("This package does not contain KCAccess."));
                 if (includeLoader && zip.GetEntry("winhttp.dll") == null && zip.GetEntry("BepInEx/core/BepInEx.dll") == null)
-                    throw new InvalidDataException("BepInEx is not installed and this package does not contain it. Use the -with-BepInEx package.");
+                    throw new InvalidDataException(KCAccess.Core.Loc.T("BepInEx is not installed and this package does not contain it. Use the -with-BepInEx package."));
 
-                // Start from a clean mod folder so files removed in a new version do not linger.
+                // Start from a clean mod folder so files removed in a new version do not linger. The player's own
+                // language files (Languages/*.txt and Languages/default/.base) are kept: the mod merges updates into them.
                 if (Directory.Exists(PluginDir))
                 {
                     foreach (var f in Directory.GetFiles(PluginDir, "*", SearchOption.AllDirectories))
                     {
                         if (string.Equals(Path.GetFileName(f), UpdaterName, StringComparison.OrdinalIgnoreCase)) continue;
+                        if (IsPlayerLanguageFile(f)) continue;
                         File.Delete(f);
                     }
                 }

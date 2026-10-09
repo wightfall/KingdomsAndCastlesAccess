@@ -47,8 +47,8 @@ namespace KCAccess.Game
             // Hunger, plague and homelessness are shown over villagers (a house shows hunger for its own pantry).
             bool villagerThought = thought == "House" || thought == "FoodCritical" || thought == "Plague" || thought == "PlagueCritical"
                 || (thought == "Food" && (b == null || b.CategoryName != "house"));
-            if (villagerThought) return b != null ? "villager at " + b.FriendlyName : "villager";
-            return b != null ? b.FriendlyName : "building";
+            if (villagerThought) return b != null ? Loc.F("villager at {0}", b.FriendlyName) : Loc.T("villager");
+            return b != null ? b.FriendlyName : Loc.T("building");
         }
 
         /// <summary>Problems on one tile, for the tile description.</summary>
@@ -59,8 +59,8 @@ namespace KCAccess.Game
                 if (p.Pos.X == x && p.Pos.Z == z) counts[p.Thought] = counts.TryGetValue(p.Thought, out int n) ? n + 1 : 1;
             if (counts.Count == 0) return null;
             if (counts.Count == 1)
-                foreach (var kv in counts) if (kv.Value == 1) return "problem: " + Thoughts.Meaning(kv.Key);
-            return "problems: " + Thoughts.Summary(counts);
+                foreach (var kv in counts) if (kv.Value == 1) return Loc.F("problem: {0}", Thoughts.Meaning(kv.Key));
+            return Loc.F("problems: {0}", Thoughts.Summary(counts));
         }
 
         /// <summary>Kingdom-wide summary for K.</summary>
@@ -69,7 +69,7 @@ namespace KCAccess.Game
             var counts = new Dictionary<string, int>();
             foreach (var p in All()) counts[p.Thought] = counts.TryGetValue(p.Thought, out int n) ? n + 1 : 1;
             string s = Thoughts.Summary(counts);
-            return s.Length == 0 ? "No problems shown" : "Problems: " + s + KeyHelp.Resolve(". {NextCategory} to the Problems category finds them");
+            return s.Length == 0 ? Loc.T("No problems shown") : Loc.F("Problems: {0}", s) + ". " + KeyHelp.Resolve(Loc.T("{NextCategory} to the Problems category finds them"));
         }
 
         /// <summary>Announce critical problems once when they appear.</summary>
@@ -96,7 +96,7 @@ namespace KCAccess.Game
             announced.RemoveWhere(b => !live.Contains(b));
             if (fresh.Count == 0 || !Plugin.CfgAnnounceLog.Value) return;
             A.Cue(Cue.Alert);
-            A.SayQueued("Problem: " + Thoughts.Summary(fresh) + (first.HasValue ? ", " + Directions.Relative(MapController.Inst.CursorPos, first.Value) : string.Empty));
+            A.SayQueued(Loc.F("Problem: {0}", Thoughts.Summary(fresh)) + (first.HasValue ? ", " + Directions.Relative(MapController.Inst.CursorPos, first.Value) : string.Empty));
         }
     }
 }

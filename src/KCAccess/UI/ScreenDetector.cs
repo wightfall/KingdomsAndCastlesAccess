@@ -32,27 +32,27 @@ namespace KCAccess.UI
     {
         private static readonly Dictionary<MainMenuMode.State, string> Titles = new Dictionary<MainMenuMode.State, string>
         {
-            { MainMenuMode.State.Menu, "Main menu" },
-            { MainMenuMode.State.ChooseMode, "Choose game mode" },
-            { MainMenuMode.State.ChooseDifficulty, "Choose difficulty" },
-            { MainMenuMode.State.NewMap, "Map setup" },
-            { MainMenuMode.State.NameAndBanner, "Kingdom name and banner" },
-            { MainMenuMode.State.PauseMenu, "Paused" },
-            { MainMenuMode.State.SettingsMenu, "Settings" },
-            { MainMenuMode.State.Save, "Save game" },
-            { MainMenuMode.State.Load, "Load game" },
-            { MainMenuMode.State.QuitConfirm, "Return to main menu" },
-            { MainMenuMode.State.ExitConfirm, "Exit game" },
-            { MainMenuMode.State.LoadError, "Load error" },
-            { MainMenuMode.State.SendSave, "Send save" },
-            { MainMenuMode.State.Credits, "Credits" },
-            { MainMenuMode.State.Failure, "Overthrown" },
-            { MainMenuMode.State.KeepDestroyed, "Keep destroyed" },
-            { MainMenuMode.State.BannerSelect, "Choose banner" },
-            { MainMenuMode.State.GameWorkshopUI, "Mods" },
-            { MainMenuMode.State.RivalChoiceUI, "Rival kingdoms" },
-            { MainMenuMode.State.KingdomShareFromMenu, "Kingdom share" },
-            { MainMenuMode.State.KingdomShareFromGame, "Kingdom share" },
+            { MainMenuMode.State.Menu, Loc.N("Main menu") },
+            { MainMenuMode.State.ChooseMode, Loc.N("Choose game mode") },
+            { MainMenuMode.State.ChooseDifficulty, Loc.N("Choose difficulty") },
+            { MainMenuMode.State.NewMap, Loc.N("Map setup") },
+            { MainMenuMode.State.NameAndBanner, Loc.N("Kingdom name and banner") },
+            { MainMenuMode.State.PauseMenu, Loc.N("Paused") },
+            { MainMenuMode.State.SettingsMenu, Loc.N("Settings") },
+            { MainMenuMode.State.Save, Loc.N("Save game") },
+            { MainMenuMode.State.Load, Loc.N("Load game") },
+            { MainMenuMode.State.QuitConfirm, Loc.N("Return to main menu") },
+            { MainMenuMode.State.ExitConfirm, Loc.N("Exit game") },
+            { MainMenuMode.State.LoadError, Loc.N("Load error") },
+            { MainMenuMode.State.SendSave, Loc.N("Send save") },
+            { MainMenuMode.State.Credits, Loc.N("Credits") },
+            { MainMenuMode.State.Failure, Loc.N("Overthrown") },
+            { MainMenuMode.State.KeepDestroyed, Loc.N("Keep destroyed") },
+            { MainMenuMode.State.BannerSelect, Loc.N("Choose banner") },
+            { MainMenuMode.State.GameWorkshopUI, Loc.N("Mods") },
+            { MainMenuMode.State.RivalChoiceUI, Loc.N("Rival kingdoms") },
+            { MainMenuMode.State.KingdomShareFromMenu, Loc.N("Kingdom share") },
+            { MainMenuMode.State.KingdomShareFromGame, Loc.N("Kingdom share") },
         };
 
         internal static ScreenInfo DetectMainMenu()
@@ -64,7 +64,7 @@ namespace KCAccess.UI
             string id = state.ToString();
             if (state == MainMenuMode.State.KingdomShareFromGame || state == MainMenuMode.State.KingdomShareFromMenu) id = "KingdomShare";
             Titles.TryGetValue(state, out var title);
-            var info = new ScreenInfo { Id = id, Title = title ?? TextUtil.Humanize(id), Root = root != null ? root.transform : null, TypeAhead = true };
+            var info = new ScreenInfo { Id = id, Title = title != null ? Loc.T(title) : TextUtil.Humanize(id), Root = root != null ? root.transform : null, TypeAhead = true };
             // A confirmation popped up inside the screen (load / save / delete confirmations, bad map warning).
             var confirm = FindActiveConfirmation(info.Root);
             if (confirm == null && mm.confirm != null && mm.confirm.gameObject.activeInHierarchy) confirm = mm.confirm;
@@ -123,7 +123,7 @@ namespace KCAccess.UI
             var texts = UIText.VisibleTexts(c.transform);
             texts.RemoveAll(t => t.GetComponentInParent<UnityEngine.UI.Selectable>() != null);
             string q = UIText.JoinTexts(texts);
-            return string.IsNullOrEmpty(q) ? "Confirm" : q;
+            return string.IsNullOrEmpty(q) ? Loc.T("Confirm") : q;
         }
     }
 }

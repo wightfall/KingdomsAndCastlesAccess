@@ -43,7 +43,7 @@ namespace KCAccess.Game
                 if (lastSeason.HasValue && lastSeason.Value != s && Plugin.CfgAnnounceSeasons.Value)
                 {
                     A.Cue(Cue.Notify);
-                    A.SayQueued(s == Weather.Season.Winter ? "Winter has come" : "Summer has come");
+                    A.SayQueued(s == Weather.Season.Winter ? Loc.T("Winter has come") : Loc.T("Summer has come"));
                 }
                 lastSeason = s;
             }
@@ -52,8 +52,8 @@ namespace KCAccess.Game
                 var wt = Weather.CurrentWeather;
                 if (lastWeather.HasValue && lastWeather.Value != wt && Plugin.CfgAnnounceSeasons.Value)
                 {
-                    if (wt == Weather.WeatherType.HeavyRain) { A.Cue(Cue.Notify); A.SayQueued("Heavy rain. Farms near water may flood."); }
-                    else if (wt == Weather.WeatherType.LightningStorm) { A.Cue(Cue.Notify); A.SayQueued("Thunderstorm. Lightning can start fires."); }
+                    if (wt == Weather.WeatherType.HeavyRain) { A.Cue(Cue.Notify); A.SayQueued(Loc.T("Heavy rain. Farms near water may flood.")); }
+                    else if (wt == Weather.WeatherType.LightningStorm) { A.Cue(Cue.Notify); A.SayQueued(Loc.T("Thunderstorm. Lightning can start fires.")); }
                 }
                 lastWeather = wt;
             }
@@ -99,7 +99,7 @@ namespace KCAccess.Game
         {
             Log.Add(text, Severity.Danger, Player.inst != null ? Player.inst.CurrYear : 0);
             A.Cue(Cue.Alert);
-            A.Say(text + KCAccess.Core.KeyHelp.Resolve(" {NextCategory} to the Threats category, then {NextItem} picks the nearest, {JumpTarget} jumps there."), Priority.High);
+            A.Say(text + " " + KCAccess.Core.KeyHelp.Resolve(Loc.T("{NextCategory} to the Threats category, then {NextItem} picks the nearest, {JumpTarget} jumps there.")), Priority.High);
         }
 
         internal static void OnInfo(string text)

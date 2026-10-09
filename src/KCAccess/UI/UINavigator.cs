@@ -129,7 +129,7 @@ namespace KCAccess.UI
 
         public void AnnounceScreen(string intro = null)
         {
-            string current = list.HasCurrent ? Describe(list.Current) : "no items";
+            string current = list.HasCurrent ? Describe(list.Current) : Loc.T("no items");
             A.Say(TextUtil.Sentences(Title, intro, current));
         }
 
@@ -327,22 +327,22 @@ namespace KCAccess.UI
             }
             var s = item.Control;
             // Read-only fields and bars are really just text.
-            if (!s.interactable && (s is InputField || s is TMP_InputField)) return UIText.ValueOf(s) == "blank" ? UIText.LabelOf(s) : UIText.ValueOf(s);
+            if (!s.interactable && (s is InputField || s is TMP_InputField)) return UIText.ValueOf(s) == UIText.Blank ? UIText.LabelOf(s) : UIText.ValueOf(s);
             if (s is Slider ro && UIText.IsReadOnlySlider(ro)) return TextUtil.Join(", ", UIText.LabelOf(ro), UIText.ValueOf(ro));
             string label = UIText.LabelOf(s);
             if (!string.IsNullOrEmpty(item.Context) && item.Context != label) label = item.Context + ", " + label;
             // Icon-only rows ("20" next to a wood icon): add the resource name.
-            if (IsNumberish(label) || label == "unlabelled")
+            if (IsNumberish(label) || label == UIText.Unlabelled)
             {
                 string res = Special.ResourceIconName(s.transform);
-                if (res != null) label = res + (label == "unlabelled" ? string.Empty : " " + label);
+                if (res != null) label = res + (label == UIText.Unlabelled ? string.Empty : " " + label);
             }
             string role = UIText.RoleOf(s);
             string value = UIText.ValueOf(s);
             var parts = new List<string> { label };
-            if (role != "button" || !s.interactable) parts.Add(role);
+            if (role != UIText.ButtonRole || !s.interactable) parts.Add(role);
             if (!string.IsNullOrEmpty(value) && value != label) parts.Add(value);
-            if (!s.interactable) parts.Add("unavailable");
+            if (!s.interactable) parts.Add(Loc.T("unavailable"));
             return TextUtil.Join(", ", parts);
         }
 
@@ -490,7 +490,7 @@ namespace KCAccess.UI
             var cur = list.Current;
             if (cur == null)
             {
-                A.Say(Title + ", empty");
+                A.Say(Loc.F("{0}, empty", Title));
                 return;
             }
             string tip = cur.IsControl ? UIText.TooltipOf(cur.Go) : null;
@@ -542,14 +542,14 @@ namespace KCAccess.UI
             if (!item.IsControl)
             {
                 A.Cue(Cue.Edge);
-                A.Say(Describe(item) + ", text, not a button", force: true);
+                A.Say(Describe(item) + ", " + Loc.T("text, not a button"), force: true);
                 return;
             }
             var s = item.Control;
             if (!s.interactable)
             {
                 A.Cue(Cue.Error);
-                A.Say(UIText.LabelOf(s) + ", unavailable");
+                A.Say(UIText.LabelOf(s) + ", " + Loc.T("unavailable"));
                 return;
             }
             switch (s)
@@ -557,7 +557,7 @@ namespace KCAccess.UI
                 case Toggle t:
                     if (t.group != null && t.isOn && !t.group.allowSwitchOff)
                     {
-                        A.Say(UIText.LabelOf(t) + ", already selected");
+                        A.Say(UIText.LabelOf(t) + ", " + Loc.T("already selected"));
                         return;
                     }
                     t.isOn = !t.isOn;
@@ -569,14 +569,14 @@ namespace KCAccess.UI
                     BeginEdit(s);
                     return;
                 case Dropdown d:
-                    A.Say(UIText.LabelOf(d) + ", use left and right arrows to change, " + UIText.ValueOf(d));
+                    A.Say(Loc.F("{0}, use left and right arrows to change, {1}", UIText.LabelOf(d), UIText.ValueOf(d)));
                     return;
                 case TMP_Dropdown td:
-                    A.Say(UIText.LabelOf(td) + ", use left and right arrows to change, " + UIText.ValueOf(td));
+                    A.Say(Loc.F("{0}, use left and right arrows to change, {1}", UIText.LabelOf(td), UIText.ValueOf(td)));
                     return;
                 case Slider sl:
                     if (UIText.IsReadOnlySlider(sl)) A.Say(Describe(item), force: true);
-                    else A.Say(UIText.LabelOf(sl) + ", use left and right arrows to change, " + UIText.ValueOf(sl));
+                    else A.Say(Loc.F("{0}, use left and right arrows to change, {1}", UIText.LabelOf(sl), UIText.ValueOf(sl)));
                     return;
             }
             A.Cue(Cue.Activate);
@@ -672,7 +672,7 @@ namespace KCAccess.UI
                         d.value = v;
                         A.Cue(Cue.Navigate);
                     }
-                    A.Say(UIText.ValueOf(d) + ", " + (d.value + 1) + " of " + d.options.Count);
+                    A.Say(UIText.ValueOf(d) + ", " + Loc.F("{0} of {1}", d.value + 1, d.options.Count));
                     return true;
                 }
                 case TMP_Dropdown td:
@@ -684,7 +684,7 @@ namespace KCAccess.UI
                         td.value = v;
                         A.Cue(Cue.Navigate);
                     }
-                    A.Say(UIText.ValueOf(td) + ", " + (td.value + 1) + " of " + td.options.Count);
+                    A.Say(UIText.ValueOf(td) + ", " + Loc.F("{0} of {1}", td.value + 1, td.options.Count));
                     return true;
                 }
                 case Toggle t when t.group != null:
@@ -734,8 +734,8 @@ namespace KCAccess.UI
             editSession = new InputEditSession(s);
             A.Cue(Cue.Open);
             string label = UIText.LabelOf(s);
-            if (label.IndexOf("Input Field", StringComparison.OrdinalIgnoreCase) >= 0 || label == "unlabelled") label = "text";
-            A.Say("Editing " + label + ". " + (editSession.Text.Length > 0 ? editSession.Text : "blank") + ". Type, then press Enter to confirm or Escape to cancel.");
+            if (label.IndexOf("Input Field", StringComparison.OrdinalIgnoreCase) >= 0 || label == UIText.Unlabelled) label = Loc.T("text");
+            A.Say(Loc.F("Editing {0}. {1}. Type, then press Enter to confirm or Escape to cancel.", label, editSession.Text.Length > 0 ? editSession.Text : UIText.Blank));
         }
 
         /// <summary>
@@ -812,8 +812,8 @@ namespace KCAccess.UI
             if (now != lastText)
             {
                 if (now.Length > lastText.Length && now.StartsWith(lastText)) A.Say(now.Substring(lastText.Length), force: true);
-                else if (now.Length < lastText.Length && lastText.StartsWith(now)) A.Say(lastText.Substring(now.Length) + " deleted", force: true);
-                else A.Say(now.Length > 0 ? now : "blank", force: true);
+                else if (now.Length < lastText.Length && lastText.StartsWith(now)) A.Say(Loc.F("{0} deleted", lastText.Substring(now.Length)), force: true);
+                else A.Say(now.Length > 0 ? now : UIText.Blank, force: true);
                 lastText = now;
             }
             if (Time.frameCount == startFrame) return true;
@@ -822,7 +822,7 @@ namespace KCAccess.UI
                 KInput.Consume(KeyCode.Return);
                 string committed = Text;
                 nav.EndEdit(true);
-                A.Say("Confirmed " + (committed.Length > 0 ? committed : "blank"));
+                A.Say(Loc.F("Confirmed {0}", committed.Length > 0 ? committed : UIText.Blank));
                 return true;
             }
             if (KInput.Down(KeyCode.Escape))
@@ -830,12 +830,12 @@ namespace KCAccess.UI
                 KInput.Consume(KeyCode.Escape);
                 Text = original;
                 nav.EndEdit(true);
-                A.Say("Cancelled, " + (original.Length > 0 ? original : "blank"));
+                A.Say(Loc.F("Cancelled, {0}", original.Length > 0 ? original : UIText.Blank));
                 return true;
             }
             if (KInput.Down(KeyCode.F2) || (KInput.Down(KeyCode.UpArrow) || KInput.Down(KeyCode.DownArrow)))
             {
-                A.Say(Text.Length > 0 ? Text : "blank", force: true);
+                A.Say(Text.Length > 0 ? Text : UIText.Blank, force: true);
             }
             return true;
         }

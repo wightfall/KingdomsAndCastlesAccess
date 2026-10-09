@@ -77,12 +77,12 @@ namespace KCAccess.Game
         /// <summary>The K status line (Enter opens or closes the Twitch voting settings).</summary>
         internal static string StatusLine()
         {
-            if (!Enabled) return "Twitch voting is off";
+            if (!Enabled) return Loc.T("Twitch voting is off");
             string s;
-            if (!Connected) s = "Twitch voting: not connected. Press Enter to open the Twitch voting settings and type your channel name";
+            if (!Connected) s = Loc.T("Twitch voting: not connected. Press Enter to open the Twitch voting settings and type your channel name");
             else if (VoteRunning) s = TwitchText.Status(Options(), SecondsLeft());
-            else s = "Twitch voting connected, no vote running right now";
-            if (LastWinner != null) s += ". Last result: " + LastWinner;
+            else s = Loc.T("Twitch voting connected, no vote running right now");
+            if (LastWinner != null) s += ". " + Loc.F("Last result: {0}", LastWinner);
             return s;
         }
 
@@ -107,7 +107,7 @@ namespace KCAccess.Game
         {
             if (!Enabled)
             {
-                A.Say("Twitch voting is off. Turn on Enable Twitch Chat Voting in the game's settings first.", force: true);
+                A.Say(Loc.T("Twitch voting is off. Turn on Enable Twitch Chat Voting in the game's settings first."), force: true);
                 return;
             }
             var s = StreamerUI.inst;
@@ -115,13 +115,13 @@ namespace KCAccess.Game
             {
                 Hide();
                 A.Cue(Cue.Close);
-                A.Say("Twitch voting settings closed", force: true);
+                A.Say(Loc.T("Twitch voting settings closed"), force: true);
                 return;
             }
             s.Visible(true);
             A.Cue(Cue.Open);
             if (!AccessController.Inst.FocusPanelGroup("Twitch"))
-                A.Say("Twitch voting settings opened. F6 from the map reaches them.", force: true);
+                A.Say(Loc.T("Twitch voting settings opened. F6 from the map reaches them."), force: true);
         }
 
         internal static void Hide()
@@ -141,7 +141,7 @@ namespace KCAccess.Game
         internal static void OnUsernameSet(string username)
         {
             awaitingChannel = string.IsNullOrEmpty(username) ? null : username.ToLowerInvariant();
-            if (awaitingChannel != null) A.SayQueued("Connecting to the Twitch channel " + awaitingChannel);
+            if (awaitingChannel != null) A.SayQueued(Loc.F("Connecting to the Twitch channel {0}", awaitingChannel));
         }
 
         internal static void OnOnline(bool online)
@@ -149,13 +149,13 @@ namespace KCAccess.Game
             if (online)
             {
                 A.Cue(Cue.Placed);
-                A.SayQueued("Connected to the Twitch chat" + (awaitingChannel != null ? " of " + awaitingChannel : string.Empty) + ". Viewers vote by typing the number sign and an option number in chat, for example #2.");
+                A.SayQueued((awaitingChannel != null ? Loc.F("Connected to the Twitch chat of {0}.", awaitingChannel) : Loc.T("Connected to the Twitch chat.")) + " " + Loc.T("Viewers vote by typing the number sign and an option number in chat, for example #2."));
                 awaitingChannel = null;
             }
             else if (awaitingChannel != null)
             {
                 A.Cue(Cue.Error);
-                A.SayQueued("Could not join the Twitch channel " + awaitingChannel + ". Check the channel name and try again.");
+                A.SayQueued(Loc.F("Could not join the Twitch channel {0}. Check the channel name and try again.", awaitingChannel));
                 awaitingChannel = null;
             }
         }
@@ -180,7 +180,7 @@ namespace KCAccess.Game
             countdownSaid = false;
             if (!Connected) return;
             string text = TwitchText.NewVote(Options(), SecondsLeft());
-            if (noVotesRound) text = "Nobody voted. " + text;
+            if (noVotesRound) text = Loc.T("Nobody voted.") + " " + text;
             noVotesRound = false;
             // Said a moment later: the result banner closing (which starts the next vote) and the map announcement
             // that follows would cut it off otherwise.
@@ -267,7 +267,7 @@ namespace KCAccess.Game
             next = Time.unscaledTime + 2f;
             try
             {
-                string text = playing ? Build() : "Kingdoms and Castles\r\nIn the menus\r\n";
+                string text = playing ? Build() : "Kingdoms and Castles\r\n" + Loc.T("In the menus") + "\r\n";
                 if (text == lastWritten) return;
                 File.WriteAllText(FilePath, text, new UTF8Encoding(false));
                 lastWritten = text;
@@ -285,8 +285,8 @@ namespace KCAccess.Game
         {
             return StreamOverlay.Build(
                 Safe(() => TownNameUI.inst != null ? TownNameUI.inst.townName : null),
-                Safe(() => TextUtil.Join(", ", "Year " + Player.inst.CurrYear, Status.SeasonName())),
-                Safe(() => "Population " + Status.Population()),
+                Safe(() => TextUtil.Join(", ", Loc.F("Year {0}", Player.inst.CurrYear), Status.SeasonName())),
+                Safe(() => Loc.F("Population {0}", Status.Population())),
                 Safe(Status.GoldLine),
                 Safe(() => GameEvents.Log.Count > 0 ? GameEvents.Log.Items[0].Text : null),
                 Safe(() => Twitch.VoteRunning ? TwitchText.Status(Twitch.Options(), Twitch.SecondsLeft()) : null));

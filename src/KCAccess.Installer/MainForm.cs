@@ -5,6 +5,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using KCAccess.Core;
 
 namespace KCAccess.Installer
 {
@@ -38,7 +39,7 @@ namespace KCAccess.Installer
         public MainForm(Options options)
         {
             this.options = options;
-            Text = "KCAccess Setup " + Versions.Show(EmbeddedVersion);
+            Text = Loc.F("KCAccess Setup {0}", Versions.Show(EmbeddedVersion));
             Font = new Font("Segoe UI", 10f);
             ClientSize = new Size(620, 400);
             StartPosition = FormStartPosition.CenterScreen;
@@ -49,25 +50,25 @@ namespace KCAccess.Installer
             status.ReadOnly = true;
             status.ScrollBars = ScrollBars.Vertical;
             status.TabIndex = 0;
-            status.AccessibleName = "Status";
+            status.AccessibleName = Loc.T("Status");
             status.SetBounds(12, 12, 596, 250);
             status.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
             status.BackColor = SystemColors.Window;
 
             progress.SetBounds(12, 270, 596, 18);
             progress.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
-            progress.AccessibleName = "Download progress";
+            progress.AccessibleName = Loc.T("Download progress");
             progress.Visible = false;
 
             int y = 300, x = 12;
-            Setup(installButton, "&Install or update", ref x, y, 1, OnInstall);
-            Setup(checkButton, "&Check for updates", ref x, y, 2, OnCheck);
-            Setup(folderButton, "Choose game &folder", ref x, y, 3, OnChooseFolder);
+            Setup(installButton, Loc.T("&Install or update"), ref x, y, 1, OnInstall);
+            Setup(checkButton, Loc.T("&Check for updates"), ref x, y, 2, OnCheck);
+            Setup(folderButton, Loc.T("Choose game &folder"), ref x, y, 3, OnChooseFolder);
             x = 12;
             y += 44;
-            Setup(uninstallButton, "&Uninstall", ref x, y, 4, OnUninstall);
-            Setup(readmeButton, "&Read me", ref x, y, 5, OnReadme);
-            Setup(closeButton, "Cl&ose", ref x, y, 6, (s, e) => Close());
+            Setup(uninstallButton, Loc.T("&Uninstall"), ref x, y, 4, OnUninstall);
+            Setup(readmeButton, Loc.T("&Read me"), ref x, y, 5, OnReadme);
+            Setup(closeButton, Loc.T("Cl&ose"), ref x, y, 6, (s, e) => Close());
             CancelButton = closeButton;
             AcceptButton = installButton;
 
@@ -128,19 +129,19 @@ namespace KCAccess.Installer
             var lines = new System.Collections.Generic.List<string>();
             if (gameDir == null)
             {
-                lines.Add("Kingdoms and Castles was not found. Press Choose game folder and select the folder that contains KingdomsAndCastles.exe.");
+                lines.Add(Loc.T("Kingdoms and Castles was not found. Press Choose game folder and select the folder that contains KingdomsAndCastles.exe."));
             }
             else
             {
                 var inst = Installer;
-                lines.Add("Game folder: " + gameDir);
-                lines.Add("Installed KCAccess version: " + Versions.Show(inst.InstalledVersion) + ".");
-                lines.Add("BepInEx: " + (inst.BepInExInstalled ? "installed." : "not installed, it will be installed together with the mod."));
+                lines.Add(Loc.F("Game folder: {0}", gameDir));
+                lines.Add(Loc.F("Installed KCAccess version: {0}.", Versions.Show(inst.InstalledVersion)));
+                lines.Add(inst.BepInExInstalled ? Loc.T("BepInEx: installed.") : Loc.T("BepInEx: not installed, it will be installed together with the mod."));
             }
-            lines.Add("This setup contains version " + Versions.Show(EmbeddedVersion) + (HasPayload ? "." : " (no offline package, downloads from GitHub)."));
-            if (checkedOnline) lines.Add(latest != null ? "Newest version on GitHub: " + Versions.Show(latest.Version) + "." : "Could not reach GitHub to check for updates.");
+            lines.Add(HasPayload ? Loc.F("This setup contains version {0}.", Versions.Show(EmbeddedVersion)) : Loc.F("This setup contains version {0} (no offline package, downloads from GitHub).", Versions.Show(EmbeddedVersion)));
+            if (checkedOnline) lines.Add(latest != null ? Loc.F("Newest version on GitHub: {0}.", Versions.Show(latest.Version)) : Loc.T("Could not reach GitHub to check for updates."));
             if (!string.IsNullOrEmpty(extra)) lines.Add(extra);
-            lines.Add("Press Install or update to install, Check for updates to look for a newer version, Escape to close.");
+            lines.Add(Loc.T("Press Install or update to install, Check for updates to look for a newer version, Escape to close."));
             status.Text = string.Join(Environment.NewLine, lines.ToArray());
             installButton.Enabled = gameDir != null && !busy;
             uninstallButton.Enabled = gameDir != null && !busy && (Installer.InstalledVersion != null || Directory.Exists(Installer.PluginDir));
@@ -160,7 +161,7 @@ namespace KCAccess.Installer
 
         private async Task CheckOnlineAsync(bool interactive)
         {
-            SetBusy(true, "Checking GitHub for updates...");
+            SetBusy(true, Loc.T("Checking GitHub for updates..."));
             try
             {
                 latest = await github.GetLatestAsync();
@@ -168,7 +169,7 @@ namespace KCAccess.Installer
             catch (Exception ex)
             {
                 latest = null;
-                if (interactive) MessageBox.Show(this, "Could not check for updates: " + ex.Message, Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                if (interactive) MessageBox.Show(this, Loc.F("Could not check for updates: {0}", ex.Message), Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             checkedOnline = true;
             SetBusy(false);
@@ -179,23 +180,23 @@ namespace KCAccess.Installer
             Version best = Versions.IsNewer(EmbeddedVersion, installed) ? EmbeddedVersion : installed;
             if (latest != null && Versions.IsNewer(latest.Version, best))
             {
-                string have = installed == null ? "KCAccess is not installed yet" : "you have " + Versions.Show(installed);
+                string have = installed == null ? Loc.T("KCAccess is not installed yet") : Loc.F("you have {0}", Versions.Show(installed));
                 var answer = MessageBox.Show(this,
-                    "KCAccess " + Versions.Show(latest.Version) + " is available (" + have + ").\n\n" + Shorten(latest.Body) + "\n\nDownload and install it now?",
-                    "Update available", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                    Loc.F("KCAccess {0} is available ({1}).", Versions.Show(latest.Version), have) + "\n\n" + Shorten(latest.Body) + "\n\n" + Loc.T("Download and install it now?"),
+                    Loc.T("Update available"), MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 if (answer == DialogResult.Yes) await InstallAsync();
-                else ShowStatus("Update postponed. Run this program again any time to install it.");
+                else ShowStatus(Loc.T("Update postponed. Run this program again any time to install it."));
             }
             else if (installed != null && Versions.IsNewer(EmbeddedVersion, installed))
             {
-                var answer = MessageBox.Show(this, "This setup contains KCAccess " + Versions.Show(EmbeddedVersion) + " and you have " + Versions.Show(installed) + ". Install it now?",
-                    "Update available", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                var answer = MessageBox.Show(this, Loc.F("This setup contains KCAccess {0} and you have {1}. Install it now?", Versions.Show(EmbeddedVersion), Versions.Show(installed)),
+                    Loc.T("Update available"), MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 if (answer == DialogResult.Yes) await InstallAsync();
             }
             else if (interactive)
             {
-                MessageBox.Show(this, installed == null ? "KCAccess is not installed. Press Install or update." : "You have the newest version, " + Versions.Show(installed) + ".",
-                    "No updates", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(this, installed == null ? Loc.T("KCAccess is not installed. Press Install or update.") : Loc.F("You have the newest version, {0}.", Versions.Show(installed)),
+                    Loc.T("No updates"), MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 
@@ -214,7 +215,7 @@ namespace KCAccess.Installer
             if (gameDir == null || busy) return;
             while (ModInstaller.GameRunning())
             {
-                var r = MessageBox.Show(this, "Kingdoms and Castles is running. Please close the game, then press Retry.", Text, MessageBoxButtons.RetryCancel, MessageBoxIcon.Warning);
+                var r = MessageBox.Show(this, Loc.T("Kingdoms and Castles is running. Please close the game, then press Retry."), Text, MessageBoxButtons.RetryCancel, MessageBoxIcon.Warning);
                 if (r != DialogResult.Retry) return;
             }
             var inst = Installer;
@@ -229,12 +230,12 @@ namespace KCAccess.Installer
                 {
                     if (latest == null)
                     {
-                        SetBusy(true, "Looking up the newest release...");
+                        SetBusy(true, Loc.T("Looking up the newest release..."));
                         latest = await github.GetLatestAsync();
                     }
                     var asset = latest.FindAsset(inst.BepInExInstalled ? AssetKind.ModOnly : AssetKind.Bundle) ?? latest.FindAsset(AssetKind.Bundle);
-                    if (asset == null) throw new InvalidOperationException("The release has no package to download.");
-                    SetBusy(true, "Downloading " + asset.Name + "...");
+                    if (asset == null) throw new InvalidOperationException(Loc.T("The release has no package to download."));
+                    SetBusy(true, Loc.F("Downloading {0}...", asset.Name));
                     progress.Visible = true;
                     tempZip = await github.DownloadAsync(asset, new Progress<int>(p => progress.Value = Math.Max(0, Math.Min(100, p))));
                     // Also fetch the new setup program so the updater in the game folder stays current.
@@ -259,7 +260,7 @@ namespace KCAccess.Installer
                     installing = EmbeddedVersion;
                 }
 
-                SetBusy(true, "Installing KCAccess " + Versions.Show(installing) + "...");
+                SetBusy(true, Loc.F("Installing KCAccess {0}...", Versions.Show(installing)));
                 int files;
                 using (package)
                 {
@@ -267,12 +268,12 @@ namespace KCAccess.Installer
                 }
                 string updater = inst.InstallUpdaterCopy(tempSetup ?? Application.ExecutablePath);
                 SetBusy(false);
-                ShowStatus("Installed KCAccess " + Versions.Show(installing) + " (" + files + " files). " +
-                           "The updater was copied to " + updater + ". Run it any time to check for updates.");
+                ShowStatus(Loc.F("Installed KCAccess {0} ({1} files).", Versions.Show(installing), files) + " " +
+                           Loc.F("The updater was copied to {0}. Run it any time to check for updates.", updater));
                 MessageBox.Show(this,
-                    "KCAccess " + Versions.Show(installing) + " is installed.\n\nStart Kingdoms and Castles from Steam. After a few seconds you will hear \"Main menu\". Press F1 in the game for help.\n\n" +
-                    "To check for updates later, run KCAccess-Updater.exe in the game folder.",
-                    "Installation complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    Loc.F("KCAccess {0} is installed.", Versions.Show(installing)) + "\n\n" + Loc.T("Start Kingdoms and Castles from Steam. After a few seconds you will hear \"Main menu\". Press F1 in the game for help.") + "\n\n" +
+                    Loc.T("To check for updates later, run KCAccess-Updater.exe in the game folder."),
+                    Loc.T("Installation complete"), MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (UnauthorizedAccessException)
             {
@@ -282,8 +283,8 @@ namespace KCAccess.Installer
             catch (Exception ex)
             {
                 SetBusy(false);
-                ShowStatus("Installation failed: " + ex.Message);
-                MessageBox.Show(this, "Installation failed: " + ex.Message, Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ShowStatus(Loc.F("Installation failed: {0}", ex.Message));
+                MessageBox.Show(this, Loc.F("Installation failed: {0}", ex.Message), Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
@@ -295,7 +296,7 @@ namespace KCAccess.Installer
 
         private void OfferElevation()
         {
-            var r = MessageBox.Show(this, "Windows did not allow writing to the game folder. Restart setup as administrator?", Text, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+            var r = MessageBox.Show(this, Loc.T("Windows did not allow writing to the game folder. Restart setup as administrator?"), Text, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
             if (r != DialogResult.Yes) return;
             try
             {
@@ -304,7 +305,7 @@ namespace KCAccess.Installer
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, "Could not restart as administrator: " + ex.Message, Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, Loc.F("Could not restart as administrator: {0}", ex.Message), Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -337,13 +338,13 @@ namespace KCAccess.Installer
 
         private void OnChooseFolder(object sender, EventArgs e)
         {
-            using (var dlg = new FolderBrowserDialog { Description = "Select the Kingdoms and Castles folder (it contains KingdomsAndCastles.exe)", ShowNewFolderButton = false })
+            using (var dlg = new FolderBrowserDialog { Description = Loc.T("Select the Kingdoms and Castles folder (it contains KingdomsAndCastles.exe)"), ShowNewFolderButton = false })
             {
                 if (gameDir != null) dlg.SelectedPath = gameDir;
                 if (dlg.ShowDialog(this) != DialogResult.OK) return;
                 if (!SteamLibrary.IsGameFolder(dlg.SelectedPath))
                 {
-                    MessageBox.Show(this, "That folder does not contain KingdomsAndCastles.exe.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show(this, Loc.T("That folder does not contain KingdomsAndCastles.exe."), Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
                 gameDir = dlg.SelectedPath;
@@ -356,25 +357,25 @@ namespace KCAccess.Installer
             if (gameDir == null) return;
             if (ModInstaller.GameRunning())
             {
-                MessageBox.Show(this, "Please close Kingdoms and Castles first.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(this, Loc.T("Please close Kingdoms and Castles first."), Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            var r = MessageBox.Show(this, "Remove KCAccess from the game?", "Uninstall", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            var r = MessageBox.Show(this, Loc.T("Remove KCAccess from the game? Your edited language files are removed too."), Loc.T("Uninstall"), MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (r != DialogResult.Yes) return;
-            var loader = MessageBox.Show(this, "Also remove BepInEx? Choose No if you use other BepInEx mods.", "Uninstall", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            var loader = MessageBox.Show(this, Loc.T("Also remove BepInEx? Choose No if you use other BepInEx mods."), Loc.T("Uninstall"), MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             try
             {
                 Installer.Uninstall(loader == DialogResult.Yes);
-                ShowStatus("KCAccess was removed.");
-                MessageBox.Show(this, "KCAccess was removed.", "Uninstall", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                ShowStatus(Loc.T("KCAccess was removed."));
+                MessageBox.Show(this, Loc.T("KCAccess was removed."), Loc.T("Uninstall"), MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (UnauthorizedAccessException)
             {
-                MessageBox.Show(this, "Windows did not allow changing the game folder. Run setup as administrator.", Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, Loc.T("Windows did not allow changing the game folder. Run setup as administrator."), Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, "Uninstall failed: " + ex.Message, Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, Loc.F("Uninstall failed: {0}", ex.Message), Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -388,7 +389,7 @@ namespace KCAccess.Installer
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, "Could not open the read me: " + ex.Message, Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, Loc.F("Could not open the read me: {0}", ex.Message), Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }

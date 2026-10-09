@@ -107,7 +107,7 @@ namespace KCAccess.Game
             if (KInput.Down(KeyCode.Escape))
             {
                 // Escape goes on to the game / map code, which ends placing.
-                if (built > 0) Finish("stopped with Escape");
+                if (built > 0) Finish(Loc.T("stopped with Escape"));
                 else Stop();
                 return;
             }
@@ -122,7 +122,7 @@ namespace KCAccess.Game
                 case Phase.WaitAccept:
                     if (Time.unscaledTime > deadline)
                     {
-                        if (built > 0) Finish("the game did not build the next level");
+                        if (built > 0) Finish(Loc.T("the game did not build the next level"));
                         else Stop();
                     }
                     break;
@@ -146,7 +146,7 @@ namespace KCAccess.Game
                     }
                     else if (Time.unscaledTime > deadline)
                     {
-                        Finish("the game did not pick the block up again, press Enter to build the next level yourself");
+                        Finish(Loc.T("the game did not pick the block up again, press Enter to build the next level yourself"));
                     }
                     break;
                 case Phase.Pressing:
@@ -174,13 +174,13 @@ namespace KCAccess.Game
             Stop();
             bool again = GameUI.inst != null && GameUI.inst.CanPlaceAgain();
             A.Cue(Cue.Placed);
-            A.Say(text + (again ? ". Move to place another, Escape to stop." : "."));
+            A.Say(text + "." + (again ? " " + Loc.T("Move to place another, Escape to stop.") : string.Empty));
         }
 
         /// <summary>Enter or Shift Enter while levels are still being built: stop after the levels already built.</summary>
         internal void Interrupt()
         {
-            if (built > 0) Finish("stopped");
+            if (built > 0) Finish(Loc.T("stopped"));
             else Stop();
         }
 

@@ -32,9 +32,9 @@ namespace KCAccess.Tests
         [Fact]
         public void OwnerWords()
         {
-            Assert.Equal("your ", UnitText.Owner(true, false));
-            Assert.Equal("enemy ", UnitText.Owner(false, true));
-            Assert.Equal("foreign ", UnitText.Owner(false, false));
+            Assert.Equal("your dragon", UnitText.Owned(true, false, "dragon"));
+            Assert.Equal("enemy dragon", UnitText.Owned(false, true, "dragon"));
+            Assert.Equal("foreign dragon", UnitText.Owned(false, false, "dragon"));
         }
 
         [Fact]

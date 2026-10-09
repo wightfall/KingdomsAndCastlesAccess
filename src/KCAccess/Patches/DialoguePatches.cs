@@ -49,7 +49,7 @@ namespace KCAccess
                 if (responses == null || responses.Length == 0) return;
                 int enabled = 0;
                 foreach (var r in responses) if (r != null && r.enabled) enabled++;
-                A.SayQueued(TextUtil.Plural(enabled, "reply", "replies") + ". Up and Down choose, Enter answers.");
+                A.SayQueued(Loc.P(enabled, "{0} reply", "{0} replies") + ". " + Loc.T("Up and Down choose, Enter answers."));
                 AccessController.Inst?.Nav.RequestFocus(go => go.GetComponent<StandardUIResponseButton>() != null);
             }
             catch (Exception e)

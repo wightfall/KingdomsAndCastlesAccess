@@ -170,6 +170,6 @@ namespace KCAccess.Core
         }
 
         /// <summary>"3 of 7"</summary>
-        public string PositionText => HasCurrent ? (Index + 1) + " of " + items.Count : string.Empty;
+        public string PositionText => HasCurrent ? Loc.F("{0} of {1}", Index + 1, items.Count) : string.Empty;
     }
 }

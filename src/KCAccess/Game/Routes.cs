@@ -26,10 +26,8 @@ namespace KCAccess.Game
             }
         }
 
-        private static string Kind(ILogisticTransport t) => t is TransportCart ? "cart" : "ship";
-
-        internal static string ModeIntro() => KeyHelp.Resolve(
-            "Route editing. Move the cursor to a dock, a building or a tile, press F6 for the route panel, choose a stop and press {MoveSoldiers} to move it to the cursor. Enter on the map says whether a stop can go there. Escape returns to normal mode.");
+        internal static string ModeIntro() => KeyHelp.Resolve(Loc.T(
+            "Route editing. Move the cursor to a dock, a building or a tile, press F6 for the route panel, choose a stop and press {MoveSoldiers} to move it to the cursor. Enter on the map says whether a stop can go there. Escape returns to normal mode."));
 
         /// <summary>
         /// Where a stop of <paramref name="t"/> could go on <paramref name="cell"/>: a building (like the game, the nearest valid
@@ -42,12 +40,12 @@ namespace KCAccess.Game
             var mode = Panel != null ? Panel.cursorMode : null;
             if (t == null || mode == null)
             {
-                why = "no route panel is open";
+                why = Loc.T("no route panel is open");
                 return false;
             }
             if (cell == null)
             {
-                why = "outside the map";
+                why = Loc.T("outside the map");
                 return false;
             }
             Building best = null;
@@ -73,13 +71,15 @@ namespace KCAccess.Game
                     building = best;
                     return true;
                 }
-                why = best.FriendlyName + " cannot be used by this " + Kind(t) + ", for example the docks of that kingdom are closed to you";
+                why = t is TransportCart
+                    ? Loc.F("{0} cannot be used by this cart, for example the docks of that kingdom are closed to you", best.FriendlyName)
+                    : Loc.F("{0} cannot be used by this ship, for example the docks of that kingdom are closed to you", best.FriendlyName);
                 return false;
             }
             if (mode.ValidCell(cell) && t.ValidForOrder(cell)) return true;
             why = t is TransportCart
-                ? "carts stop at stockpiles, granaries, markets and other storage or production buildings, or on roads and open ground of their own island"
-                : "ships stop at docks or on water they can reach";
+                ? Loc.T("carts stop at stockpiles, granaries, markets and other storage or production buildings, or on roads and open ground of their own island")
+                : Loc.T("ships stop at docks or on water they can reach");
             return false;
         }
 
@@ -90,18 +90,18 @@ namespace KCAccess.Game
             if (t == null)
             {
                 A.Cue(Cue.Error);
-                A.Say("No ship or cart is selected. Shift Enter on your ship or cart opens its route.");
+                A.Say(Loc.T("No ship or cart is selected. Shift Enter on your ship or cart opens its route."));
                 return;
             }
             if (TryTarget(t, cell, out var b, out var why))
             {
                 A.Cue(Cue.PlaceValid);
-                A.Say(KeyHelp.Resolve("A stop can go here: " + (b != null ? PlaceName(b) : "this tile, " + CellInfo.Brief(cell, false)) + ". F6, choose a stop, {MoveSoldiers} moves it here."), force: true);
+                A.Say(KeyHelp.Resolve(Loc.F("A stop can go here: {0}. F6, choose a stop, {MoveSoldiers} moves it here.", b != null ? PlaceName(b) : Loc.F("this tile, {0}", CellInfo.Brief(cell, false)))), force: true);
             }
             else
             {
                 A.Cue(Cue.PlaceInvalid);
-                A.Say("No stop can go here: " + why + ". " + CellInfo.Brief(cell, false), force: true);
+                A.Say(Loc.F("No stop can go here: {0}.", why) + " " + CellInfo.Brief(cell, false), force: true);
             }
         }
 
@@ -145,7 +145,7 @@ namespace KCAccess.Game
                 end = order.endPosition; // the building of the stop is gone
             }
             var cell = World.inst.GetCellData(end);
-            if (waypoint) place = "waypoint" + (cell != null ? " on " + CellInfo.Terrain(cell) : string.Empty);
+            if (waypoint) place = cell != null ? Loc.F("waypoint on {0}", CellInfo.Terrain(cell)) : Loc.T("waypoint");
             else place = PlaceName(order.GetBuilding());
             string where = Directions.Relative(MapController.Inst.CursorPos, new GridPos(Mathf.FloorToInt(end.x), Mathf.FloorToInt(end.z)));
             bool sells = false;
@@ -161,7 +161,7 @@ namespace KCAccess.Game
             return UnitText.RouteStop(index, orders.Count, place, where, waypoint, sells, Cargo(order.loadFromStart), Cargo(order.unloadAtEnd));
         }
 
-        private static string Checked(Toggle t) => t.isOn ? "checked" : "not checked";
+        private static string Checked(Toggle t) => t.isOn ? Loc.T("checked") : Loc.T("not checked");
 
         /// <summary>Spoken description of a control in a route stop row, or null for the default.</summary>
         internal static string Describe(LogisticsDestUI row, Selectable control)
@@ -169,14 +169,14 @@ namespace KCAccess.Game
             if (row == null || control == null || Transport == null) return null;
             int index = Transport.GetOrders().IndexOf(row.logisticOrder) + 1;
             if (control == row.HeaderDockTrack)
-                return KeyHelp.Resolve(StopText(row) + ". Button, Enter shows it, {MoveSoldiers} moves this stop to the map cursor");
+                return StopText(row) + ". " + KeyHelp.Resolve(Loc.T("Button, Enter shows it, {MoveSoldiers} moves this stop to the map cursor"));
             if (control == row.PickUpToggle)
-                return "Stop " + index + ", pick up, check box, " + Checked(row.PickUpToggle)
-                       + (row.PickUpToggle.isOn && !row.PickUpConfirm.activeSelf ? ", " + (Cargo(row.logisticOrder.loadFromStart) ?? "nothing") + ", Shift Enter changes the amounts" : string.Empty);
+                return Loc.F("Stop {0}, pick up, check box, {1}", index, Checked(row.PickUpToggle))
+                       + (row.PickUpToggle.isOn && !row.PickUpConfirm.activeSelf ? ", " + (Cargo(row.logisticOrder.loadFromStart) ?? Loc.T("nothing")) + ", " + Loc.T("Shift Enter changes the amounts") : string.Empty);
             if (control == row.DropOffToggle)
-                return "Stop " + index + ", drop off, check box, " + Checked(row.DropOffToggle)
-                       + (row.DropOffToggle.isOn && !row.DropOffConfirm.activeSelf ? ", " + (Cargo(row.logisticOrder.unloadAtEnd) ?? "nothing") + ", Shift Enter changes the amounts" : string.Empty);
-            if (control == row.DeleteBtn) return "Remove stop " + index + ", button";
+                return Loc.F("Stop {0}, drop off, check box, {1}", index, Checked(row.DropOffToggle))
+                       + (row.DropOffToggle.isOn && !row.DropOffConfirm.activeSelf ? ", " + (Cargo(row.logisticOrder.unloadAtEnd) ?? Loc.T("nothing")) + ", " + Loc.T("Shift Enter changes the amounts") : string.Empty);
+            if (control == row.DeleteBtn) return Loc.F("Remove stop {0}, button", index);
             return null;
         }
 
@@ -197,7 +197,7 @@ namespace KCAccess.Game
                 if (edit == null || toggle == null || !toggle.isOn) return false;
                 edit.onClick.Invoke();
                 A.Cue(Cue.Open);
-                A.Say("Amounts open for changes: move down to the resource fields, type the amounts, then choose the confirm button", force: true);
+                A.Say(Loc.T("Amounts open for changes: move down to the resource fields, type the amounts, then choose the confirm button"), force: true);
                 return true;
             }
             return false;
@@ -212,17 +212,17 @@ namespace KCAccess.Game
             if (!TryTarget(t, cell, out var b, out var why))
             {
                 A.Cue(Cue.Error);
-                A.Say("Cannot move the stop to the cursor: " + why, force: true);
+                A.Say(Loc.F("Cannot move the stop to the cursor: {0}", why), force: true);
                 return;
             }
             if (b != null) order.SetEnd(b);
             else order.SetEnd(cell.Center);
             Panel.PopulateUI(); // redraws the route, re-reads every stop and checks the orders like a mouse drag does
             A.Cue(Cue.Placed);
-            A.Say(StopText(row) ?? "Stop moved", force: true);
+            A.Say(StopText(row) ?? Loc.T("Stop moved"), force: true);
         }
 
-        internal static string Help(LogisticsDestUI row) => row == null ? null : KeyHelp.Resolve(
-            "On a route stop: {MoveSoldiers} moves the stop to the dock, building or tile under the map cursor. On the pick up and drop off check boxes Shift Enter changes the amounts. The add buttons at the start and end of the list add stops.");
+        internal static string Help(LogisticsDestUI row) => row == null ? null : KeyHelp.Resolve(Loc.T(
+            "On a route stop: {MoveSoldiers} moves the stop to the dock, building or tile under the map cursor. On the pick up and drop off check boxes Shift Enter changes the amounts. The add buttons at the start and end of the list add stops."));
     }
 }

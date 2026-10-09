@@ -79,7 +79,7 @@ namespace KCAccess.Game
                 announced = true;
                 Rebuild();
                 A.Cue(Cue.Open);
-                A.Say(TextUtil.Sentences(Title, List.Count == 0 ? "empty" : List.CurrentLabel));
+                A.Say(TextUtil.Sentences(Title, List.Count == 0 ? Loc.T("empty") : List.CurrentLabel));
                 return;
             }
             if (KInput.Plain(KeyCode.Escape))
@@ -125,7 +125,7 @@ namespace KCAccess.Game
             if (r == NavResult.Empty)
             {
                 A.Cue(Cue.Edge);
-                A.Say("empty");
+                A.Say(Loc.T("empty"));
                 return;
             }
             A.Cue(r == NavResult.HitEdge ? Cue.Edge : Cue.Navigate);

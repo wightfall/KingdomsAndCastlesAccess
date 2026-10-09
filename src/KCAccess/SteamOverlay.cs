@@ -40,13 +40,13 @@ namespace KCAccess
             if (Active)
             {
                 A.Cue(KCAccess.Core.Cue.Open);
-                A.Say("Steam overlay opened. It takes the keyboard away from the game. Press Shift Tab or Escape to return. "
-                    + "To stop this, turn off the Steam overlay or change its shortcut in Steam settings.", force: true);
+                A.Say(KCAccess.Core.Loc.T("Steam overlay opened. It takes the keyboard away from the game. Press Shift Tab or Escape to return. "
+                    + "To stop this, turn off the Steam overlay or change its shortcut in Steam settings."), force: true);
             }
             else
             {
                 A.Cue(KCAccess.Core.Cue.Close);
-                A.Say("Back in the game", force: true);
+                A.Say(KCAccess.Core.Loc.T("Back in the game"), force: true);
             }
         }
     }

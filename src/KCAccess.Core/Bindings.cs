@@ -49,30 +49,45 @@ namespace KCAccess.Core
         public override string ToString() => (Ctrl ? "Ctrl+" : "") + (Shift ? "Shift+" : "") + (Alt ? "Alt+" : "") + Key;
 
         /// <summary>How the chord is spoken: "Control Shift O", "Backslash", "Page Down".</summary>
-        public string Spoken() => (Ctrl ? "Control " : "") + (Shift ? "Shift " : "") + (Alt ? "Alt " : "") + KeyName(Key);
+        public string Spoken() => (Ctrl ? Loc.T("Control") + " " : "") + (Shift ? Loc.T("Shift") + " " : "") + (Alt ? Loc.T("Alt") + " " : "") + KeyName(Key);
 
         public static string KeyName(string key)
         {
-            if (string.IsNullOrEmpty(key)) return "none";
+            if (string.IsNullOrEmpty(key)) return Loc.T("none");
             switch (key)
             {
-                case "LeftBracket": return "open bracket";
-                case "RightBracket": return "close bracket";
-                case "Backslash": return "Backslash";
-                case "Slash": return "Slash";
-                case "Semicolon": return "Semicolon";
-                case "Quote": return "Apostrophe";
-                case "Comma": return "Comma";
-                case "Period": return "Period";
-                case "Minus": return "Minus";
-                case "Equals": return "Equals";
-                case "BackQuote": return "Grave accent";
-                case "Return": return "Enter";
+                case "LeftBracket": return Loc.T("open bracket");
+                case "RightBracket": return Loc.T("close bracket");
+                case "Backslash": return Loc.T("Backslash");
+                case "Slash": return Loc.T("Slash");
+                case "Semicolon": return Loc.T("Semicolon");
+                case "Quote": return Loc.T("Apostrophe");
+                case "Comma": return Loc.T("Comma");
+                case "Period": return Loc.T("Period");
+                case "Minus": return Loc.T("Minus");
+                case "Equals": return Loc.T("Equals");
+                case "BackQuote": return Loc.T("Grave accent");
+                case "Return": return Loc.T("Enter");
+                case "KeypadEnter": return Loc.T("Numpad Enter");
+                case "Space": return Loc.T("Space");
+                case "Tab": return Loc.T("Tab");
+                case "Escape": return Loc.T("Escape");
+                case "Backspace": return Loc.T("Backspace");
+                case "Delete": return Loc.T("Delete");
+                case "Insert": return Loc.T("Insert");
+                case "Home": return Loc.T("Home");
+                case "End": return Loc.T("End");
+                case "PageUp": return Loc.T("Page Up");
+                case "PageDown": return Loc.T("Page Down");
+                case "UpArrow": return Loc.T("Up Arrow");
+                case "DownArrow": return Loc.T("Down Arrow");
+                case "LeftArrow": return Loc.T("Left Arrow");
+                case "RightArrow": return Loc.T("Right Arrow");
             }
             var m = Regex.Match(key, "^Alpha([0-9])$");
             if (m.Success) return m.Groups[1].Value;
             m = Regex.Match(key, "^Keypad([0-9])$");
-            if (m.Success) return "Numpad " + m.Groups[1].Value;
+            if (m.Success) return Loc.F("Numpad {0}", m.Groups[1].Value);
             return TextUtil.Humanize(key);
         }
 
@@ -96,6 +111,9 @@ namespace KCAccess.Core
         public readonly Chord Default;
         public readonly BindingScope Scope;
 
+        /// <summary>The action's name in the player's language.</summary>
+        public string SpokenName => Loc.T(Name);
+
         public BindingDef(string id, string name, string def, BindingScope scope)
         {
             Id = id;
@@ -110,42 +128,51 @@ namespace KCAccess.Core
     {
         public static readonly List<BindingDef> Defs = new List<BindingDef>
         {
-            new BindingDef("Settings", "Mod settings", "Ctrl+Shift+O", BindingScope.Global),
-            new BindingDef("KeyList", "Key list", "Shift+F1", BindingScope.Global),
-            new BindingDef("Mute", "Sound cues on or off", "Ctrl+Shift+M", BindingScope.Global),
-            new BindingDef("Redetect", "Search for the screen reader again", "Ctrl+Shift+F5", BindingScope.Global),
-            new BindingDef("Reset", "Reset the mod", "Ctrl+Shift+F10", BindingScope.Global),
-            new BindingDef("Report", "Keyboard report", "Ctrl+Shift+F11", BindingScope.Global),
-            new BindingDef("TileInfo", "Describe the tile", "I", BindingScope.Map),
-            new BindingDef("BuildingDetails", "Details of the selected building", "Shift+I", BindingScope.Map),
-            new BindingDef("Survey", "Survey the area", "O", BindingScope.Map),
-            new BindingDef("Coordinates", "Cursor coordinates", "G", BindingScope.Map),
-            new BindingDef("Date", "Date, season and weather", "T", BindingScope.Map),
-            new BindingDef("Status", "Kingdom status", "K", BindingScope.Map),
-            new BindingDef("Log", "Notification history", "L", BindingScope.Map),
-            new BindingDef("LastNotification", "Repeat the last notification", "Shift+L", BindingScope.Map),
-            new BindingDef("BuildMenu", "Build menu", "B", BindingScope.Map),
-            new BindingDef("Keep", "Jump to your keep", "Home", BindingScope.Map),
-            new BindingDef("SelectedBuilding", "Jump to the selected building", "End", BindingScope.Map),
-            new BindingDef("PrevCategory", "Previous scan category", "PageUp", BindingScope.Map),
-            new BindingDef("NextCategory", "Next scan category", "PageDown", BindingScope.Map),
-            new BindingDef("PrevItem", "Previous target in the category", "LeftBracket", BindingScope.Map),
-            new BindingDef("NextItem", "Next target in the category", "RightBracket", BindingScope.Map),
-            new BindingDef("JumpTarget", "Jump to the target", "Backslash", BindingScope.Map),
-            new BindingDef("WhereTarget", "Where is the target", "Shift+Backslash", BindingScope.Map),
-            new BindingDef("Walk", "Walk to the target", "N", BindingScope.Map),
-            new BindingDef("WalkStraight", "Walk to the target in a straight line", "Ctrl+N", BindingScope.Map),
-            new BindingDef("Beacon", "Target beacon on or off", "Shift+N", BindingScope.Map),
-            new BindingDef("ChopMode", "Chop trees mode on or off", "Shift+C", BindingScope.Map),
-            new BindingDef("Validity", "While placing: why the spot is valid or not", "V", BindingScope.Map),
-            new BindingDef("StackMore", "Castle blocks: build one more level with each placement", "Shift+PageUp", BindingScope.Map),
-            new BindingDef("StackLess", "Castle blocks: build one level fewer with each placement", "Shift+PageDown", BindingScope.Map),
-            new BindingDef("MoveSoldiers", "Send selected soldiers to the cursor", "M", BindingScope.Map),
-            new BindingDef("Alert", "Respond to the nearest alert (exclamation mark: advisor news, waiting envoy, stopped cart, ship)", "Ctrl+E", BindingScope.Map),
+            new BindingDef("Settings", Loc.N("Mod settings"), "Ctrl+Shift+O", BindingScope.Global),
+            new BindingDef("KeyList", Loc.N("Key list"), "Shift+F1", BindingScope.Global),
+            new BindingDef("Mute", Loc.N("Sound cues on or off"), "Ctrl+Shift+M", BindingScope.Global),
+            new BindingDef("Redetect", Loc.N("Search for the screen reader again"), "Ctrl+Shift+F5", BindingScope.Global),
+            new BindingDef("Reset", Loc.N("Reset the mod"), "Ctrl+Shift+F10", BindingScope.Global),
+            new BindingDef("Report", Loc.N("Keyboard report"), "Ctrl+Shift+F11", BindingScope.Global),
+            new BindingDef("TileInfo", Loc.N("Describe the tile"), "I", BindingScope.Map),
+            new BindingDef("BuildingDetails", Loc.N("Details of the selected building"), "Shift+I", BindingScope.Map),
+            new BindingDef("Survey", Loc.N("Survey the area"), "O", BindingScope.Map),
+            new BindingDef("Coordinates", Loc.N("Cursor coordinates"), "G", BindingScope.Map),
+            new BindingDef("Date", Loc.N("Date, season and weather"), "T", BindingScope.Map),
+            new BindingDef("Status", Loc.N("Kingdom status"), "K", BindingScope.Map),
+            new BindingDef("Log", Loc.N("Notification history"), "L", BindingScope.Map),
+            new BindingDef("LastNotification", Loc.N("Repeat the last notification"), "Shift+L", BindingScope.Map),
+            new BindingDef("BuildMenu", Loc.N("Build menu"), "B", BindingScope.Map),
+            new BindingDef("Keep", Loc.N("Jump to your keep"), "Home", BindingScope.Map),
+            new BindingDef("SelectedBuilding", Loc.N("Jump to the selected building"), "End", BindingScope.Map),
+            new BindingDef("PrevCategory", Loc.N("Previous scan category"), "PageUp", BindingScope.Map),
+            new BindingDef("NextCategory", Loc.N("Next scan category"), "PageDown", BindingScope.Map),
+            new BindingDef("PrevItem", Loc.N("Previous target in the category"), "LeftBracket", BindingScope.Map),
+            new BindingDef("NextItem", Loc.N("Next target in the category"), "RightBracket", BindingScope.Map),
+            new BindingDef("JumpTarget", Loc.N("Jump to the target"), "Backslash", BindingScope.Map),
+            new BindingDef("WhereTarget", Loc.N("Where is the target"), "Shift+Backslash", BindingScope.Map),
+            new BindingDef("Walk", Loc.N("Walk to the target"), "N", BindingScope.Map),
+            new BindingDef("WalkStraight", Loc.N("Walk to the target in a straight line"), "Ctrl+N", BindingScope.Map),
+            new BindingDef("Beacon", Loc.N("Target beacon on or off"), "Shift+N", BindingScope.Map),
+            new BindingDef("ChopMode", Loc.N("Chop trees mode on or off"), "Shift+C", BindingScope.Map),
+            new BindingDef("Validity", Loc.N("While placing: why the spot is valid or not"), "V", BindingScope.Map),
+            new BindingDef("StackMore", Loc.N("Castle blocks: build one more level with each placement"), "Shift+PageUp", BindingScope.Map),
+            new BindingDef("StackLess", Loc.N("Castle blocks: build one level fewer with each placement"), "Shift+PageDown", BindingScope.Map),
+            new BindingDef("MoveSoldiers", Loc.N("Send selected soldiers to the cursor"), "M", BindingScope.Map),
+            new BindingDef("Alert", Loc.N("Respond to the nearest alert (exclamation mark: advisor news, waiting envoy, stopped cart, ship)"), "Ctrl+E", BindingScope.Map),
         };
 
         /// <summary>Keys the mod always uses for itself; they cannot be given to another action.</summary>
-        public static readonly List<KeyValuePair<Chord, string>> Fixed = BuildFixed();
+        public static readonly List<KeyValuePair<Chord, FixedUse>> Fixed = BuildFixed();
+
+        /// <summary>What a fixed key does: an English text (translated when spoken) with an optional {0} number.</summary>
+        public struct FixedUse
+        {
+            public string Text;
+            public int Number;
+
+            public override string ToString() => Loc.F(Text, Number);
+        }
 
         private readonly Dictionary<string, Chord> current = new Dictionary<string, Chord>();
 
@@ -180,19 +207,19 @@ namespace KCAccess.Core
         public string Conflict(string id, Chord chord, Func<Chord, string> gameUse = null)
         {
             var def = Def(id);
-            if (def == null) return "unknown action";
-            if (chord.IsEmpty) return "no key";
+            if (def == null) return Loc.T("unknown action");
+            if (chord.IsEmpty) return Loc.T("no key");
             foreach (var f in Fixed)
-                if (f.Key.Equals(chord)) return "it is used by the mod for " + f.Value;
+                if (f.Key.Equals(chord)) return Loc.F("it is used by the mod for {0}", f.Value.ToString());
             foreach (var other in Defs)
             {
                 if (other.Id == id) continue;
                 // Map keys only clash with map and global keys; global keys clash with everything.
                 bool overlap = def.Scope == BindingScope.Global || other.Scope == BindingScope.Global || def.Scope == other.Scope;
-                if (overlap && Get(other.Id).Equals(chord)) return "it is used by the mod for " + other.Name;
+                if (overlap && Get(other.Id).Equals(chord)) return Loc.F("it is used by the mod for {0}", other.SpokenName);
             }
             string game = gameUse != null ? gameUse(chord) : null;
-            if (!string.IsNullOrEmpty(game)) return "it is the game's key for " + game;
+            if (!string.IsNullOrEmpty(game)) return Loc.F("it is the game's key for {0}", game);
             return null;
         }
 
@@ -223,39 +250,39 @@ namespace KCAccess.Core
             }
         }
 
-        private static List<KeyValuePair<Chord, string>> BuildFixed()
+        private static List<KeyValuePair<Chord, FixedUse>> BuildFixed()
         {
-            var l = new List<KeyValuePair<Chord, string>>();
-            void Add(string chord, string what)
+            var l = new List<KeyValuePair<Chord, FixedUse>>();
+            void Add(string chord, string what, int number = 0)
             {
                 Chord.TryParse(chord, out var c);
-                l.Add(new KeyValuePair<Chord, string>(c, what));
+                l.Add(new KeyValuePair<Chord, FixedUse>(c, new FixedUse { Text = what, Number = number }));
             }
             foreach (var arrow in new[] { "UpArrow", "DownArrow", "LeftArrow", "RightArrow" })
             {
-                Add(arrow, "moving");
-                Add("Shift+" + arrow, "moving 5 tiles");
-                Add("Ctrl+" + arrow, "jumping to the next change");
+                Add(arrow, Loc.N("moving"));
+                Add("Shift+" + arrow, Loc.N("moving 5 tiles"));
+                Add("Ctrl+" + arrow, Loc.N("jumping to the next change"));
             }
-            Add("Return", "selecting and activating");
-            Add("Shift+Return", "selecting soldiers and marking areas");
-            Add("Ctrl+Shift+Return", "adding soldiers to the selection");
-            Add("KeypadEnter", "activating");
-            Add("Escape", "going back");
-            Add("Tab", "moving between controls");
-            Add("Shift+Tab", "moving between controls");
-            Add("F1", "help");
-            Add("F5", "repeating");
-            Add("F6", "moving between panels");
-            Add("Shift+F6", "moving between panels");
-            Add("Ctrl+R", "reading the whole screen");
-            Add("Ctrl+M", "exploring the map from the map setup screen");
-            Add("Backspace", "deleting while typing");
+            Add("Return", Loc.N("selecting and activating"));
+            Add("Shift+Return", Loc.N("selecting soldiers and marking areas"));
+            Add("Ctrl+Shift+Return", Loc.N("adding soldiers to the selection"));
+            Add("KeypadEnter", Loc.N("activating"));
+            Add("Escape", Loc.N("going back"));
+            Add("Tab", Loc.N("moving between controls"));
+            Add("Shift+Tab", Loc.N("moving between controls"));
+            Add("F1", Loc.N("help"));
+            Add("F5", Loc.N("repeating"));
+            Add("F6", Loc.N("moving between panels"));
+            Add("Shift+F6", Loc.N("moving between panels"));
+            Add("Ctrl+R", Loc.N("reading the whole screen"));
+            Add("Ctrl+M", Loc.N("exploring the map from the map setup screen"));
+            Add("Backspace", Loc.N("deleting while typing"));
             for (int i = 1; i <= 9; i++)
             {
-                Add("Ctrl+Alpha" + i, "jumping to bookmark " + i);
-                Add("Ctrl+Shift+Alpha" + i, "storing bookmark " + i);
-                Add("Alt+Alpha" + i, "making bookmark " + i + " the target");
+                Add("Ctrl+Alpha" + i, Loc.N("jumping to bookmark {0}"), i);
+                Add("Ctrl+Shift+Alpha" + i, Loc.N("storing bookmark {0}"), i);
+                Add("Alt+Alpha" + i, Loc.N("making bookmark {0} the target"), i);
             }
             return l;
         }
