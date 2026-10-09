@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using I2.Loc;
 using KCAccess.Core;
 using TMPro;
@@ -33,7 +33,8 @@ namespace KCAccess.UI
                     {
                         // Not laid out yet.
                     }
-                    if (!string.IsNullOrEmpty(parsed)) return parsed;
+                    // Letters the game's font lacks (Thai, for one) come back as boxes: the raw text has them.
+                    if (!string.IsNullOrEmpty(parsed) && !(parsed.IndexOf('□') >= 0 && raw != null && raw.IndexOf('□') < 0)) return parsed;
                 }
                 return raw;
             }

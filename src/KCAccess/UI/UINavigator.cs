@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using KCAccess.Core;
 using TMPro;
@@ -198,6 +198,10 @@ namespace KCAccess.UI
                     || (i + 1 < merged.Count && merged[i + 1].IsControl && SameLabel(UIText.LabelOf(merged[i + 1].Control), txt));
                 if (dup) merged.RemoveAt(i);
             }
+            // The language list has an invisible full-screen button behind it that closes it on a click outside
+            // ("1pixelwhite"): Escape does that already.
+            merged.RemoveAll(it => it.IsControl && it.Go != null && it.Go.transform.parent != null
+                && it.Go.transform.parent.name == "LanguageSelector" && it.Go.name == "GameObject");
             AddContextToDuplicates(merged);
             return merged;
         }

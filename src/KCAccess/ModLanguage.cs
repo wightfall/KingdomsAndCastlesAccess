@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using KCAccess.Core;
@@ -215,7 +215,13 @@ namespace KCAccess
                     // The copy keeps the original's text components; I2 would put "English" back on them.
                     foreach (var l in go.GetComponentsInChildren<I2.Loc.Localize>(true)) UnityEngine.Object.Destroy(l);
                     string label = ButtonLabel(info);
-                    foreach (var t in go.GetComponentsInChildren<TMPro.TMP_Text>(true)) t.text = label;
+                    // The game's entries have two lines (native name, English name): the copy says it all on the first.
+                    bool first = true;
+                    foreach (var t in go.GetComponentsInChildren<TMPro.TMP_Text>(true))
+                    {
+                        t.text = first ? label : string.Empty;
+                        first = false;
+                    }
                     foreach (var t in go.GetComponentsInChildren<Text>(true)) t.text = label;
                     var button = go.GetComponent<Button>();
                     button.onClick = new Button.ButtonClickedEvent(); // drop the copied EnglishMode listener
