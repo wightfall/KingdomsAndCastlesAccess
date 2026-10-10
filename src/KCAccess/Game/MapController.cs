@@ -698,7 +698,7 @@ namespace KCAccess.Game
                 SelectUnitAt(CurrentCell, add: true);
                 return;
             }
-            if (KInput.Pressed("Validity") && IsPlacing)
+            if (IsPlacing && KInput.Pressed("Validity"))
             {
                 SpeakValidity(always: true);
                 return;

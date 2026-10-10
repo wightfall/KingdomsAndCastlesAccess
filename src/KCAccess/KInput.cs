@@ -68,12 +68,17 @@ namespace KCAccess
             return key != KeyCode.None;
         }
 
-        /// <summary>The key bound to a mod action (see Core.Bindings) was pressed this frame, with exactly its modifiers.</summary>
+        /// <summary>
+        /// The key bound to a mod action (see Core.Bindings) was pressed this frame, with exactly its modifiers. The key
+        /// is then the mod's for this frame: V (where the target is valid) also zoomed the camera in, the game's V.
+        /// </summary>
         internal static bool Pressed(string action)
         {
             var c = Plugin.Keys.Get(action);
             if (c.IsEmpty || !TryKeyCode(c.Key, out var k)) return false;
-            return Down(k) && Ctrl == c.Ctrl && Shift == c.Shift && Alt == c.Alt;
+            if (!(Down(k) && Ctrl == c.Ctrl && Shift == c.Shift && Alt == c.Alt)) return false;
+            Consume(k);
+            return true;
         }
 
         /// <summary>Pressed with no modifiers.</summary>

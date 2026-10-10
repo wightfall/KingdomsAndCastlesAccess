@@ -5,12 +5,15 @@ namespace KCAccess.Game
     /// <summary>L: browse notification history, Enter jumps the map cursor to where it happened.</summary>
     internal sealed class LogBrowser : ListMenu
     {
+        /// <summary>The notifications as listed: new ones are inserted at the top of the log while the list is open.</summary>
+        private readonly System.Collections.Generic.List<Notification> shown = new System.Collections.Generic.List<Notification>();
+
         protected override bool HandleExtraKeys()
         {
             if (!KInput.WithShift(UnityEngine.KeyCode.Return) || !List.HasCurrent) return false;
             int idx = List.Index;
-            if (idx < 0 || idx >= GameEvents.Log.Count) return true;
-            var n = GameEvents.Log.Items[idx];
+            if (idx < 0 || idx >= shown.Count) return true;
+            var n = shown[idx];
             if (!n.Where.HasValue)
             {
                 A.Cue(Cue.Error);
@@ -30,9 +33,11 @@ namespace KCAccess.Game
 
         protected override void Build()
         {
+            shown.Clear();
             foreach (var n in GameEvents.Log.Items)
             {
                 var note = n;
+                shown.Add(note);
                 string text = note.Describe() + (note.Where.HasValue ? ", " + Loc.T("has location") : string.Empty);
                 Add(text, note.Where.HasValue ? () =>
                 {
