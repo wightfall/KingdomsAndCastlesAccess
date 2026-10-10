@@ -278,11 +278,16 @@ namespace KCAccess.Core
             Add("Ctrl+R", Loc.N("reading the whole screen"));
             Add("Ctrl+M", Loc.N("exploring the map from the map setup screen"));
             Add("Backspace", Loc.N("deleting while typing"));
+            Add("Ctrl+Shift+F12", Loc.N("writing the screen's layout to a file for bug reports"));
             for (int i = 1; i <= 9; i++)
             {
-                Add("Ctrl+Alpha" + i, Loc.N("jumping to bookmark {0}"), i);
-                Add("Ctrl+Shift+Alpha" + i, Loc.N("storing bookmark {0}"), i);
-                Add("Alt+Alpha" + i, Loc.N("making bookmark {0} the target"), i);
+                // The number row and the number pad both work for bookmarks.
+                foreach (var digit in new[] { "Alpha" + i, "Keypad" + i })
+                {
+                    Add("Ctrl+" + digit, Loc.N("jumping to bookmark {0}"), i);
+                    Add("Ctrl+Shift+" + digit, Loc.N("storing bookmark {0}"), i);
+                    Add("Alt+" + digit, Loc.N("making bookmark {0} the target"), i);
+                }
             }
             return l;
         }

@@ -63,7 +63,12 @@ namespace KCAccess.Game
             }
         }
 
-        internal static string GoldLine() => Loc.F("Gold {0}", Player.inst.PlayerLandmassOwner.Gold);
+        /// <summary>Gold and the treasury space (the top bar shows "gold/space"; building costs can only use gold up to the space).</summary>
+        internal static string GoldLine()
+        {
+            var owner = Player.inst.PlayerLandmassOwner;
+            return Loc.F("Gold {0}, treasury space {1}", owner.Gold, owner.MaxGoldStorage);
+        }
 
         internal static string PopulationLine()
         {

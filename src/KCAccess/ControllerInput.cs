@@ -41,9 +41,10 @@ namespace KCAccess
                 bool lt = false, rt = false;
                 pressed.Clear();
                 dirs.Clear();
-                foreach (var j in sticks)
+                // Index loops: foreach over the IList allocated an enumerator every frame.
+                for (int si = 0; si < sticks.Count; si++)
                 {
-                    var t = j.GetTemplate<IGamepadTemplate>();
+                    var t = sticks[si].GetTemplate<IGamepadTemplate>();
                     if (t == null) continue;
                     lt |= t.leftTrigger != null && t.leftTrigger.value > TriggerThreshold;
                     rt |= t.rightTrigger != null && t.rightTrigger.value > TriggerThreshold;
@@ -98,7 +99,7 @@ namespace KCAccess
                         nextRepeat[d] = Time.unscaledTime + RepeatEvery;
                     }
                 }
-                foreach (var b in pressed) Fire(b, lt, rt, onMap);
+                for (int i = 0; i < pressed.Count; i++) Fire(pressed[i], lt, rt, onMap);
             }
             catch (Exception e)
             {
@@ -142,8 +143,9 @@ namespace KCAccess
         {
             int n = 0;
             string name = null;
-            foreach (var j in sticks)
+            for (int i = 0; i < sticks.Count; i++)
             {
+                var j = sticks[i];
                 if (j.GetTemplate<IGamepadTemplate>() == null) continue;
                 n++;
                 name = j.name;
