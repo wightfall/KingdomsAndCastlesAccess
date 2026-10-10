@@ -47,6 +47,7 @@ Selection = Auswahl
 {0} reply = {0} Antwort
 {0} replies = {0} Antworten
 Up and Down choose, Enter answers. = Pfeil hoch und runter wählen, Eingabe antwortet.
+the Steam store page in your web browser = die Steam-Shopseite in deinem Webbrowser
 Steam overlay opened. It takes the keyboard away from the game. Press Shift Tab or Escape to return. To stop this, turn off the Steam overlay or change its shortcut in Steam settings. = Steam-Overlay geöffnet. Es nimmt dem Spiel die Tastatur weg. Drücke Umschalt Tab oder Escape, um zurückzukehren. Um das zu verhindern, schalte das Steam-Overlay aus oder ändere sein Tastenkürzel in den Steam-Einstellungen.
 Main menu = Hauptmenü
 Choose game mode = Spielmodus wählen
@@ -1380,6 +1381,3 @@ Unsafe path in package: {0} = Unsicherer Pfad im Paket: {0}
 This package does not contain KCAccess. = Dieses Paket enthält KCAccess nicht.
 BepInEx is not installed and this package does not contain it. Use the -with-BepInEx package. = BepInEx ist nicht installiert und dieses Paket enthält es nicht. Verwende das Paket -with-BepInEx.
 not installed = nicht installiert
-
-# ===== Other =====
-the Steam store page in your web browser = die Steam-Shopseite in deinem Webbrowser

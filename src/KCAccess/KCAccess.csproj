@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
     <AssemblyName>KCAccess</AssemblyName>
@@ -39,6 +39,7 @@
     <!-- Shipped language files go to Languages\default; the mod copies or merges them into the player's Languages folder. -->
     <ItemGroup>
       <LanguageFile Include="$(MSBuildThisFileDirectory)Languages\*.txt" />
+      <LanguageFile Include="$(MSBuildThisFileDirectory)Languages\retired.keys" />
     </ItemGroup>
     <Copy SourceFiles="@(LanguageFile)" DestinationFolder="$(BepInExDir)\plugins\KCAccess\Languages\default" />
   </Target>

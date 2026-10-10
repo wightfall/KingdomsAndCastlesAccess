@@ -1,4 +1,4 @@
-# Builds, tests and creates the release zips in dist/.
+﻿# Builds, tests and creates the release zips in dist/.
 #   powershell -ExecutionPolicy Bypass -File tools\package.ps1 [-GameDir "D:\Games\Kingdoms and Castles"]
 param(
     [string]$GameDir = "C:\Program Files (x86)\Steam\steamapps\common\Kingdoms and Castles",
@@ -31,7 +31,7 @@ Copy-Item README.md, LICENSE, THIRD-PARTY-NOTICES.md $plugin
 # Shipped language files: the mod copies them to Languages\<code>.txt (or merges updates into the player's copy).
 $langDefault = Join-Path $plugin "Languages\default"
 New-Item -ItemType Directory -Force $langDefault | Out-Null
-Copy-Item (Join-Path $root "src\KCAccess\Languages\*.txt") $langDefault
+Copy-Item (Join-Path $root "src\KCAccess\Languages\*.txt"), (Join-Path $root "src\KCAccess\Languages\retired.keys") $langDefault
 if (-not (Test-Path (Join-Path $langDefault "template.txt"))) { throw "Language files missing" }
 $lic = Join-Path $plugin "licenses\prism"
 New-Item -ItemType Directory -Force $lic | Out-Null

@@ -47,6 +47,7 @@ Selection = 선택
 {0} reply = 답변 {0}개
 {0} replies = 답변 {0}개
 Up and Down choose, Enter answers. = 위/아래로 고르고 Enter로 답합니다.
+the Steam store page in your web browser = 웹 브라우저에서 Steam 상점 페이지
 Steam overlay opened. It takes the keyboard away from the game. Press Shift Tab or Escape to return. To stop this, turn off the Steam overlay or change its shortcut in Steam settings. = Steam 오버레이가 열렸습니다. 게임에서 키보드를 가져갑니다. Shift Tab이나 Escape로 돌아가세요. 이를 막으려면 Steam 설정에서 Steam 오버레이를 끄거나 단축키를 바꾸세요.
 Main menu = 주 메뉴
 Choose game mode = 게임 모드 선택
@@ -1380,6 +1381,3 @@ Unsafe path in package: {0} = 패키지에 안전하지 않은 경로가 있습�
 This package does not contain KCAccess. = 이 패키지에는 KCAccess가 들어 있지 않습니다.
 BepInEx is not installed and this package does not contain it. Use the -with-BepInEx package. = BepInEx가 설치되어 있지 않고 이 패키지에도 들어 있지 않습니다. -with-BepInEx 패키지를 사용하세요.
 not installed = 설치되지 않음
-
-# ===== Other =====
-the Steam store page in your web browser = 웹 브라우저에서 Steam 상점 페이지

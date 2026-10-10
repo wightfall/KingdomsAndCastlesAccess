@@ -47,6 +47,7 @@ Selection = สิ่งที่เลือก
 {0} reply = {0} คำตอบ
 {0} replies = {0} คำตอบ
 Up and Down choose, Enter answers. = ลูกศรขึ้นลงเพื่อเลือก Enter เพื่อตอบ
+the Steam store page in your web browser = หน้าร้านค้า Steam ในเว็บเบราว์เซอร์
 Steam overlay opened. It takes the keyboard away from the game. Press Shift Tab or Escape to return. To stop this, turn off the Steam overlay or change its shortcut in Steam settings. = เปิด Steam overlay แล้ว มันดึงคีย์บอร์ดไปจากเกม กด Shift Tab หรือ Escape เพื่อกลับ หากไม่ต้องการให้เกิดขึ้นอีก ให้ปิด Steam overlay หรือเปลี่ยนปุ่มลัดในการตั้งค่าของ Steam
 Main menu = เมนูหลัก
 Choose game mode = เลือกโหมดเกม
@@ -1380,6 +1381,3 @@ Unsafe path in package: {0} = เส้นทางไม่ปลอดภั�
 This package does not contain KCAccess. = แพ็กเกจนี้ไม่มี KCAccess
 BepInEx is not installed and this package does not contain it. Use the -with-BepInEx package. = ยังไม่ได้ติดตั้ง BepInEx และแพ็กเกจนี้ไม่มี BepInEx ให้ใช้แพ็กเกจ -with-BepInEx
 not installed = ยังไม่ได้ติดตั้ง
-
-# ===== Other =====
-the Steam store page in your web browser = หน้าร้านค้า Steam ในเว็บเบราว์เซอร์

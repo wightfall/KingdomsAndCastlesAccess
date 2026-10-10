@@ -53,6 +53,7 @@ Selection =
 {0} reply =
 {0} replies =
 Up and Down choose, Enter answers. =
+the Steam store page in your web browser =
 Steam overlay opened. It takes the keyboard away from the game. Press Shift Tab or Escape to return. To stop this, turn off the Steam overlay or change its shortcut in Steam settings. =
 Main menu =
 Choose game mode =
@@ -1386,6 +1387,3 @@ Unsafe path in package: {0} =
 This package does not contain KCAccess. =
 BepInEx is not installed and this package does not contain it. Use the -with-BepInEx package. =
 not installed =
-
-# ===== Other =====
-the Steam store page in your web browser =

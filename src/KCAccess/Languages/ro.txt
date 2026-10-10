@@ -47,6 +47,7 @@ Selection = Selecție
 {0} reply = {0} răspuns
 {0} replies = răspunsuri: {0}
 Up and Down choose, Enter answers. = Sus și jos aleg, Enter răspunde.
+the Steam store page in your web browser = pagina magazinului Steam în browser
 Steam overlay opened. It takes the keyboard away from the game. Press Shift Tab or Escape to return. To stop this, turn off the Steam overlay or change its shortcut in Steam settings. = S-a deschis suprapunerea Steam. Aceasta preia tastatura de la joc. Apasă Shift Tab sau Escape pentru a reveni. Ca să nu se mai întâmple, oprește suprapunerea Steam sau schimbă-i scurtătura în setările Steam.
 Main menu = Meniul principal
 Choose game mode = Alege modul de joc
@@ -1380,6 +1381,3 @@ Unsafe path in package: {0} = Cale nesigură în pachet: {0}
 This package does not contain KCAccess. = Acest pachet nu conține KCAccess.
 BepInEx is not installed and this package does not contain it. Use the -with-BepInEx package. = BepInEx nu este instalat și acest pachet nu îl conține. Folosește pachetul -with-BepInEx.
 not installed = neinstalat
-
-# ===== Other =====
-the Steam store page in your web browser = pagina magazinului Steam în browser

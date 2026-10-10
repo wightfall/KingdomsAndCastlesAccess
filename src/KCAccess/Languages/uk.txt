@@ -47,6 +47,7 @@ Selection = Вибір
 {0} reply = {0} відповідь
 {0} replies = відповідей: {0}
 Up and Down choose, Enter answers. = Вгору і вниз — вибір, Enter — відповісти.
+the Steam store page in your web browser = сторінка крамниці Steam у веб-браузері
 Steam overlay opened. It takes the keyboard away from the game. Press Shift Tab or Escape to return. To stop this, turn off the Steam overlay or change its shortcut in Steam settings. = Відкрито оверлей Steam. Він забирає клавіатуру в гри. Натисніть Shift Tab або Escape, щоб повернутися. Щоб цього не траплялося, вимкніть оверлей Steam або змініть його комбінацію клавіш у налаштуваннях Steam.
 Main menu = Головне меню
 Choose game mode = Вибір режиму гри
@@ -1380,6 +1381,3 @@ Unsafe path in package: {0} = Небезпечний шлях у пакеті: {
 This package does not contain KCAccess. = Цей пакет не містить KCAccess.
 BepInEx is not installed and this package does not contain it. Use the -with-BepInEx package. = BepInEx не встановлено, і цей пакет його не містить. Використовуйте пакет -with-BepInEx.
 not installed = не встановлено
-
-# ===== Other =====
-the Steam store page in your web browser = сторінка крамниці Steam у веб-браузері

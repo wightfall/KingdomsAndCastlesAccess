@@ -1,0 +1,10 @@
+﻿# Texts earlier versions of KCAccess used. Mod updates remove them from the language files.
+Gold {0}
+Mod settings. Up and Down move through the settings, Enter or Space toggles a check box, Left and Right change a value such as the sound volume or walking speed. On a mod key, Enter waits for the new key: press it with Control, Shift or Alt if you like, Escape cancels. A key already used by the mod or the game is refused and you are told what uses it. Delete restores that key's default. The last line resets everything. Escape closes.
+Opinion of you: {0}, the best there is
+Opinion of you: {0}, {1} percent of the way to {2}
+Placing a building. Move with the arrow keys, the building follows the cursor and you hear whether the spot is valid. Enter places it. R rotates. {Validity} reads why the spot is invalid. For roads, walls and fields press Shift Enter to mark a start point, move to the end point, then press Enter to build the whole line or area. Escape cancels placement.
+favorable
+unfavorable
+very favorable
+very unfavorable

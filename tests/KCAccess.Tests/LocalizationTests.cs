@@ -67,7 +67,7 @@ namespace KCAccess.Tests
         /// <summary>Section names of the language files (what a translator looks for) and the source files in them.</summary>
         public static readonly string[][] Categories =
         {
-            new[] { "Speech, screens and menus", "AccessController", "UINavigator", "UIText", "Special", "ScreenDetector", "GameScreens", "ListMenu", "NavList", "TextUtil", "SteamOverlay", "Diagnostics", "DialoguePatches", "Plugin", "KeyboardGuard", "OsKeyboard" },
+            new[] { "Speech, screens and menus", "AccessController", "UINavigator", "UIText", "Special", "ScreenDetector", "GameScreens", "ListMenu", "NavList", "TextUtil", "SteamOverlay", "Diagnostics", "DialoguePatches", "Plugin", "KeyboardGuard", "OsKeyboard", "WebLinks" },
             new[] { "Help and key lists", "HelpText", "KeyHelp", "KeysMenu", "Bindings" },
             new[] { "Mod settings, languages and sound cues", "ModSettingsMenu", "ModLanguage", "Cues", "AudioCues" },
             new[] { "Map, tiles and cursor", "MapController", "CellInfo", "AreaSurvey", "GridMath", "ResourceNames", "VirtualPointer" },
@@ -286,7 +286,16 @@ namespace KCAccess.Tests
             var keys = Extract();
             string dir = LanguagesDir;
             Directory.CreateDirectory(dir);
-            File.WriteAllText(Path.Combine(dir, "template.txt"), TemplateHeader + Body(keys, k => string.Empty), LanguageFiles.FileEncoding);
+            // Texts that left the mod are listed in retired.keys, so updates remove them from the players' files.
+            string templatePath = Path.Combine(dir, "template.txt");
+            var current = new HashSet<string>(keys.ConvertAll(k => k.Value), StringComparer.Ordinal);
+            var retired = new SortedSet<string>(LanguageFiles.ReadRetired(Path.Combine(dir, LanguageFiles.RetiredName)), StringComparer.Ordinal);
+            if (File.Exists(templatePath))
+                foreach (var k in LocTable.Parse(File.ReadAllText(templatePath, Encoding.UTF8)).Keys)
+                    if (!current.Contains(k)) retired.Add(k);
+            retired.RemoveWhere(k => current.Contains(k));
+            File.WriteAllText(Path.Combine(dir, LanguageFiles.RetiredName), LanguageFiles.RetiredHeader + string.Join("\r\n", retired) + "\r\n", LanguageFiles.FileEncoding);
+            File.WriteAllText(templatePath, TemplateHeader + Body(keys, k => string.Empty), LanguageFiles.FileEncoding);
             foreach (var lang in Languages)
             {
                 string path = Path.Combine(dir, lang[0] + ".txt");
@@ -517,6 +526,18 @@ namespace KCAccess.Tests
             Assert.True(text.IndexOf("# ===== Build =====", StringComparison.Ordinal) < text.IndexOf("C = c1", StringComparison.Ordinal));
             Assert.Equal("mine", LocTable.Parse(text).Raw("A"));
             Assert.DoesNotContain(LanguageFiles.OwnSection, text);
+        }
+
+        [Fact]
+        public void RetiredAndUntranslatedUnknownLinesAreDropped()
+        {
+            string user = "# Language: X\nA = mine\nOld text = alt\nUnused =\nMy brush = pinsel\n";
+            string text = LanguageFiles.Merge(user, "# Language: X\nA = a1\n", "# Language: X\nA = a1\n", new HashSet<string> { "Old text" });
+            var merged = LocTable.Parse(text);
+            Assert.Null(merged.Raw("Old text"));
+            Assert.Null(merged.Raw("Unused"));
+            Assert.Equal("pinsel", merged.Raw("My brush"));
+            Assert.Equal("mine", merged.Raw("A"));
         }
 
         [Fact]

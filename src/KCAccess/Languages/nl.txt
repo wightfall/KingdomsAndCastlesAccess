@@ -47,6 +47,7 @@ Selection = Selectie
 {0} reply = {0} antwoord
 {0} replies = {0} antwoorden
 Up and Down choose, Enter answers. = Omhoog en omlaag kiezen, Enter antwoordt.
+the Steam store page in your web browser = de Steam-winkelpagina in je webbrowser
 Steam overlay opened. It takes the keyboard away from the game. Press Shift Tab or Escape to return. To stop this, turn off the Steam overlay or change its shortcut in Steam settings. = Steam-overlay geopend. Die neemt het toetsenbord over van het spel. Druk op Shift Tab of Escape om terug te gaan. Om dit te voorkomen, zet de Steam-overlay uit of wijzig de sneltoets in de Steam-instellingen.
 Main menu = Hoofdmenu
 Choose game mode = Spelmodus kiezen
@@ -1380,6 +1381,3 @@ Unsafe path in package: {0} = Onveilig pad in pakket: {0}
 This package does not contain KCAccess. = Dit pakket bevat geen KCAccess.
 BepInEx is not installed and this package does not contain it. Use the -with-BepInEx package. = BepInEx is niet geïnstalleerd en dit pakket bevat het niet. Gebruik het pakket -with-BepInEx.
 not installed = niet geïnstalleerd
-
-# ===== Other =====
-the Steam store page in your web browser = de Steam-winkelpagina in je webbrowser

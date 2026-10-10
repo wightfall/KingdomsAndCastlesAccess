@@ -47,6 +47,7 @@ Selection = Utvalg
 {0} reply = {0} svar
 {0} replies = {0} svar
 Up and Down choose, Enter answers. = Pil opp og ned velger, Enter svarer.
+the Steam store page in your web browser = Steam-butikksiden i nettleseren
 Steam overlay opened. It takes the keyboard away from the game. Press Shift Tab or Escape to return. To stop this, turn off the Steam overlay or change its shortcut in Steam settings. = Steam-overlegget er åpnet. Det tar tastaturet fra spillet. Trykk Shift Tab eller Escape for å gå tilbake. For å unngå dette, slå av Steam-overlegget eller endre snarveien i Steam-innstillingene.
 Main menu = Hovedmeny
 Choose game mode = Velg spillmodus
@@ -1380,6 +1381,3 @@ Unsafe path in package: {0} = Utrygg sti i pakken: {0}
 This package does not contain KCAccess. = Denne pakken inneholder ikke KCAccess.
 BepInEx is not installed and this package does not contain it. Use the -with-BepInEx package. = BepInEx er ikke installert, og denne pakken inneholder det ikke. Bruk pakken -with-BepInEx.
 not installed = ikke installert
-
-# ===== Other =====
-the Steam store page in your web browser = Steam-butikksiden i nettleseren

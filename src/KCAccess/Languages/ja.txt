@@ -47,6 +47,7 @@ Selection = 選択
 {0} reply = 返答 {0} 件
 {0} replies = 返答 {0} 件
 Up and Down choose, Enter answers. = 上下で選択、Enter で返答します。
+the Steam store page in your web browser = Web ブラウザーで Steam ストアページ
 Steam overlay opened. It takes the keyboard away from the game. Press Shift Tab or Escape to return. To stop this, turn off the Steam overlay or change its shortcut in Steam settings. = Steam オーバーレイが開きました。キーボードがゲームから奪われます。Shift Tab または Escape で戻ります。これを防ぐには、Steam の設定でオーバーレイをオフにするか、ショートカットを変更してください。
 Main menu = メインメニュー
 Choose game mode = ゲームモードの選択
@@ -1380,6 +1381,3 @@ Unsafe path in package: {0} = パッケージ内に安全でないパスがあ�
 This package does not contain KCAccess. = このパッケージには KCAccess が含まれていません。
 BepInEx is not installed and this package does not contain it. Use the -with-BepInEx package. = BepInEx がインストールされておらず、このパッケージにも含まれていません。-with-BepInEx パッケージを使ってください。
 not installed = 未インストール
-
-# ===== Other =====
-the Steam store page in your web browser = Web ブラウザーで Steam ストアページ

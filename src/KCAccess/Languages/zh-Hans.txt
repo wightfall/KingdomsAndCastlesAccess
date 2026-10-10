@@ -47,6 +47,7 @@ Selection = 选择
 {0} reply = {0} 个回复
 {0} replies = {0} 个回复
 Up and Down choose, Enter answers. = 上下方向键选择，Enter 回答。
+the Steam store page in your web browser = 网页浏览器中的 Steam 商店页面
 Steam overlay opened. It takes the keyboard away from the game. Press Shift Tab or Escape to return. To stop this, turn off the Steam overlay or change its shortcut in Steam settings. = Steam 界面已打开，它会从游戏中夺走键盘。按 Shift Tab 或 Esc 返回。若不想这样，请在 Steam 设置中关闭 Steam 界面或更改其快捷键。
 Main menu = 主菜单
 Choose game mode = 选择游戏模式
@@ -1380,6 +1381,3 @@ Unsafe path in package: {0} = 安装包中有不安全的路径：{0}
 This package does not contain KCAccess. = 此安装包不包含 KCAccess。
 BepInEx is not installed and this package does not contain it. Use the -with-BepInEx package. = BepInEx 未安装，且此安装包不包含它。请使用 -with-BepInEx 安装包。
 not installed = 未安装
-
-# ===== Other =====
-the Steam store page in your web browser = 网页浏览器中的 Steam 商店页面

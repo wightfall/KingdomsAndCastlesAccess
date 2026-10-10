@@ -76,6 +76,7 @@ namespace KCAccess.Core
             var changed = new List<string>();
             if (!Directory.Exists(DefaultDir)) return changed;
             Directory.CreateDirectory(Dir);
+            var retired = ReadRetired(Path.Combine(DefaultDir, RetiredName));
             foreach (var shippedPath in Directory.GetFiles(DefaultDir, "*.txt"))
             {
                 string file = Path.GetFileName(shippedPath);
@@ -101,7 +102,7 @@ namespace KCAccess.Core
                     {
                         string current = File.ReadAllText(user, Encoding.UTF8);
                         string previous = File.Exists(basePath) ? File.ReadAllText(basePath, Encoding.UTF8) : null;
-                        string merged = Merge(current, shipped, previous);
+                        string merged = Merge(current, shipped, previous, retired);
                         if (merged != current)
                         {
                             File.WriteAllText(user, merged, FileEncoding);
@@ -128,7 +129,7 @@ namespace KCAccess.Core
         /// that the shipped file does not have are kept in a section at the end. Returns <paramref name="user"/>
         /// unchanged when there is nothing to do.
         /// </summary>
-        public static string Merge(string user, string shipped, string previousShipped)
+        public static string Merge(string user, string shipped, string previousShipped, ICollection<string> retired = null)
         {
             var mine = LocTable.Parse(user ?? string.Empty);
             var old = previousShipped != null ? LocTable.Parse(previousShipped) : null;
@@ -159,9 +160,10 @@ namespace KCAccess.Core
             foreach (var line in LocTable.SplitLines((user ?? string.Empty).TrimStart('﻿')))
             {
                 string t = line.Trim();
-                if (LocTable.TrySplit(line, out var key, out _))
+                if (LocTable.TrySplit(line, out var key, out var value))
                 {
-                    if (!known.Contains(key)) own.Add(line);
+                    // Texts the mod no longer uses (retired.keys) and untranslated lines do nothing: drop them.
+                    if (!known.Contains(key) && value.Length > 0 && (retired == null || !retired.Contains(key))) own.Add(line);
                 }
                 else if (t.StartsWith("#", StringComparison.Ordinal) && !shippedComments.Contains(t) && !IsGeneratedComment(t)) own.Add(line);
             }
@@ -178,6 +180,23 @@ namespace KCAccess.Core
         }
 
         public const string OwnSection = "# ===== Your own lines (kept by mod updates) =====";
+
+        /// <summary>Texts earlier versions of the mod used, one per line (shipped next to the language files).</summary>
+        public const string RetiredName = "retired.keys";
+
+        public const string RetiredHeader = "# Texts earlier versions of KCAccess used. Mod updates remove them from the language files.\r\n";
+
+        public static HashSet<string> ReadRetired(string path)
+        {
+            var set = new HashSet<string>(StringComparer.Ordinal);
+            if (!File.Exists(path)) return set;
+            foreach (var line in File.ReadAllLines(path, Encoding.UTF8))
+            {
+                string t = line.TrimStart('\uFEFF');
+                if (t.Length > 0 && !t.StartsWith("#", StringComparison.Ordinal)) set.Add(t);
+            }
+            return set;
+        }
 
         /// <summary>Comments the mod itself wrote (sections, update markers of older versions, the header).</summary>
         private static bool IsGeneratedComment(string t) =>

@@ -47,6 +47,7 @@ Selection = Seçim
 {0} reply = {0} yanıt
 {0} replies = {0} yanıt
 Up and Down choose, Enter answers. = Yukarı ve Aşağı seçer, Enter yanıtlar.
+the Steam store page in your web browser = web tarayıcında Steam mağaza sayfası
 Steam overlay opened. It takes the keyboard away from the game. Press Shift Tab or Escape to return. To stop this, turn off the Steam overlay or change its shortcut in Steam settings. = Steam arayüzü açıldı. Klavyeyi oyundan alır. Geri dönmek için Shift Tab veya Escape'e bas. Bunu önlemek için Steam arayüzünü kapat veya Steam ayarlarında kısayolunu değiştir.
 Main menu = Ana menü
 Choose game mode = Oyun modu seç
@@ -1380,6 +1381,3 @@ Unsafe path in package: {0} = Pakette güvenli olmayan yol: {0}
 This package does not contain KCAccess. = Bu paket KCAccess içermiyor.
 BepInEx is not installed and this package does not contain it. Use the -with-BepInEx package. = BepInEx yüklü değil ve bu paket onu içermiyor. -with-BepInEx paketini kullan.
 not installed = yüklü değil
-
-# ===== Other =====
-the Steam store page in your web browser = web tarayıcında Steam mağaza sayfası

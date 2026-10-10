@@ -47,6 +47,7 @@ Selection = Выбор
 {0} reply = {0} ответ
 {0} replies = ответов: {0}
 Up and Down choose, Enter answers. = Вверх и вниз — выбор, Enter — ответить.
+the Steam store page in your web browser = страница магазина Steam в веб-браузере
 Steam overlay opened. It takes the keyboard away from the game. Press Shift Tab or Escape to return. To stop this, turn off the Steam overlay or change its shortcut in Steam settings. = Открыт оверлей Steam. Он забирает клавиатуру у игры. Нажмите Shift Tab или Escape, чтобы вернуться. Чтобы это не происходило, отключите оверлей Steam или измените его сочетание клавиш в настройках Steam.
 Main menu = Главное меню
 Choose game mode = Выбор режима игры
@@ -1380,6 +1381,3 @@ Unsafe path in package: {0} = Небезопасный путь в пакете:
 This package does not contain KCAccess. = Этот пакет не содержит KCAccess.
 BepInEx is not installed and this package does not contain it. Use the -with-BepInEx package. = BepInEx не установлен, и этот пакет его не содержит. Используйте пакет -with-BepInEx.
 not installed = не установлен
-
-# ===== Other =====
-the Steam store page in your web browser = страница магазина Steam в веб-браузере
