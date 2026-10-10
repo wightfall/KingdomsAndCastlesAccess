@@ -240,7 +240,7 @@ namespace KCAccess.Game
                         VirtualPointer.Inst?.Click();
                         A.Cue(Cue.Activate);
                         // Say what was painted and how big the brush is (the game shows both only on screen).
-                        A.Say(Loc.F("Painted {0}, brush size {1}, at {2}", Loc.T(TextUtil.Humanize(edit.brushMode.ToString()).ToLowerInvariant()), Mathf.RoundToInt(edit.radius + 1f), cursor.Pos));
+                        A.Say(Loc.F("Painted {0}, brush size {1}, at {2}", MapBrushName(edit.brushMode), Mathf.RoundToInt(edit.radius + 1f), cursor.Pos));
                         return;
                     }
                     if (edit != null)
@@ -335,7 +335,33 @@ namespace KCAccess.Game
                 case GameUI.CursorBrushes.Delete: return Loc.T("Removal tool");
                 case GameUI.CursorBrushes.Fire: return Loc.T("Create fire");
                 case GameUI.CursorBrushes.Trees: return Loc.T("Create trees");
-                default: return Loc.F("{0} stack", TextUtil.Humanize(b.ToString()));
+                // The rest drop a stack of a resource (the enum names were spoken in English).
+                case GameUI.CursorBrushes.Wood: return Loc.F("{0} stack", ResourceNames.Name("Tree"));
+                case GameUI.CursorBrushes.Iron: return Loc.F("{0} stack", ResourceNames.Name("IronOre"));
+                case GameUI.CursorBrushes.Armaments: return Loc.F("{0} stack", ResourceNames.Name("Armament"));
+                case GameUI.CursorBrushes.Food: return Loc.F("{0} stack", Loc.T("food"));
+                default: return Loc.F("{0} stack", ResourceNames.Name(b.ToString()));
+            }
+        }
+
+        /// <summary>Map editor brush (map setup screen, creative mode) in the player's language.</summary>
+        private static string MapBrushName(MapEdit.BrushMode m)
+        {
+            switch (m)
+            {
+                case MapEdit.BrushMode.BarrenLand: return Loc.T("barren land");
+                case MapEdit.BrushMode.FertileLand: return Loc.T("fertile land");
+                case MapEdit.BrushMode.VeryFertileLand: return Loc.T("very fertile land");
+                case MapEdit.BrushMode.Forest: return Loc.T("forest");
+                case MapEdit.BrushMode.ShallowWater: return Loc.T("shallow water");
+                case MapEdit.BrushMode.DeepWater: return Loc.T("deep water");
+                case MapEdit.BrushMode.UnusableStone: return Loc.T("rock");
+                case MapEdit.BrushMode.Stone: return Loc.T("stone deposit");
+                case MapEdit.BrushMode.Iron: return Loc.T("iron deposit");
+                case MapEdit.BrushMode.Witch: return Loc.T("witch hut");
+                case MapEdit.BrushMode.EmptyCave: return Loc.T("empty cave");
+                case MapEdit.BrushMode.Fish: return Loc.T("fish");
+                default: return TextUtil.Humanize(m.ToString()).ToLowerInvariant();
             }
         }
 
@@ -971,7 +997,16 @@ namespace KCAccess.Game
                 else if (ship.teamID != 0) how = null;
                 else if (ship is ILogisticTransport) how = Loc.T("F6 opens its route panel: each stop with its cargo, and {MoveSoldiers} on a stop moves it to the cursor.");
                 else how = Loc.T("{MoveSoldiers} sends it to the cursor, F6 opens its panel.");
-                A.Say(Loc.F("Selected {0}", CellInfo.WithoutSelected(CellInfo.ShipName(ship))) + ". " + (how != null ? KeyHelp.Resolve(how) : string.Empty));
+                // A troop ship's cargo is shown only as pictures of the units on board.
+                string cargo = null;
+                if (ship is TroopTransportShip troops && ship.teamID == 0)
+                {
+                    var aboard = new List<string>();
+                    for (int i = 0; i < troops.CarryCount(); i++)
+                        if (troops.GetCarried(i) != null) aboard.Add(CellInfo.WithoutSelected(CellInfo.UnitName(troops.GetCarried(i))));
+                    cargo = aboard.Count > 0 ? Loc.F("On board: {0}", string.Join(", ", aboard.ToArray())) : Loc.T("Nobody on board");
+                }
+                A.Say(TextUtil.Sentences(Loc.F("Selected {0}", CellInfo.WithoutSelected(CellInfo.ShipName(ship))), cargo, how != null ? KeyHelp.Resolve(how) : null));
                 return;
             }
             // Transport carts drive routes between stockpiles, markets and other buildings; selecting one opens its route.

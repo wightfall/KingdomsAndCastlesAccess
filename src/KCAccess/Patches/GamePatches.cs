@@ -426,13 +426,54 @@ namespace KCAccess
             try { __state = IntegrationManager.inst != null && IntegrationManager.inst.GetAchievement(achievement); } catch { }
         }
 
+        private static readonly Dictionary<string, string> Names = new Dictionary<string, string>
+        {
+            { "first_hamlet", KCAccess.Core.Loc.N("First hamlet") },
+            { "first_village", KCAccess.Core.Loc.N("First village") },
+            { "first_town", KCAccess.Core.Loc.N("First town") },
+            { "first_city", KCAccess.Core.Loc.N("First city") },
+            { "first_humblekingdom", KCAccess.Core.Loc.N("First humble kingdom") },
+            { "first_thrivingkingdom", KCAccess.Core.Loc.N("First thriving kingdom") },
+            { "first_dignifiedkingdom", KCAccess.Core.Loc.N("First dignified kingdom") },
+            { "first_magnificentkingdom", KCAccess.Core.Loc.N("First magnificent kingdom") },
+            { "first_kingdomofthegods", KCAccess.Core.Loc.N("First kingdom of the gods") },
+            { "towerofbabel", KCAccess.Core.Loc.N("Tower of Babel") },
+            { "first_dragonkill", KCAccess.Core.Loc.N("First dragon slain") },
+            { "first_ogrekill", KCAccess.Core.Loc.N("First ogre slain") },
+        };
+
+        /// <summary>
+        /// The achievement's name: the mod's translation, else Steam's name for it (in the Steam language), else the
+        /// English name. The game's ids ("first_humblekingdom") were spoken as they are.
+        /// </summary>
+        private static string NameOf(string id)
+        {
+            Names.TryGetValue(id, out var english);
+            var table = KCAccess.Core.Loc.Table;
+            string translated = english != null && table != null ? table.Lookup(english) : null;
+            if (translated != null) return translated;
+            try
+            {
+                if (SteamManager.Initialized)
+                {
+                    string steam = Steamworks.SteamUserStats.GetAchievementDisplayAttribute(id, "name");
+                    if (KCAccess.Core.TextUtil.HasContent(steam)) return steam;
+                }
+            }
+            catch
+            {
+                // no Steam
+            }
+            return english ?? KCAccess.Core.TextUtil.Humanize(id.Replace('_', ' '));
+        }
+
         private static void Postfix(string achievement, bool __state)
         {
             try
             {
                 if (__state || IntegrationManager.inst == null || !IntegrationManager.inst.GetAchievement(achievement)) return;
                 A.Cue(KCAccess.Core.Cue.Placed);
-                A.SayQueued(KCAccess.Core.Loc.F("Achievement unlocked: {0}", KCAccess.Core.TextUtil.Humanize(achievement.Replace('_', ' '))));
+                A.SayQueued(KCAccess.Core.Loc.F("Achievement unlocked: {0}", NameOf(achievement)));
             }
             catch
             {
