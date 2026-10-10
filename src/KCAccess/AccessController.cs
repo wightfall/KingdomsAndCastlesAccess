@@ -52,13 +52,17 @@ namespace KCAccess
         /// <summary>Coming back with Alt+Tab (from a web page, File Explorer, another program): say where you are.</summary>
         private void OnApplicationFocus(bool focus)
         {
+            Plugin.Log.LogInfo("[focus] window " + (focus ? "focused" : "lost focus"));
             if (!focus)
             {
                 lostFocusAt = Time.unscaledTime;
                 return;
             }
-            if (lostFocusAt < 0f || Time.unscaledTime - lostFocusAt < 1f || !Plugin.Loaded) return;
+            // Always forget the loss: a short blip (under a second) used to leave it set, so a later focus event
+            // with no real absence said "Back in the game, Paused" right after Escape opened the pause menu.
+            float lost = lostFocusAt;
             lostFocusAt = -1f;
+            if (lost < 0f || Time.unscaledTime - lost < 1f || !Plugin.Loaded || SteamOverlay.Active) return;
             string where = modal != null ? modal.Title : panel != null ? panel.Title : (GameState.inst != null && GameState.inst.IsPlayMode() ? Loc.T("the map") : null);
             A.Say(where != null ? Loc.F("Back in the game, {0}", where) : Loc.T("Back in the game"), force: true);
         }
