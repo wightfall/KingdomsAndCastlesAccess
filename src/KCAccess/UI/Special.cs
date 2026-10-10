@@ -168,7 +168,7 @@ namespace KCAccess.UI
             return TextUtil.Capitalize(res ?? Loc.T("resource"));
         }
 
-        private static string NegotiationValue(Slider s) => (int)s.value + ", " + Loc.F("they are {0}", UnitText.NegotiationMood(s.value));
+        private static string NegotiationValue(Slider s) => (int)s.value + ", " + Loc.F("they are {0}", UnitText.NegotiationMood(s.value)) + ". " + Game.Diplomacy.OfferVerdict();
 
         /// <summary>Value spoken after a slider was changed, when the slider needs more than the number; null otherwise.</summary>
         internal static string SliderValue(Slider s) => NegotiationResource(s) != null ? NegotiationValue(s) : null;
@@ -518,6 +518,7 @@ namespace KCAccess.UI
         internal static string Describe(UIItem item)
         {
             if (item == null || item.Go == null) return null;
+            if (Game.Diplomacy.Describe(item) is string diplomacy) return diplomacy;
             if (item.IsControl && ResourceAmountField(item.Control) is string amountField) return amountField;
             if (item.IsControl && ResourceToggle(item.Control, out var toggleName) is ResourceToggleButton rtb)
                 return toggleName + ", " + Loc.T("check box") + ", " + (rtb.State ? Loc.T("checked") : Loc.T("not checked"));
