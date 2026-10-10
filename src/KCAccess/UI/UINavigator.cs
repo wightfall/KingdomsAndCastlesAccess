@@ -476,7 +476,7 @@ namespace KCAccess.UI
             A.Cue(result == NavResult.Wrapped ? Cue.Wrap : (result == NavResult.HitEdge ? Cue.Edge : Cue.Navigate));
             EnsureVisible(cur.Go);
             SetHover(cur.Go);
-            string tip = cur.IsControl ? UIText.TooltipOf(cur.Go) : null;
+            string tip = (cur.IsControl ? UIText.TooltipOf(cur.Go) : null) ?? Special.ExtraTooltip(cur);
             string desc = Describe(cur);
             if (tip != null && !desc.Contains(tip)) desc = TextUtil.Sentences(desc, tip);
             if (Plugin.CfgPositions.Value && list.Count > 1) desc += ", " + list.PositionText;
@@ -530,7 +530,7 @@ namespace KCAccess.UI
                 A.Say(Loc.F("{0}, empty", Title));
                 return;
             }
-            string tip = cur.IsControl ? UIText.TooltipOf(cur.Go) : null;
+            string tip = (cur.IsControl ? UIText.TooltipOf(cur.Go) : null) ?? Special.ExtraTooltip(cur);
             string desc = Describe(cur);
             if (tip != null && desc.Contains(tip)) tip = null;
             A.Say(TextUtil.Sentences(desc, tip, list.PositionText), force: true);

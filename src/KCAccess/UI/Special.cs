@@ -452,6 +452,69 @@ namespace KCAccess.UI
             return null;
         }
 
+        private static bool HasText(UIItem item, Component text) =>
+            text != null && item.Texts != null && item.Texts.Contains(text);
+
+        /// <summary>
+        /// A dragon's health, happiness and bond (dragon nest panel, army panel): what affects them is only in a tooltip the
+        /// panel draws itself on hover (an EventTrigger, no TooltipHook). Returns that text for those items, else null.
+        /// </summary>
+        internal static string ExtraTooltip(UIItem item)
+        {
+            if (item == null || item.Go == null) return null;
+            try
+            {
+                DragonNest.DragonSlot slot = null;
+                int which = -1; // 0 health, 1 happiness, 2 bond
+                RectTransform rect = null;
+                TMPro.TextMeshProUGUI desc = null, warning = null;
+                System.Action hide = null;
+                var nestUI = GameUI.inst != null && GameUI.inst.workerUI != null ? GameUI.inst.workerUI.dragonNestUI : null;
+                if (nestUI != null && nestUI.slots != null && nestUI.dragonNest != null && item.Go.transform.IsChildOf(nestUI.transform))
+                {
+                    for (int i = 0; i < nestUI.slots.Length && i < nestUI.dragonNest.slots.Length; i++)
+                    {
+                        var s = nestUI.slots[i];
+                        if (s == null || !item.Go.transform.IsChildOf(s.transform)) continue;
+                        if (HasText(item, s.healthTMP) || HasText(item, s.healthDescriptionTMP)) which = 0;
+                        else if (HasText(item, s.happinessTMP) || (s.happinessSlider != null && item.Control == s.happinessSlider)) which = 1;
+                        else if (HasText(item, s.bondProgressTMP) || HasText(item, s.bondSliderTMP) || (s.bondSlider != null && item.Control == s.bondSlider)) which = 2;
+                        slot = nestUI.dragonNest.slots[i];
+                        break;
+                    }
+                    rect = nestUI.tooltipRectT;
+                    desc = nestUI.tooltipTMP;
+                    warning = nestUI.tooltipWarningTMP;
+                    hide = () => nestUI.SetTooltipVisibility(false);
+                }
+                var unitUI = UnitUI.inst;
+                if (which < 0 && unitUI != null && item.Go.transform.IsChildOf(unitUI.transform))
+                {
+                    if (unitUI.currentUnitSelected is Dragon d) slot = d.currSlot;
+                    else if (unitUI.currentUnitSelected is DragonPuppet p) slot = p.dSlot;
+                    if (HasText(item, unitUI.dragonHealthTMP) || HasText(item, unitUI.dragonHealthDescriptionTMP)) which = 0;
+                    else if (HasText(item, unitUI.dragonHappinessTMP) || (unitUI.dragonHappinessSlider != null && item.Control == unitUI.dragonHappinessSlider)) which = 1;
+                    else if (HasText(item, unitUI.dragonBondTMP) || HasText(item, unitUI.dragonBondProgressTMP) || (unitUI.dragonBondSlider != null && item.Control == unitUI.dragonBondSlider)) which = 2;
+                    rect = unitUI.dragonTooltipRect;
+                    desc = unitUI.dragonTooltipTMP;
+                    warning = unitUI.dragonTooltipWarningTMP;
+                    hide = () => { if (unitUI.dragonTooltipRect != null) unitUI.dragonTooltipRect.gameObject.SetActive(false); };
+                }
+                if (which < 0 || slot == null || slot.currNest == null || rect == null || desc == null || warning == null) return null;
+                if (which == 0) DragonNestUI.UpdateHealthTooltip(slot, rect, desc, warning, rect.position);
+                else if (which == 1) DragonNestUI.UpdateHappinessTooltip(slot, rect, desc, warning, rect.position);
+                else DragonNestUI.UpdateBondTooltip(slot, rect, desc, warning, rect.position);
+                string text = TextUtil.Sentences(desc.text, warning.enabled ? warning.text : null);
+                hide();
+                return text.Length > 0 ? text : null;
+            }
+            catch (System.Exception e)
+            {
+                Plugin.Log.LogWarning("Dragon tooltip failed: " + e.Message);
+                return null;
+            }
+        }
+
         internal static string Describe(UIItem item)
         {
             if (item == null || item.Go == null) return null;
