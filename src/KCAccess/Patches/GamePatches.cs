@@ -348,6 +348,26 @@ namespace KCAccess
         }
     }
 
+    /// <summary>A construction site of the player finished: only a sound and the scaffolding going away showed it.</summary>
+    [HarmonyPatch(typeof(Building), "UpdateConstruction")]
+    internal static class Patch_ConstructionDone
+    {
+        private static void Prefix(Building __instance, out bool __state) => __state = __instance.IsBuilt();
+
+        private static void Postfix(Building __instance, bool __state)
+        {
+            if (__state || !__instance.IsBuilt()) return;
+            try
+            {
+                if (__instance.TeamID() == 0) GameEvents.OnBuilt(__instance);
+            }
+            catch (Exception e)
+            {
+                Plugin.Log.LogWarning("Construction announcement failed: " + e.Message);
+            }
+        }
+    }
+
     /// <summary>A barracks, archery range, siege workshop or keep finished a unit with only a sound effect: say it.</summary>
     [HarmonyPatch(typeof(Barracks), nameof(Barracks.Tick))]
     internal static class Patch_TrainingDone

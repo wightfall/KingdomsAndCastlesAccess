@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Assets.Code;
 using Assets;
 using KCAccess.Core;
@@ -31,6 +32,7 @@ namespace KCAccess.Game
                 // Another world: nothing from the previous kingdom may leak into announcements.
                 Log.Clear();
                 lastWeather = null;
+                built.Clear();
                 EnvoyWatch.Reset();
                 Twitch.Reset();
                 MapController.Inst.OnEnterPlayMode();
@@ -45,6 +47,7 @@ namespace KCAccess.Game
         internal static void Tick()
         {
             TrackAttacks();
+            FlushBuilt();
             if (Weather.inst != null)
             {
                 var s = Weather.inst.season;
@@ -147,6 +150,43 @@ namespace KCAccess.Game
             if (!Plugin.CfgAnnounceLog.Value) return;
             A.Cue(Cue.Notify);
             A.SayQueued(text + (where.HasValue ? ", " + Directions.Relative(MapController.Inst.CursorPos, where.Value) : string.Empty));
+        }
+
+        // Construction sites finishing: only a sound and the scaffolding disappearing. Collected and said together
+        // ("Construction finished: Farm; Road, 6 pieces") once nothing else finished for a few seconds.
+        private static readonly List<string> built = new List<string>();
+        private static GridPos? builtAt;
+        private static float builtQuietAt, builtLatestAt;
+
+        /// <summary>One of the player's buildings finished construction (Patch_ConstructionDone).</summary>
+        internal static void OnBuilt(Building b)
+        {
+            if (b == null || GameState.inst == null || !GameState.inst.IsPlayMode()) return;
+            if (built.Count == 0)
+            {
+                var c = b.GetCell();
+                builtAt = c != null ? new GridPos(c.x, c.z) : (GridPos?)null;
+                builtLatestAt = Time.unscaledTime + 20f;
+            }
+            built.Add(b.FriendlyName);
+            builtQuietAt = Time.unscaledTime + 3f;
+        }
+
+        private static void FlushBuilt()
+        {
+            if (built.Count == 0 || (Time.unscaledTime < builtQuietAt && Time.unscaledTime < builtLatestAt)) return;
+            var counts = new Dictionary<string, int>();
+            var order = new List<string>();
+            foreach (var n in built)
+            {
+                if (!counts.ContainsKey(n)) { counts[n] = 0; order.Add(n); }
+                counts[n]++;
+            }
+            var parts = new List<string>();
+            foreach (var n in order) parts.Add(counts[n] > 1 ? Loc.F("{0}, {1} pieces", n, counts[n]) : n);
+            GridPos? where = built.Count == 1 ? builtAt : null;
+            built.Clear();
+            OnDone(Loc.F("Construction finished: {0}", string.Join("; ", parts.ToArray())), where);
         }
 
         private static void OnThreatWarning(string text)
