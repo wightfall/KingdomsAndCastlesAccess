@@ -30,6 +30,7 @@ namespace KCAccess.Game
                 Log.Clear();
                 lastWeather = null;
                 EnvoyWatch.Reset();
+                Twitch.Reset();
                 MapController.Inst.OnEnterPlayMode();
             }
             else MapController.Inst.OnResume();

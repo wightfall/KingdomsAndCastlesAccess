@@ -136,6 +136,16 @@ namespace KCAccess.Game
             }
         }
 
+        /// <summary>A new or loaded world: the last result and a pending announcement belong to the previous kingdom.</summary>
+        internal static void Reset()
+        {
+            LastWinner = null;
+            bannerWinner = null;
+            pending = null;
+            countdownSaid = false;
+            noVotesRound = false;
+        }
+
         // ------------------------------------------------------------------ game hooks (GamePatches.cs)
 
         internal static void OnUsernameSet(string username)
