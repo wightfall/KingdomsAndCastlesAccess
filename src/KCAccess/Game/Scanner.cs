@@ -48,8 +48,11 @@ namespace KCAccess.Game
         {
             if (stale || origin != lastOrigin)
             {
-                // The cursor moved: list again nearest first from the new spot.
+                // The cursor moved: list again nearest first from the new spot. When it moved onto the current item
+                // (jump or walk to the target), that item is the nearest now: count from it, or "next" named it again.
+                var current = !stale && index >= 0 && index < items.Count ? items[index].Pos : (GridPos?)null;
                 Refresh(origin);
+                if (current.HasValue && current.Value == origin) index = items.FindIndex(i => i.Pos == origin);
             }
             else if (Time.unscaledTime - refreshedAt > 5f)
             {
