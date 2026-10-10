@@ -20,6 +20,8 @@ namespace KCAccess.Game
             lastSpeed = -1;
             lastRaid = null;
             lastDragonAttack = null;
+            lastVikingYears = -1;
+            lastDragonYears = -1;
             // Coming back from the pause menu (or save / settings / banner screens) is just a resume.
             var st = GameState.inst.mainMenuMode.GetState();
             bool freshWorld = st == MainMenuMode.State.NewMap || st == MainMenuMode.State.Load || st == MainMenuMode.State.Menu
@@ -38,6 +40,7 @@ namespace KCAccess.Game
 
         private static Weather.WeatherType? lastWeather;
         private static bool? lastRaid, lastDragonAttack;
+        private static int lastVikingYears = -1, lastDragonYears = -1;
 
         internal static void Tick()
         {
@@ -93,6 +96,14 @@ namespace KCAccess.Game
                 bool dragons = DragonSpawn.inst != null && DragonSpawn.inst.IsAttackInProgress();
                 if (lastDragonAttack == true && !dragons && Plugin.CfgAnnounceLog.Value) OnInfo(Loc.T("The dragon attack is over."));
                 lastDragonAttack = dragons;
+                // The on-screen countdowns (setting "Show Viking and Dragon Timers") start to flash in the last year.
+                bool timers = Assets.Settings.inst != null && Assets.Settings.inst.VikingDragonTimers && Player.inst != null && Player.inst.difficulty != Player.Difficulty.Peaceful;
+                int vy = timers && !raid && RaiderSystem.inst != null && RaiderSystem.inst.AllowSpawningVikings() ? RaiderSystem.inst.yearsUntilNextAttack : -1;
+                if (lastVikingYears > 0 && vy == 0 && Plugin.CfgAnnounceLog.Value) OnThreatWarning(Loc.T("Vikings will raid within a year."));
+                lastVikingYears = vy;
+                int dy = timers && !dragons && DragonSpawn.inst != null && DragonSpawn.inst.AllowSpawning() ? DragonSpawn.inst.yearsUntilNextAttack : -1;
+                if (lastDragonYears > 0 && dy == 0 && Plugin.CfgAnnounceLog.Value) OnThreatWarning(Loc.T("Dragons will attack within a year."));
+                lastDragonYears = dy;
             }
             catch (System.Exception)
             {
@@ -136,6 +147,13 @@ namespace KCAccess.Game
             if (!Plugin.CfgAnnounceLog.Value) return;
             A.Cue(Cue.Notify);
             A.SayQueued(text + (where.HasValue ? ", " + Directions.Relative(MapController.Inst.CursorPos, where.Value) : string.Empty));
+        }
+
+        private static void OnThreatWarning(string text)
+        {
+            Log.Add(text, Severity.Warning, Player.inst != null ? Player.inst.CurrYear : 0);
+            A.Cue(Cue.Error);
+            A.SayQueued(text);
         }
 
         internal static void OnInfo(string text)
