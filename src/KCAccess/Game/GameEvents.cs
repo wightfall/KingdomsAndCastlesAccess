@@ -15,6 +15,9 @@ namespace KCAccess.Game
         private static bool lastPaused;
         private static int lastSpeed = -1;
 
+        /// <summary>Set when a save is loaded or a map generated (Patch_WorldChanged); cleared on entering play.</summary>
+        internal static bool WorldChanged;
+
         internal static void OnEnterPlayMode()
         {
             lastSeason = null;
@@ -23,10 +26,13 @@ namespace KCAccess.Game
             lastDragonAttack = null;
             lastVikingYears = -1;
             lastDragonYears = -1;
-            // Coming back from the pause menu (or save / settings / banner screens) is just a resume.
+            // Coming back from the pause menu (or save / settings / banner screens) is just a resume. A world that was
+            // loaded or generated meanwhile is not: visiting a shared kingdom from the pause menu (and coming back from
+            // it) loads another world while the menu state stays "kingdom share from game".
             var st = GameState.inst.mainMenuMode.GetState();
-            bool freshWorld = st == MainMenuMode.State.NewMap || st == MainMenuMode.State.Load || st == MainMenuMode.State.Menu
+            bool freshWorld = WorldChanged || st == MainMenuMode.State.NewMap || st == MainMenuMode.State.Load || st == MainMenuMode.State.Menu
                 || st == MainMenuMode.State.GameWorkshopUI || st == MainMenuMode.State.LoadError || st == MainMenuMode.State.KingdomShareFromMenu;
+            WorldChanged = false;
             if (freshWorld)
             {
                 // Another world: nothing from the previous kingdom may leak into announcements.

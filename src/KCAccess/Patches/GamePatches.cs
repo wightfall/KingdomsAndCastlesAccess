@@ -114,6 +114,19 @@ namespace KCAccess
         }
     }
 
+    /// <summary>Another world was loaded or generated: entering play afterwards is a new kingdom, not a resume.</summary>
+    [HarmonyPatch]
+    internal static class Patch_WorldChanged
+    {
+        private static IEnumerable<System.Reflection.MethodBase> TargetMethods()
+        {
+            yield return AccessTools.Method(typeof(LoadSave), nameof(LoadSave.LoadAtPath));
+            yield return AccessTools.Method(typeof(World), nameof(World.Generate));
+        }
+
+        private static void Postfix() => GameEvents.WorldChanged = true;
+    }
+
     // No hook on SaveLoadUI.ClickSaveItem: it only opens the "overwrite?" confirmation, so "Game saved" was spoken
     // before the player answered (even after No). Patch_ManualSave confirms a save once it really happened.
 }
