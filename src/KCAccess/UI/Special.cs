@@ -444,7 +444,10 @@ namespace KCAccess.UI
                 string res = TextUtil.Capitalize(ResourceNames.Name(((FreeResourceType)i).ToString()));
                 string value = string.IsNullOrEmpty(field.text) ? "0" : field.text;
                 if (field.interactable) return Loc.F("{0}, edit, {1}", res, value);
-                return TextUtil.Join(", ", res, value, Loc.T("unavailable"), UIText.TooltipOf(field.gameObject));
+                // The reason ("this storage does not accept it") is the tooltip of the cover drawn over the field, not of the field.
+                var hover = field.GetComponentInParent<HoverHide>();
+                string why = hover != null && hover.toHide != null ? UIText.TooltipOf(hover.toHide.gameObject) : null;
+                return TextUtil.Join(", ", res, value, Loc.T("unavailable"), why ?? UIText.TooltipOf(field.gameObject));
             }
             return null;
         }
