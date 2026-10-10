@@ -485,8 +485,25 @@ namespace KCAccess.UI
                     return (item.Control == construct.play ? Loc.T("Keep building") : Loc.T("Pause construction")) + ", " + Loc.T("radio button") + ", " + (tg.isOn ? Loc.T("selected") : Loc.T("not selected"));
                 }
                 if (item.IsControl && construct.trashUI != null && item.Go == construct.trashUI) return Loc.T("Demolish, button");
+                if (item.Control is Slider cs && construct.progressBar != null && item.Go == construct.progressBar)
+                    return Loc.F("Construction progress, {0}", TextUtil.Percent(cs.value));
                 if (!item.IsControl && construct.infoTextUI != null && item.Go == construct.infoTextUI.gameObject)
                     return Loc.F("Builders {0}", UIText.JoinTexts(item.Texts));
+            }
+            // Barracks, archery range, siege workshop, keep: the training bar has no caption.
+            var barracks = GameUI.inst != null ? GameUI.inst.barracksUI : null;
+            if (barracks != null && barracks.progressBar != null && item.Control == barracks.progressBar)
+                return Loc.F("Training progress, {0}", TextUtil.Percent(barracks.progressBar.value));
+            // Kingdom share: the code fields have no caption, and some buttons are only pictures.
+            var share = item.IsControl && GameState.inst != null && GameState.inst.mainMenuMode != null ? GameState.inst.mainMenuMode.kingdomShareUI : null;
+            if (share != null && item.Go.transform.IsChildOf(share.transform))
+            {
+                if (item.Control == share.L_codeInput) return Loc.F("Code of the kingdom to visit, edit, {0}", UIText.ValueOf(share.L_codeInput));
+                if (item.Control == share.U_codeOutput) return Loc.F("Share code of your kingdom: {0}", UIText.ValueOf(share.U_codeOutput));
+                bool pictureOnly = UIText.VisibleTexts(item.Go.transform).Count == 0;
+                if (pictureOnly && item.Control == share.close) return Loc.T("Close, button");
+                if (pictureOnly && item.Control == share.U_refreshCode) return Loc.T("Get a new share code, button");
+                if (pictureOnly && item.Control == share.U_takeScreenshot) return Loc.T("Take a new screenshot, button");
             }
             // Kingdom overview: the island name field is greyed out until its Edit button is pressed.
             var region = item.IsControl ? item.Go.GetComponentInParent<RegionNameUI>() : null;
@@ -503,6 +520,13 @@ namespace KCAccess.UI
                        + (ModLanguage.ActiveModOnly ? ". " + Loc.F("Screen reader language: {0}", ModLanguage.ActiveName) : string.Empty);
             var kbd = item.IsControl ? item.Go.GetComponentInParent<KeyButton>() : null;
             if (IsKeyRow(kbd)) return KeyAction(kbd) + ": " + KeyName(kbd) + ", " + Loc.T("button, Enter to change");
+            // Map setup: the arrows around the seed field.
+            var seed = item.IsControl ? item.Go.GetComponentInParent<SeedButtonUI>() : null;
+            if (seed != null && UIText.VisibleTexts(item.Go.transform).Count == 0)
+            {
+                if (item.Control == seed.previousSeed) return Loc.T("Previous map, button");
+                if (item.Control == seed.nextSeed) return Loc.T("Next map, button");
+            }
             if (item.IsControl && item.Go.name == "SeedInput" && !UIText.LabelOf(item.Control).ToLowerInvariant().Contains("seed"))
                 return Loc.F("Map seed, edit, {0}", UIText.ValueOf(item.Control));
             var mrow = item.Go.GetComponentInParent<ResourceLineItemUI>();

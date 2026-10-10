@@ -107,8 +107,7 @@ namespace KCAccess.UI
                 {
                     if (!list.Items[i].IsControl) continue;
                     if (firstControl < 0) firstControl = i;
-                    string l = UIText.LabelOf(list.Items[i].Control).ToLowerInvariant();
-                    if (l == "back" || l == "close" || l == "x" || l == "cancel") continue;
+                    if (IsBackButton(list.Items[i].Control)) continue;
                     if (list.Items[i].Control is Slider rs && UIText.IsReadOnlySlider(rs)) continue;
                     firstControl = i;
                     break;
@@ -116,6 +115,26 @@ namespace KCAccess.UI
                 if (firstControl >= 0) list.SelectIndex(firstControl);
             }
             if (announce) AnnounceScreen(intro);
+        }
+
+        /// <summary>
+        /// Back / Close / Cancel buttons are not a good first stop. Recognised by object and handler names too: their
+        /// captions are in the game's language.
+        /// </summary>
+        private static bool IsBackButton(Selectable s)
+        {
+            string n = s.gameObject.name.ToLowerInvariant();
+            if (n == "x" || n.Contains("back") || n.Contains("close") || n.Contains("cancel")) return true;
+            if (s is Button b)
+            {
+                for (int i = 0; i < b.onClick.GetPersistentEventCount(); i++)
+                {
+                    string m = (b.onClick.GetPersistentMethodName(i) ?? string.Empty).ToLowerInvariant();
+                    if (m.Contains("back") || m.Contains("close") || m.Contains("cancel")) return true;
+                }
+            }
+            string l = UIText.LabelOf(s).ToLowerInvariant();
+            return l == "back" || l == "close" || l == "x" || l == "cancel" || l == Loc.T("Back").ToLowerInvariant() || l == Loc.T("Close").ToLowerInvariant() || l == Loc.T("Cancel").ToLowerInvariant();
         }
 
         public void Clear()

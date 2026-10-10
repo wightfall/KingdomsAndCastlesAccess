@@ -305,6 +305,12 @@ namespace KCAccess.UI
             { "SetCursorModeConsole", Loc.N("Normal mode") },
         };
 
+        /// <summary>Handler names that are plain words (OnNextClicked → "Next"): spoken in the player's language.</summary>
+        private static readonly HashSet<string> CommonWords = new HashSet<string>
+        {
+            Loc.N("Next"), Loc.N("Previous"), Loc.N("Back"), Loc.N("Close"), Loc.N("Accept"), Loc.N("Cancel"), Loc.N("Confirm"), Loc.N("Done"), Loc.N("Edit"),
+        };
+
         private static string MethodLabel(UnityEventBase ev)
         {
             if (ev == null) return null;
@@ -315,7 +321,8 @@ namespace KCAccess.UI
                 if (KnownMethods.TryGetValue(m, out var known)) return Loc.T(known);
                 string words = MethodToWords(m);
                 if (words == "Click" || words == "Press" || words == "Select" || words == "Clicked" || words.Length == 0) continue;
-                return TextUtil.Humanize(words);
+                string label = TextUtil.Humanize(words);
+                return CommonWords.Contains(label) ? Loc.T(label) : label;
             }
             return null;
         }
