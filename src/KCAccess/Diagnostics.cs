@@ -265,6 +265,14 @@ namespace KCAccess
                             // Developer only: raise (or lower) the visited kingdom's opinion of the player.
                             if (GameUI.inst.diplomacyUI.Visible() && parts.Length > 1) GameUI.inst.diplomacyUI.ModifyStanding(int.Parse(parts[1]));
                             break;
+                        case "feast":
+                            // Developer only: the feast menu and, with "feast eat", the meal (as the dialogue opens them).
+                            if (GameUI.inst.diplomacyUI.Visible())
+                            {
+                                if (parts.Length > 1 && parts[1] == "eat") { GameUI.inst.diplomacyUI.feastType = parts.Length > 2 ? parts[2] : "apples"; GameUI.inst.diplomacyUI.DoFoodAnim(); }
+                                else GameUI.inst.diplomacyUI.ShowFoodMenu();
+                            }
+                            break;
                         case "negotiate":
                             // Developer only: the trade price editor as the dialogue opens it (needs an open visit).
                             if (GameUI.inst.diplomacyUI.Visible()) GameUI.inst.diplomacyUI.DisplayNegotiationUI();

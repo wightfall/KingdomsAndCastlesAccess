@@ -196,15 +196,24 @@ focus on the current language; Enter switches language, Escape closes the list.
 
 ### Trading, diplomacy and research
 
+* **Store and workshop links:** "DLC Available", "Wishlist our next game!" and workshop pages open in your web
+  browser instead of the Steam overlay, which screen readers cannot read.
 * **Merchants:** when "A merchant ship has arrived" is announced, find it with the scanner (Your soldiers
   and ships), press Shift+Enter on it and then F6. Each trade line reads "Wood: 2 gold each, 40 available,
   buy 5, costs 10 gold"; Left / Right change the amount by 1, Page Up / Page Down by 10, Enter lets you
   type it. Then choose the complete-transaction button.
 * **Diplomacy:** every line an envoy or ruler says is read aloud, followed by the number of replies;
   focus jumps to the first reply. Up / Down choose, Enter answers. To visit a kingdom, select your envoy
-  (Shift+Enter), put the cursor on the other kingdom's keep and press M.
-* **Diplomacy prices:** in the price editor each slider reads its resource, the price and how the other
-  kingdom feels about it ("Wood price, slider, 3, they are neutral"); lower prices make them happier.
+  (Shift+Enter), put the cursor on the other kingdom's keep and press M: the visit opens when the envoy
+  arrives, wherever the camera is. "Opinion of you: neutral, 80 percent of the way to favorable" tells their
+  opinion level and how close the next one is; a trade deal needs at least favorable.
+* **Trade deal (Let's talk trade):** the price editor explains itself and starts on the first resource. Each
+  slider reads its resource, the price and how they feel about it ("Wood price, slider, 3, they are
+  neutral"); after a change you also hear the effect of the whole offer ("Overall they like these prices,
+  opinion plus 10"), and so does the Propose prices button. Their own price list reads "Wood: 2 gold", and
+  when you ask "Can you do better?" the prices they lower are announced ("Armaments 4 gold, was 5").
+* **Feasts:** the food buttons say the feast and its cost ("Apple feast, costs 50 apples"); afterwards you
+  hear how they liked it (their favourite food, one they dislike, or some of it).
 * **Army panel (F6 with soldiers selected):** the unit type tabs and the list of selected units are named
   ("Siege catapults, 2, tab"); Enter on a unit shows its details.
 * **Research (Great Library):** select the library, F6, Research. Each technology reads its effect and
@@ -333,10 +342,10 @@ Settings are saved in `BepInEx\config\kcaccess.screenreader.cfg` right away.
 
 Everything the mod itself says (help, key list, tile descriptions, menus, settings, notifications it builds and
 the setup program) can be translated. Names and texts that come from the game, such as building names, stay in
-the game's own language. Shipped: **Thai** (complete) and a file for every language the game has (German,
-French, Simplified and Traditional Chinese, Dutch, Japanese, Romanian, Portuguese (Brazil), Spanish, Korean,
-Italian, Polish, Russian, Norwegian, Ukrainian, Swedish, Turkish); those files are still empty, so the mod speaks
-English there until someone translates them.
+the game's own language. Shipped, all complete: every language the game has (German, French, Simplified and
+Traditional Chinese, Dutch, Japanese, Romanian, Portuguese (Brazil), Spanish, Korean, Italian, Polish, Russian,
+Norwegian, Ukrainian, Swedish, Turkish) and **Thai**. The files are sorted into sections by topic ("Map, tiles and
+cursor", "Building and castle walls", "Setup program" ...), so a text is easy to find.
 
 **Choosing the language**
 
@@ -362,9 +371,10 @@ While a language is active, the mod checks its file every 2 seconds: save it in 
 "Language file reloaded" (in that language) with your changes in effect, no restart needed.
 
 **Updates keep your changes.** The shipped files are in `Languages\default` and are replaced by every update.
-At start the mod copies a shipped file to `Languages` when you do not have it yet; when you have it, new texts
-are added at the end of your file and texts you never changed get the new shipped translation, while every text
-you changed stays yours. So always edit the files directly in `Languages`, never in `Languages\default`. The
+At start the mod copies a shipped file to `Languages` when you do not have it yet; when you have it, your file is
+rebuilt in the shipped layout: new texts appear in their own section, texts you never changed get the new shipped
+translation, and every text you changed stays yours. Lines and comments you added yourself are kept in a
+"Your own lines" section at the end. So always edit the files directly in `Languages`, never in `Languages\default`. The
 setup program keeps them when it updates the mod; uninstalling removes them.
 
 **Adding a language**

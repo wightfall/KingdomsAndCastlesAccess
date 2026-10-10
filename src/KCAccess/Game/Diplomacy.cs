@@ -42,6 +42,7 @@ namespace KCAccess.Game
         /// </summary>
         internal static string Describe(UIItem item)
         {
+            if (ForeignIslandButton(item) is string foreign) return foreign;
             var ui = GameUI.inst != null ? GameUI.inst.diplomacyUI : null;
             if (ui == null || item == null || item.Go == null || !ui.Visible()) return null;
             // The opinion bar is the progress towards the next level ("Neutral, 80 percent" was read as an 80 percent opinion).
@@ -61,6 +62,16 @@ namespace KCAccess.Game
                     return Loc.T("Their request to you") + ", " + Loc.T("button") + ", " + (ui.missionRoot.activeSelf ? Loc.T("shown") : Loc.T("hidden"));
                 if (b == ui.resourceInfoToggle)
                     return Loc.T("Their trade prices") + ", " + Loc.T("button") + ", " + (ui.resourceCostRoot.activeSelf ? Loc.T("shown") : Loc.T("hidden"));
+                if (ui.feastMenu != null && b.transform.IsChildOf(ui.feastMenu.transform))
+                {
+                    var menu = ui.feastMenu.transform;
+                    for (int i = 0; i < menu.childCount && i < FeastFoods.Length; i++)
+                    {
+                        if (!b.transform.IsChildOf(menu.GetChild(i))) continue;
+                        string food = ResourceNames.Name(FeastFoods[i].ToString());
+                        return Loc.F("{0}, button, costs 50 {1}", FeastName(i), food) + (b.interactable ? string.Empty : ", " + Loc.T("you do not have enough"));
+                    }
+                }
                 if (ui.negotiationUI != null && b.transform.IsChildOf(ui.negotiationUI.transform))
                     return Loc.T("Propose prices") + ", " + Loc.T("button") + ". " + OfferVerdict();
             }
@@ -74,6 +85,57 @@ namespace KCAccess.Game
                 }
             }
             return null;
+        }
+
+        /// <summary>
+        /// The foreign island panel's Declare war / Break alliance button: the relation and what it means are shown only
+        /// while the mouse rests on the panel (relationExplanationText).
+        /// </summary>
+        private static string ForeignIslandButton(UIItem item)
+        {
+            var panel = GameUI.inst != null ? GameUI.inst.foreignIslandInfoUI : null;
+            if (panel == null || item == null || item.Control == null || item.Control != panel.hostilityButton) return null;
+            string label = TextUtil.Clean(UIText.TextOf(panel.relationButtonTxt));
+            string status = TextUtil.Clean(UIText.TextOf(panel.relationStatusTxt));
+            string why = TextUtil.Clean(panel.relationExplanationText != null ? panel.relationExplanationText.text : null);
+            return TextUtil.Join(". ", label + ", " + Loc.T("button"), TextUtil.HasContent(status) ? Loc.F("Now: {0}", status) : null, TextUtil.HasContent(why) ? why : null);
+        }
+
+        private static float confirmUntil;
+        private static Selectable confirmFor;
+
+        /// <summary>
+        /// Declaring war or breaking an alliance happens on the first click in the game and cannot be undone: the first
+        /// Enter only asks, a second Enter within 5 seconds does it. True when the press was held back.
+        /// </summary>
+        internal static bool HoldBack(Selectable s)
+        {
+            var panel = GameUI.inst != null ? GameUI.inst.foreignIslandInfoUI : null;
+            if (panel == null || s == null || s != panel.hostilityButton) return false;
+            if (confirmFor == s && Time.unscaledTime <= confirmUntil)
+            {
+                confirmFor = null;
+                return false;
+            }
+            confirmFor = s;
+            confirmUntil = Time.unscaledTime + 5f;
+            A.Cue(Cue.Error);
+            A.Say(Loc.F("{0}? This cannot be undone. Press Enter again within 5 seconds to confirm.", TextUtil.Clean(UIText.TextOf(panel.relationButtonTxt))), force: true);
+            return true;
+        }
+
+        /// <summary>The feast menu's buttons in order (DiplomacyUI.ShowFoodMenu: bread, apples, fish, pork).</summary>
+        internal static readonly FreeResourceType[] FeastFoods = { FreeResourceType.Wheat, FreeResourceType.Apples, FreeResourceType.Fish, FreeResourceType.Pork };
+
+        internal static string FeastName(int i)
+        {
+            switch (i)
+            {
+                case 0: return Loc.T("Bread feast");
+                case 1: return Loc.T("Apple feast");
+                case 2: return Loc.T("Fish feast");
+                default: return Loc.T("Pork feast");
+            }
         }
 
         internal static string StandingName(LandmassOwner.Standing s)
@@ -176,6 +238,46 @@ namespace KCAccess.Game
                     changes.Add(Loc.F("{0} {1} gold, was {2}", Diplomacy.ResourceAt(i), now, __state[i]));
             }
             if (changes.Count > 0) A.SayQueued(Loc.F("Their new prices: {0}", string.Join(", ", changes.ToArray())));
+        }
+    }
+
+    /// <summary>The feast menu opens in the middle of a conversation: say so and start on the first food.</summary>
+    [HarmonyPatch(typeof(DiplomacyUI), nameof(DiplomacyUI.ShowFoodMenu))]
+    internal static class Patch_FeastMenuOpened
+    {
+        private static void Postfix(DiplomacyUI __instance)
+        {
+            if (__instance.feastMenu == null) return;
+            A.Cue(Cue.Open);
+            A.Say(Loc.T("Feast: choose the food to serve. Their favourite food pleases them most."), force: true);
+            var first = __instance.feastMenu.GetComponentInChildren<Button>();
+            if (first != null && AccessController.Inst != null) AccessController.Inst.Nav.RequestFocus(g => g == first.gameObject);
+        }
+    }
+
+    /// <summary>
+    /// The feast: how the guest liked the food was only shown by the eating animation (all of it for their favourite
+    /// food, nothing for the one they dislike), and it changes their opinion.
+    /// </summary>
+    [HarmonyPatch(typeof(DiplomacyUI), nameof(DiplomacyUI.DoFoodAnim))]
+    internal static class Patch_FeastEaten
+    {
+        private static void Postfix(DiplomacyUI __instance)
+        {
+            var k = __instance.kingdom;
+            if (k == null) return;
+            FreeResourceType food;
+            switch (__instance.feastType)
+            {
+                case "bread": food = FreeResourceType.Wheat; break;
+                case "apples": food = FreeResourceType.Apples; break;
+                case "fish": food = FreeResourceType.Fish; break;
+                case "pork": food = FreeResourceType.Pork; break;
+                default: return;
+            }
+            if (k.FavoriteFood == food) A.SayQueued(Loc.T("They eat it all: it is their favourite food."));
+            else if (k.LeastFavoriteFood == food) A.SayQueued(Loc.T("They do not touch it: they dislike this food."));
+            else A.SayQueued(Loc.T("They eat some of it."));
         }
     }
 

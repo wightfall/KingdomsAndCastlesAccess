@@ -605,6 +605,7 @@ namespace KCAccess.UI
                 A.Say(UIText.LabelOf(s) + ", " + Loc.T("unavailable"));
                 return;
             }
+            if (Game.Diplomacy.HoldBack(s)) return; // declaring war or breaking an alliance asks for a second Enter
             switch (s)
             {
                 case Toggle t:
