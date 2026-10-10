@@ -44,6 +44,17 @@ namespace KCAccess.Game
         {
             var ui = GameUI.inst != null ? GameUI.inst.diplomacyUI : null;
             if (ui == null || item == null || item.Go == null || !ui.Visible()) return null;
+            // The opinion bar is the progress towards the next level ("Neutral, 80 percent" was read as an 80 percent opinion).
+            if (item.Control is Slider bar && bar == ui.statusProgress && ui.kingdom != null && Player.inst != null)
+            {
+                var lmo = ui.kingdom.LandmassOwner;
+                int team = Player.inst.PlayerLandmassOwner.teamId;
+                var standing = lmo.GetStandingFor(team);
+                string now = StandingName(standing);
+                if (standing == LandmassOwner.Standing.VeryFavorable) return Loc.F("Opinion of you: {0}, the best there is", now);
+                int points = Mathf.Clamp(lmo.GetPointsStandingFor(team), 0, 100);
+                return Loc.F("Opinion of you: {0}, {1} percent of the way to {2}", now, points, StandingName(standing + 1));
+            }
             if (item.Control is Button b)
             {
                 if (b == ui.missionInfoToggle)
@@ -65,8 +76,20 @@ namespace KCAccess.Game
             return null;
         }
 
+        internal static string StandingName(LandmassOwner.Standing s)
+        {
+            switch (s)
+            {
+                case LandmassOwner.Standing.VeryUnfavorable: return Loc.T("very unfavorable");
+                case LandmassOwner.Standing.Unfavorable: return Loc.T("unfavorable");
+                case LandmassOwner.Standing.Neutral: return Loc.T("neutral");
+                case LandmassOwner.Standing.Favorable: return Loc.T("favorable");
+                default: return Loc.T("very favorable");
+            }
+        }
+
         /// <summary>Resource of the n-th entry of the game's price lists (every resource but gold and the dead).</summary>
-        private static string ResourceAt(int n)
+        internal static string ResourceAt(int n)
         {
             int k = 0;
             for (int i = 0; i < 12; i++)
@@ -108,6 +131,51 @@ namespace KCAccess.Game
             if (lm < 0) return "the AI kingdom has no land";
             GameUI.inst.diplomacyUI.Show(envoy, World.GetLandmassOwner(lm), lm, kingdom);
             return "visit opened at " + kingdom.GetLocalizedName();
+        }
+    }
+
+    /// <summary>
+    /// The price editor opens in the middle of a trade conversation with nothing said: explain it and start on the
+    /// first price.
+    /// </summary>
+    [HarmonyPatch(typeof(DiplomacyUI), nameof(DiplomacyUI.DisplayNegotiationUI))]
+    internal static class Patch_NegotiationOpened
+    {
+        private static void Postfix(DiplomacyUI __instance)
+        {
+            var editor = __instance.negotiationUI;
+            if (editor == null) return;
+            A.Cue(Cue.Open);
+            A.Say(Loc.T("Price editor: what they pay for each of your resources. Up and Down choose a resource, Left and Right change its price; lower prices please them, higher ones annoy them. Then choose Propose prices."), force: true);
+            var first = editor.GetComponentInChildren<Slider>();
+            if (first != null && AccessController.Inst != null) AccessController.Inst.Nav.RequestFocus(g => g == first.gameObject);
+        }
+    }
+
+    /// <summary>
+    /// "Can you do better?": the other kingdom lowers some of its prices in the price list, silently. Say which ones.
+    /// </summary>
+    [HarmonyPatch(typeof(DiplomacyUI), nameof(DiplomacyUI.UpdateAISellPriceUI))]
+    internal static class Patch_TheirPricesChanged
+    {
+        private static void Prefix(DiplomacyUI __instance, out string[] __state)
+        {
+            var texts = __instance.resourceCostUI != null ? __instance.resourceCostUI.texts : null;
+            __state = texts != null ? texts.ConvertAll(t => t != null ? t.text : null).ToArray() : null;
+        }
+
+        private static void Postfix(DiplomacyUI __instance, string[] __state)
+        {
+            var texts = __instance.resourceCostUI != null ? __instance.resourceCostUI.texts : null;
+            if (__state == null || texts == null) return;
+            var changes = new System.Collections.Generic.List<string>();
+            for (int i = 0; i < texts.Count && i < __state.Length; i++)
+            {
+                string now = texts[i] != null ? texts[i].text : null;
+                if (now != null && __state[i] != null && now != __state[i])
+                    changes.Add(Loc.F("{0} {1} gold, was {2}", Diplomacy.ResourceAt(i), now, __state[i]));
+            }
+            if (changes.Count > 0) A.SayQueued(Loc.F("Their new prices: {0}", string.Join(", ", changes.ToArray())));
         }
     }
 

@@ -168,10 +168,11 @@ namespace KCAccess.UI
             return TextUtil.Capitalize(res ?? Loc.T("resource"));
         }
 
-        private static string NegotiationValue(Slider s) => (int)s.value + ", " + Loc.F("they are {0}", UnitText.NegotiationMood(s.value)) + ". " + Game.Diplomacy.OfferVerdict();
+        // After a change the overall verdict follows (how the whole offer changes their opinion); not on every focus move.
+        private static string NegotiationValue(Slider s, bool verdict) => (int)s.value + ", " + Loc.F("they are {0}", UnitText.NegotiationMood(s.value)) + (verdict ? ". " + Game.Diplomacy.OfferVerdict() : string.Empty);
 
         /// <summary>Value spoken after a slider was changed, when the slider needs more than the number; null otherwise.</summary>
-        internal static string SliderValue(Slider s) => NegotiationResource(s) != null ? NegotiationValue(s) : null;
+        internal static string SliderValue(Slider s) => NegotiationResource(s) != null ? NegotiationValue(s, true) : null;
 
         /// <summary>
         /// The army panel (UnitUI): its tabs and its list of selected units are pictures only. Names them, or returns null.
@@ -531,7 +532,7 @@ namespace KCAccess.UI
                 if (d != null) return d;
             }
             if (item.IsControl && item.Control is Slider ns && NegotiationResource(ns) is string nres)
-                return Loc.F("{0} price, slider, {1}", nres, NegotiationValue(ns));
+                return Loc.F("{0} price, slider, {1}", nres, NegotiationValue(ns, false));
             string unit = item.IsControl ? UnitPanelItem(item.Go) : null;
             if (unit != null) return unit;
             if (item.IsControl && item.Go.GetComponentInParent<PersonListItemUI>() is PersonListItemUI pli && pli.MagGlass != null && item.Control == pli.MagGlass)
