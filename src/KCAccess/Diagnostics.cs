@@ -273,6 +273,14 @@ namespace KCAccess
                                 else GameUI.inst.diplomacyUI.ShowFoodMenu();
                             }
                             break;
+                        case "lowerprices":
+                            // Developer only: "Can you do better?" a few times, then the price list refresh the dialogue does.
+                            if (GameUI.inst.diplomacyUI.Visible())
+                            {
+                                for (int i = 0; i < 6; i++) GameUI.inst.diplomacyUI.LowerPrices();
+                                GameUI.inst.diplomacyUI.UpdateAISellPriceUI();
+                            }
+                            break;
                         case "negotiate":
                             // Developer only: the trade price editor as the dialogue opens it (needs an open visit).
                             if (GameUI.inst.diplomacyUI.Visible()) GameUI.inst.diplomacyUI.DisplayNegotiationUI();

@@ -99,7 +99,14 @@ namespace KCAccess.Game
         private static string ForeignIslandButton(UIItem item)
         {
             var panel = GameUI.inst != null ? GameUI.inst.foreignIslandInfoUI : null;
-            if (panel == null || item == null || item.Control == null || item.Control != panel.hostilityButton) return null;
+            if (panel == null || item == null) return null;
+            // The relation and opinion values come before their captions in the panel; read them together.
+            if (!item.IsControl && item.Texts != null)
+            {
+                if (item.Texts.Contains(panel.relationStatusTxt)) return Loc.F("Relationship: {0}", TextUtil.Clean(UIText.TextOf(panel.relationStatusTxt)));
+                if (item.Texts.Contains(panel.opinionStatusTxt)) return Loc.F("Their opinion of you: {0}", TextUtil.Clean(UIText.TextOf(panel.opinionStatusTxt)));
+            }
+            if (item.Control == null || item.Control != panel.hostilityButton) return null;
             string label = TextUtil.Clean(UIText.TextOf(panel.relationButtonTxt));
             string status = TextUtil.Clean(UIText.TextOf(panel.relationStatusTxt));
             string why = TextUtil.Clean(panel.relationExplanationText != null ? panel.relationExplanationText.text : null);
