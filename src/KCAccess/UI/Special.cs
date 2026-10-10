@@ -610,6 +610,24 @@ namespace KCAccess.UI
                 if (!item.IsControl && construct.infoTextUI != null && item.Go == construct.infoTextUI.gameObject)
                     return Loc.F("Builders {0}", UIText.JoinTexts(item.Texts));
             }
+            // Creative menu: the unit brushes' team is chosen with colour swatches (named "PaletteColor").
+            var creative = item.IsControl && item.Control is Button ? item.Go.GetComponentInParent<CreativeModeOptions>() : null;
+            if (creative != null && creative.paletteContainer != null && item.Go.transform.parent != null && item.Go.transform.parent.parent == creative.paletteContainer)
+            {
+                int idx = item.Go.transform.parent.GetSiblingIndex();
+                string team = Loc.T("your kingdom");
+                if (idx > 0 && creative.paletteIdxs != null && idx < creative.paletteIdxs.Length)
+                {
+                    var owner = World.GetLandmassOwnerByBannerIdx(creative.paletteIdxs[idx]);
+                    team = owner != null && owner.teamId == 0 ? Loc.T("your kingdom") : Loc.T("a foreign kingdom");
+                    if (owner != null && owner.teamId != 0 && owner.ownedLandMasses != null && owner.ownedLandMasses.Count > 0)
+                    {
+                        int lm = owner.ownedLandMasses.data[0];
+                        if (lm >= 0 && lm < Player.inst.LandMassNames.Count && TextUtil.HasContent(Player.inst.LandMassNames[lm])) team = Player.inst.LandMassNames[lm];
+                    }
+                }
+                return Loc.F("Spawned units belong to {0}, radio button, {1}", team, creative.currentPalette == idx ? Loc.T("selected") : Loc.T("not selected"));
+            }
             // Stone slab: the text style buttons are pictures (their handlers are added in code, so no handler name either).
             var slab = item.IsControl && GameUI.inst != null ? GameUI.inst.slabUI : null;
             if (slab != null && item.Control is Button && item.Go.transform.IsChildOf(slab.transform) && UIText.JoinTexts(UIText.VisibleTexts(item.Go.transform)).Length <= 2)
