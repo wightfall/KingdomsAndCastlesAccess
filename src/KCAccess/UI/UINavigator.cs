@@ -568,10 +568,31 @@ namespace KCAccess.UI
             }
         }
 
+        /// <summary>
+        /// Texts that react to a click without being a Button (the main menu's "DLC Available" and "Wishlist our next
+        /// game!" callouts): sends the click. False when nothing on or above the text takes clicks.
+        /// </summary>
+        private static bool ClickText(GameObject go)
+        {
+            if (go == null) return false;
+            var dlc = go.GetComponentInParent<DLCCallout>();
+            if (dlc != null) { A.Cue(Cue.Activate); dlc.OnClicked(); return true; }
+            var rome = go.GetComponentInParent<RomeButtonCallout>();
+            if (rome != null) { A.Cue(Cue.Activate); rome.OnClicked(); return true; }
+            var target = ExecuteEvents.GetEventHandler<IPointerClickHandler>(go);
+            if (target == null || target.GetComponentInParent<Canvas>() == null || target.GetComponent<Selectable>() != null) return false;
+            if (EventSystem.current == null) return false;
+            A.Cue(Cue.Activate);
+            ExecuteEvents.Execute(target, new PointerEventData(EventSystem.current) { button = PointerEventData.InputButton.Left }, ExecuteEvents.pointerClickHandler);
+            return true;
+        }
+
         internal void Activate(UIItem item)
         {
             if (!item.IsControl)
             {
+                // Some texts are clickable without a Button (DLC Available, Wishlist our next game): click them.
+                if (ClickText(item.Go)) return;
                 A.Cue(Cue.Edge);
                 A.Say(Describe(item) + ", " + Loc.T("text, not a button"), force: true);
                 return;
