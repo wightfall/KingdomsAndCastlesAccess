@@ -428,9 +428,31 @@ namespace KCAccess.UI
             return r;
         }
 
+        /// <summary>
+        /// Amount fields of a ResourceAmountUI (route stop pick up / drop off amounts, an envoy's gift): one field per
+        /// resource, named only by an icon. The container's children are in FreeResourceType order. Null otherwise.
+        /// </summary>
+        private static string ResourceAmountField(Selectable s)
+        {
+            if (!(s is TMPro.TMP_InputField field)) return null;
+            var ui = s.GetComponentInParent<ResourceAmountUI>();
+            var container = ui != null ? (ui.resourceContainer != null ? ui.resourceContainer : ui.transform) : null;
+            if (container == null) return null;
+            for (int i = 0; i < container.childCount && i < (int)FreeResourceType.NumTypes; i++)
+            {
+                if (!s.transform.IsChildOf(container.GetChild(i))) continue;
+                string res = TextUtil.Capitalize(ResourceNames.Name(((FreeResourceType)i).ToString()));
+                string value = string.IsNullOrEmpty(field.text) ? "0" : field.text;
+                if (field.interactable) return Loc.F("{0}, edit, {1}", res, value);
+                return TextUtil.Join(", ", res, value, Loc.T("unavailable"), UIText.TooltipOf(field.gameObject));
+            }
+            return null;
+        }
+
         internal static string Describe(UIItem item)
         {
             if (item == null || item.Go == null) return null;
+            if (item.IsControl && ResourceAmountField(item.Control) is string amountField) return amountField;
             if (item.IsControl && ResourceToggle(item.Control, out var toggleName) is ResourceToggleButton rtb)
                 return toggleName + ", " + Loc.T("check box") + ", " + (rtb.State ? Loc.T("checked") : Loc.T("not checked"));
             if (item.IsControl && SpeedToggleName(item.Control) is string speed)
