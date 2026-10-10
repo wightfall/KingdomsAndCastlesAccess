@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -11,11 +11,16 @@ namespace KCAccess.Installer
 {
     /// <summary>
     /// The setup / updater window. Built from standard Windows controls so screen readers can read it:
-    /// a read-only status box (focused on start) and buttons with Alt shortcuts. Questions use Yes/No message boxes.
+    /// a read-only status box (focused on start), the language list, two check boxes and buttons with Alt shortcuts.
+    /// Questions use Yes/No message boxes.
     /// </summary>
     public sealed class MainForm : Form
     {
         private readonly TextBox status = new TextBox();
+        private readonly Label languageLabel = new Label();
+        private readonly ComboBox languageBox = new ComboBox();
+        private readonly CheckBox useLanguageCheck = new CheckBox();
+        private readonly CheckBox startGameCheck = new CheckBox();
         private readonly Button installButton = new Button();
         private readonly Button checkButton = new Button();
         private readonly Button folderButton = new Button();
@@ -30,6 +35,7 @@ namespace KCAccess.Installer
         private Release latest;
         private bool checkedOnline;
         private bool busy;
+        private bool fillingLanguages;
 
         /// <summary>Version of the mod packed inside this exe (same as the exe's version).</summary>
         public static Version EmbeddedVersion => Versions.Normalize(Assembly.GetExecutingAssembly().GetName().Version);
@@ -39,47 +45,125 @@ namespace KCAccess.Installer
         public MainForm(Options options)
         {
             this.options = options;
-            Text = Loc.F("KCAccess Setup {0}", Versions.Show(EmbeddedVersion));
             Font = new Font("Segoe UI", 10f);
-            ClientSize = new Size(620, 400);
+            ClientSize = new Size(620, 436);
             StartPosition = FormStartPosition.CenterScreen;
-            MinimumSize = new Size(500, 360);
+            MinimumSize = new Size(560, 500);
             KeyPreview = true;
 
             status.Multiline = true;
             status.ReadOnly = true;
             status.ScrollBars = ScrollBars.Vertical;
             status.TabIndex = 0;
-            status.AccessibleName = Loc.T("Status");
-            status.SetBounds(12, 12, 596, 250);
+            status.SetBounds(12, 50, 596, 200);
             status.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
             status.BackColor = SystemColors.Window;
 
-            progress.SetBounds(12, 270, 596, 18);
+            // Language of this window and, with the check box below, of the mod in the game.
+            languageLabel.AutoSize = true;
+            languageLabel.Location = new Point(12, 16);
+            languageLabel.TabIndex = 1;
+            languageBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            languageBox.SetBounds(160, 12, 448, 28);
+            languageBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            languageBox.TabIndex = 2;
+            languageBox.SelectedIndexChanged += OnLanguageChanged;
+
+            progress.SetBounds(12, 256, 596, 18);
             progress.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
-            progress.AccessibleName = Loc.T("Download progress");
             progress.Visible = false;
 
-            int y = 300, x = 12;
-            Setup(installButton, Loc.T("&Install or update"), ref x, y, 1, OnInstall);
-            Setup(checkButton, Loc.T("&Check for updates"), ref x, y, 2, OnCheck);
-            Setup(folderButton, Loc.T("Choose game &folder"), ref x, y, 3, OnChooseFolder);
+            // Both off by default: the player decides.
+            SetupCheck(useLanguageCheck, 282, 3, options.ModLanguage != null);
+            SetupCheck(startGameCheck, 310, 4, options.StartGame);
+
+            int y = 344, x = 12;
+            Setup(installButton, null, ref x, y, 5, OnInstall);
+            Setup(checkButton, null, ref x, y, 6, OnCheck);
+            Setup(folderButton, null, ref x, y, 7, OnChooseFolder);
             x = 12;
             y += 44;
-            Setup(uninstallButton, Loc.T("&Uninstall"), ref x, y, 4, OnUninstall);
-            Setup(readmeButton, Loc.T("&Read me"), ref x, y, 5, OnReadme);
-            Setup(closeButton, Loc.T("Cl&ose"), ref x, y, 6, (s, e) => Close());
+            Setup(uninstallButton, null, ref x, y, 8, OnUninstall);
+            Setup(readmeButton, null, ref x, y, 9, OnReadme);
+            Setup(closeButton, null, ref x, y, 10, (s, e) => Close());
             CancelButton = closeButton;
             AcceptButton = installButton;
 
             Controls.Add(status);
+            Controls.Add(languageLabel);
+            Controls.Add(languageBox);
             Controls.Add(progress);
+            Controls.Add(useLanguageCheck);
+            Controls.Add(startGameCheck);
+            if (options.ModLanguage != null) InstallerLanguage.Apply(options.GameDir ?? FindGameFolder(), Normalize(options.ModLanguage));
+            ApplyTexts();
             Shown += async (s, e) => await StartAsync();
         }
 
+        private void SetupCheck(CheckBox c, int y, int tab, bool on)
+        {
+            c.SetBounds(12, y, 596, 26);
+            c.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
+            c.TabIndex = tab;
+            c.Checked = on;
+        }
+
+        /// <summary>All texts of the window in the current setup language (again after another language was chosen).</summary>
+        private void ApplyTexts()
+        {
+            Text = Loc.F("KCAccess Setup {0}", Versions.Show(EmbeddedVersion));
+            status.AccessibleName = Loc.T("Status");
+            progress.AccessibleName = Loc.T("Download progress");
+            languageLabel.Text = Loc.T("&Language:");
+            languageBox.AccessibleName = Loc.T("Language");
+            useLanguageCheck.Text = Loc.T("Use this language for the &mod in the game");
+            startGameCheck.Text = Loc.T("&Start Kingdoms and Castles when setup finishes");
+            installButton.Text = Loc.T("&Install or update");
+            checkButton.Text = Loc.T("&Check for updates");
+            folderButton.Text = Loc.T("Choose game &folder");
+            uninstallButton.Text = Loc.T("&Uninstall");
+            readmeButton.Text = Loc.T("&Read me");
+            closeButton.Text = Loc.T("Cl&ose");
+        }
+
+        /// <summary>The language list: every language of the built-in package and of the game folder, the current one chosen.</summary>
+        private void FillLanguages()
+        {
+            fillingLanguages = true;
+            try
+            {
+                languageBox.Items.Clear();
+                var list = InstallerLanguage.Available(gameDir);
+                int selected = 0;
+                for (int i = 0; i < list.Count; i++)
+                {
+                    languageBox.Items.Add(list[i]);
+                    if (string.Equals(list[i].Code, InstallerLanguage.Current, StringComparison.OrdinalIgnoreCase)) selected = i;
+                }
+                languageBox.SelectedIndex = list.Count > 0 ? selected : -1;
+            }
+            finally
+            {
+                fillingLanguages = false;
+            }
+        }
+
+        private void OnLanguageChanged(object sender, EventArgs e)
+        {
+            if (fillingLanguages || !(languageBox.SelectedItem is InstallerLanguage.Choice choice)) return;
+            if (!InstallerLanguage.Apply(gameDir, choice.Code)) return;
+            ApplyTexts();
+            ShowStatus();
+            languageBox.Focus();
+        }
+
+        private string SelectedLanguageName => languageBox.SelectedItem is InstallerLanguage.Choice c ? c.Name : "English";
+
+        private static string Normalize(string code) => string.Equals(code, "en", StringComparison.OrdinalIgnoreCase) ? null : code;
+
         private void Setup(Button b, string text, ref int x, int y, int tab, EventHandler click)
         {
-            b.Text = text;
+            if (text != null) b.Text = text;
             b.TabIndex = tab;
             b.SetBounds(x, y, 190, 36);
             b.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
@@ -106,6 +190,7 @@ namespace KCAccess.Installer
                 // Still locked; removed next time.
             }
             gameDir = FindGameFolder();
+            FillLanguages();
             ShowStatus();
             if (options.InstallNow)
             {
@@ -268,12 +353,40 @@ namespace KCAccess.Installer
                 }
                 string updater = inst.InstallUpdaterCopy(tempSetup ?? Application.ExecutablePath);
                 SetBusy(false);
+                string languageNote = null;
+                if (useLanguageCheck.Checked)
+                {
+                    try
+                    {
+                        ModConfig.WriteLanguage(gameDir, InstallerLanguage.Current ?? "en");
+                        languageNote = Loc.F("The mod will speak {0} in the game.", SelectedLanguageName);
+                    }
+                    catch (Exception ex)
+                    {
+                        languageNote = Loc.F("Could not save the mod's language: {0}", ex.Message);
+                    }
+                }
+                bool startGame = startGameCheck.Checked;
                 ShowStatus(Loc.F("Installed KCAccess {0} ({1} files).", Versions.Show(installing), files) + " " +
-                           Loc.F("The updater was copied to {0}. Run it any time to check for updates.", updater));
+                           Loc.F("The updater was copied to {0}. Run it any time to check for updates.", updater) +
+                           (languageNote != null ? " " + languageNote : string.Empty));
                 MessageBox.Show(this,
-                    Loc.F("KCAccess {0} is installed.", Versions.Show(installing)) + "\n\n" + Loc.T("Start Kingdoms and Castles from Steam. After a few seconds you will hear \"Main menu\". Press F1 in the game for help.") + "\n\n" +
+                    Loc.F("KCAccess {0} is installed.", Versions.Show(installing)) + (languageNote != null ? " " + languageNote : string.Empty) + "\n\n" +
+                    (startGame ? Loc.T("Kingdoms and Castles starts when you close this message. After a few seconds you will hear \"Main menu\". Press F1 in the game for help.")
+                               : Loc.T("Start Kingdoms and Castles from Steam. After a few seconds you will hear \"Main menu\". Press F1 in the game for help.")) + "\n\n" +
                     Loc.T("To check for updates later, run KCAccess-Updater.exe in the game folder."),
                     Loc.T("Installation complete"), MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (startGame)
+                {
+                    try
+                    {
+                        GameLauncher.Start(gameDir);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(this, Loc.F("Could not start the game: {0}", ex.Message), Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                }
             }
             catch (UnauthorizedAccessException)
             {
@@ -300,7 +413,11 @@ namespace KCAccess.Installer
             if (r != DialogResult.Yes) return;
             try
             {
-                Process.Start(new ProcessStartInfo(Application.ExecutablePath, "--install --game \"" + gameDir + "\"") { Verb = "runas", UseShellExecute = true });
+                // The administrator copy keeps the player's choices.
+                string args = "--install --game \"" + gameDir + "\"";
+                if (useLanguageCheck.Checked) args += " --mod-language " + (InstallerLanguage.Current ?? "en");
+                if (startGameCheck.Checked) args += " --start-game";
+                Process.Start(new ProcessStartInfo(Application.ExecutablePath, args) { Verb = "runas", UseShellExecute = true });
                 Close();
             }
             catch (Exception ex)
@@ -348,6 +465,7 @@ namespace KCAccess.Installer
                     return;
                 }
                 gameDir = dlg.SelectedPath;
+                FillLanguages();
                 ShowStatus();
             }
         }

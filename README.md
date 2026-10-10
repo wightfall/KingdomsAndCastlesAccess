@@ -39,8 +39,23 @@ reader (Prism falls back to Windows speech if none is running).
    your settings and any existing BepInEx install.
 
 The window is made of standard Windows controls: the status text box has focus when it opens,
-Tab moves between the buttons, and questions are Yes / No message boxes. Silent install:
-`KCAccess-Setup-vX.Y.Z.exe --quiet` (exit code 0 = installed, 2 = game not found, 3 = game running).
+Tab moves on to the language list, the two check boxes and the buttons, and questions are Yes / No
+message boxes.
+
+* **Language** (Alt+L): the setup speaks the mod's language (your setting in the mod, otherwise the Windows
+  display language). The list has every language the mod has, including languages you added yourself in the
+  game folder; choosing another one switches the window to it at once.
+* **Use this language for the mod in the game** (off by default): after installing, the chosen language
+  becomes the mod's language (the same as choosing it in the mod settings, Ctrl+Shift+O).
+* **Start Kingdoms and Castles when setup finishes** (off by default): the game starts through Steam when
+  you close the "Installation complete" message.
+
+Silent install: `KCAccess-Setup-vX.Y.Z.exe --quiet` (exit code 0 = installed, 2 = game not found,
+3 = game running). Add `--mod-language th` (a language file name, `en` or `auto`) to set the mod's language
+and `--start-game` to start the game afterwards.
+
+If your antivirus blocks or removes the setup program (Malwarebytes' machine-learning check reports new,
+unsigned programs as "MachineLearning/Anomalous"), use the zip below instead: it contains the same mod.
 
 ### Alternative: the bundle zip
 
@@ -54,7 +69,8 @@ Tab moves between the buttons, and questions are Yes / No message boxes. Silent 
 ### If you already use BepInEx 5.4
 
 Download `KCAccess-vX.Y.Z.zip` and extract it into the game folder. It only contains
-`BepInEx\plugins\KCAccess\` (`KCAccess.dll`, `KCAccess.Core.dll`, `prism.dll`, licenses).
+`BepInEx\plugins\KCAccess\` (`KCAccess.dll`, `KCAccess.Core.dll`, `prism.dll`, the `Languages` folder,
+licenses).
 
 ### Uninstall
 
@@ -373,7 +389,8 @@ While a language is active, the mod checks its file every 2 seconds: save it in 
 **Updates keep your changes.** The shipped files are in `Languages\default` and are replaced by every update.
 At start the mod copies a shipped file to `Languages` when you do not have it yet; when you have it, your file is
 rebuilt in the shipped layout: new texts appear in their own section, texts you never changed get the new shipped
-translation, and every text you changed stays yours. Lines and comments you added yourself are kept in a
+translation, every text you changed stays yours, and texts the mod no longer uses are removed (they are
+listed in `Languages\default\retired.keys`). Translated lines and comments you added yourself are kept in a
 "Your own lines" section at the end. So always edit the files directly in `Languages`, never in `Languages\default`. The
 setup program keeps them when it updates the mod; uninstalling removes them.
 
