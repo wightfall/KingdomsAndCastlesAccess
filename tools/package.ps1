@@ -73,4 +73,7 @@ if ($LASTEXITCODE -ne 0) { throw "Installer build failed" }
 Copy-Item (Join-Path $root 'src/KCAccess.Installer/bin/Release/net472/KCAccessSetup.exe') (Join-Path $dist "KCAccess-Setup-v$version.exe")
 
 Remove-Item -Recurse -Force $stage, $bundle
+# Every release file is checked for signs of a file-infecting virus before it can be published.
+& powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "check-binaries.ps1") -Folder $dist
+if ($LASTEXITCODE -ne 0) { throw "Infection check failed: do not publish these files" }
 Write-Host "Created:" ; Get-ChildItem $dist | ForEach-Object { Write-Host "  $($_.Name)  $([math]::Round($_.Length / 1KB)) KB" }
