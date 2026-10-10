@@ -50,11 +50,16 @@ namespace KCAccess.Game
             {
                 var lmo = ui.kingdom.LandmassOwner;
                 int team = Player.inst.PlayerLandmassOwner.teamId;
-                var standing = lmo.GetStandingFor(team);
-                string now = StandingName(standing);
-                if (standing == LandmassOwner.Standing.VeryFavorable) return Loc.F("Opinion of you: {0}, the best there is", now);
                 int points = Mathf.Clamp(lmo.GetPointsStandingFor(team), 0, 100);
-                return Loc.F("Opinion of you: {0}, {1} percent of the way to {2}", now, points, StandingName(standing + 1));
+                // One whole sentence per level, so every language can use the right grammar for each level word.
+                switch (lmo.GetStandingFor(team))
+                {
+                    case LandmassOwner.Standing.VeryUnfavorable: return Loc.F("Opinion of you: very unfavorable, {0} percent of the way to unfavorable", points);
+                    case LandmassOwner.Standing.Unfavorable: return Loc.F("Opinion of you: unfavorable, {0} percent of the way to neutral", points);
+                    case LandmassOwner.Standing.Neutral: return Loc.F("Opinion of you: neutral, {0} percent of the way to favorable", points);
+                    case LandmassOwner.Standing.Favorable: return Loc.F("Opinion of you: favorable, {0} percent of the way to very favorable", points);
+                    default: return Loc.T("Opinion of you: very favorable, the best there is");
+                }
             }
             if (item.Control is Button b)
             {
@@ -135,18 +140,6 @@ namespace KCAccess.Game
                 case 1: return Loc.T("Apple feast");
                 case 2: return Loc.T("Fish feast");
                 default: return Loc.T("Pork feast");
-            }
-        }
-
-        internal static string StandingName(LandmassOwner.Standing s)
-        {
-            switch (s)
-            {
-                case LandmassOwner.Standing.VeryUnfavorable: return Loc.T("very unfavorable");
-                case LandmassOwner.Standing.Unfavorable: return Loc.T("unfavorable");
-                case LandmassOwner.Standing.Neutral: return Loc.T("neutral");
-                case LandmassOwner.Standing.Favorable: return Loc.T("favorable");
-                default: return Loc.T("very favorable");
             }
         }
 
