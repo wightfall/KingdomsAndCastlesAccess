@@ -398,9 +398,41 @@ namespace KCAccess.UI
             return null;
         }
 
+        /// <summary>
+        /// On / off buttons of the storage filters and the blacksmith (ResourceToggleButton): the state is a tick or a cross
+        /// picture, and the resource often only an icon. Null for other controls.
+        /// </summary>
+        private static ResourceToggleButton ResourceToggle(Selectable s, out string name)
+        {
+            name = null;
+            var r = s is Button ? s.GetComponentInParent<ResourceToggleButton>() : null;
+            if (r == null || r.button != s) return null;
+            var f = GameUI.inst != null ? GameUI.inst.resourceFilterUI : null;
+            var smith = GameUI.inst != null ? GameUI.inst.blacksmithUI : null;
+            if (f != null)
+            {
+                if (r == f.WoodToggleButton) name = ResourceNames.Name("Tree");
+                else if (r == f.StoneToggleButton) name = ResourceNames.Name("Stone");
+                else if (r == f.CharcoalToggleButton) name = ResourceNames.Name("Charcoal");
+                else if (r == f.IronToggleButton) name = ResourceNames.Name("IronOre");
+                else if (r == f.ToolsToggleButton) name = ResourceNames.Name("Tools");
+                else if (r == f.ArmamentToggleButton) name = ResourceNames.Name("Armament");
+            }
+            if (name == null && smith != null)
+            {
+                if (r == smith.ToolToggleButton) name = Loc.T("Make tools");
+                else if (r == smith.WeaponToggleButton) name = Loc.T("Make armaments");
+            }
+            if (name == null) name = UIText.LabelOf(s);
+            name = TextUtil.Capitalize(name);
+            return r;
+        }
+
         internal static string Describe(UIItem item)
         {
             if (item == null || item.Go == null) return null;
+            if (item.IsControl && ResourceToggle(item.Control, out var toggleName) is ResourceToggleButton rtb)
+                return toggleName + ", " + Loc.T("check box") + ", " + (rtb.State ? Loc.T("checked") : Loc.T("not checked"));
             if (item.IsControl && SpeedToggleName(item.Control) is string speed)
                 return speed + ", " + Loc.T("radio button") + ", " + (((Toggle)item.Control).isOn ? Loc.T("selected") : Loc.T("not selected"));
             if (item.IsControl && OnBoardSlot(item.Control) is string onBoard) return onBoard;
@@ -730,6 +762,21 @@ namespace KCAccess.UI
                     A.Cue(Cue.Activate);
                     tg.isOn = true; // the game's handler sets the speed; the change is announced by GameEvents
                 }
+                return true;
+            }
+            if (item.IsControl && ResourceToggle(item.Control, out _) is ResourceToggleButton rt && (KInput.Plain(KeyCode.Return) || KInput.Plain(KeyCode.Space) || KInput.Plain(KeyCode.KeypadEnter)))
+            {
+                KInput.Consume(KeyCode.Return);
+                KInput.Consume(KeyCode.Space);
+                if (!item.Control.interactable)
+                {
+                    A.Cue(Cue.Error);
+                    A.Say(Loc.T("unavailable"));
+                    return true;
+                }
+                UINavigator.Click(item.Go);
+                A.Cue(rt.State ? Cue.ToggleOn : Cue.ToggleOff);
+                A.Say(rt.State ? Loc.T("checked") : Loc.T("not checked"), force: true);
                 return true;
             }
             var keyBtn = item.IsControl ? item.Go.GetComponentInParent<KeyButton>() : null;
