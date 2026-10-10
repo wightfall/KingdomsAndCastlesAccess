@@ -14,6 +14,7 @@ namespace KCAccess
     internal static class Patch_DialogueSubtitle
     {
         internal static string LastLine;
+        private static float lastLineAt = -10f;
 
         private static void Postfix(Subtitle subtitle)
         {
@@ -21,8 +22,13 @@ namespace KCAccess
             {
                 if (subtitle?.formattedText == null) return;
                 string text = TextUtil.Clean(subtitle.formattedText.text);
-                if (!TextUtil.HasContent(text) || text == LastLine) return;
+                // The same line shown twice in a row (the panel refreshing) is said once; the same line in a later
+                // conversation (an advisor's greeting) was never said again.
+                if (!TextUtil.HasContent(text)) return;
+                bool repeat = text == LastLine && Time.unscaledTime - lastLineAt < 2f;
                 LastLine = text;
+                lastLineAt = Time.unscaledTime;
+                if (repeat) return;
                 string speaker = subtitle.speakerInfo != null ? TextUtil.Clean(subtitle.speakerInfo.Name) : null;
                 // Player lines are the reply just chosen; only name the other party.
                 bool isPlayer = subtitle.speakerInfo != null && subtitle.speakerInfo.isPlayer;
