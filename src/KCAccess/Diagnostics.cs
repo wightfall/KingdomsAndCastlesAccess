@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
 using BepInEx;
@@ -253,6 +253,13 @@ namespace KCAccess
                                 Plugin.Log.LogInfo("[navinfo] cursor=" + mc.CursorPos + " target=" + tgt.Value + " (" + mc.Nav.TargetLabel + ") pan=" + bs.Pan.ToString("0.00") + " pitch=" + bs.Pitch.ToString("0.00") + " interval=" + bs.Interval.ToString("0.00") + " dist=" + bs.Distance + " walking=" + mc.Nav.Walking + " beacon=" + mc.Nav.BeaconOn);
                             }
                             else Plugin.Log.LogInfo("[navinfo] cursor=" + mc.CursorPos + " no target");
+                            break;
+                        case "visit":
+                            Plugin.Log.LogInfo("[dbg] " + Game.Diplomacy.DebugVisit());
+                            break;
+                        case "negotiate":
+                            // Developer only: the trade price editor as the dialogue opens it (needs an open visit).
+                            if (GameUI.inst.diplomacyUI.Visible()) GameUI.inst.diplomacyUI.DisplayNegotiationUI();
                             break;
                         case "gold":
                             Player.inst.PlayerLandmassOwner.Gold += 5000;
