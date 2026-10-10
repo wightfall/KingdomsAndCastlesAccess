@@ -267,7 +267,7 @@ namespace KCAccess.UI
         {
             if (string.IsNullOrEmpty(sprite)) return null;
             string lower = sprite.ToLowerInvariant();
-            string[] generic = { "uisprite", "background", "knob", "checkmark", "dropdownarrow", "inputfield", "panel", "button", "frame", "border", "white", "square", "round", "gradient", "slice", "box", "bg" };
+            string[] generic = { "uisprite", "background", "knob", "checkmark", "dropdownarrow", "inputfield", "panel", "button", "frame", "border", "white", "square", "round", "gradient", "slice", "box", "bg", "1pixel", "pixel", "uimask" };
             foreach (var g in generic) if (lower.StartsWith(g) || lower == g) return null;
             string n = sprite;
             foreach (var prefix in new[] { "icon_", "Icon_", "ico_", "ui_", "UI_" }) if (n.StartsWith(prefix)) n = n.Substring(prefix.Length);
@@ -275,16 +275,35 @@ namespace KCAccess.UI
             return TextUtil.Humanize(n);
         }
 
+        /// <summary>Unity's default object names say nothing about the control ("Text Mesh Pro Input Field", "Image (3)").</summary>
+        private static readonly HashSet<string> DefaultNames = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase)
+        {
+            "GameObject", "Image", "Raw Image", "RawImage", "Text", "Toggle", "Slider", "Dropdown", "Scrollbar", "Scroll View", "Panel",
+            "Input Field", "InputField", "Text Mesh Pro Input Field", "TextMeshPro - InputField", "InputField (TMP)", "Dropdown (TMP)",
+            "Item", "Label", "Background", "Handle", "Fill", "Checkmark", "1pixelwhite", "Text (TMP)", "Text Mesh Pro"
+        };
+
         internal static string NameLabel(string name)
         {
             if (string.IsNullOrEmpty(name)) return string.Empty;
-            string n = name.Replace("(Clone)", "");
+            string n = name.Replace("(Clone)", "").Trim();
+            if (DefaultNames.Contains(n)) return Unlabelled;
             int paren = n.IndexOf(" (");
             if (paren > 0) n = n.Substring(0, paren);
             n = n.Replace("Button", "").Replace("Btn", "").Trim();
-            if (n.Length == 0) return Unlabelled;
+            if (n.Length == 0 || DefaultNames.Contains(n) || DefaultNames.Contains(TextUtil.Humanize(n))) return Unlabelled;
             return TextUtil.Humanize(n);
         }
+
+        /// <summary>Picture buttons whose handler is known: the toolbar's tool modes (their method names were spoken in English).</summary>
+        private static readonly Dictionary<string, string> KnownMethods = new Dictionary<string, string>
+        {
+            { "SetCursorModeChop", Loc.N("Chop trees mode") },
+            { "SetCursorModeChopCancel", Loc.N("Cancel chopping mode") },
+            { "SetCursorModeDemolish", Loc.N("Demolish mode") },
+            { "SetCursorModeRebuild", Loc.N("Rebuild mode") },
+            { "SetCursorModeConsole", Loc.N("Normal mode") },
+        };
 
         private static string MethodLabel(UnityEventBase ev)
         {
@@ -293,6 +312,7 @@ namespace KCAccess.UI
             {
                 string m = ev.GetPersistentMethodName(i);
                 if (string.IsNullOrEmpty(m) || m == "SetActive" || m == "PlayUiSelect") continue;
+                if (KnownMethods.TryGetValue(m, out var known)) return Loc.T(known);
                 string words = MethodToWords(m);
                 if (words == "Click" || words == "Press" || words == "Select" || words == "Clicked" || words.Length == 0) continue;
                 return TextUtil.Humanize(words);
@@ -440,6 +460,18 @@ namespace KCAccess.UI
             string tip = hook.toolTipText;
             if (!TextUtil.HasContent(tip) || tip == "missing tip" || tip.StartsWith("<localization")) return null;
             return TextUtil.Clean(tip);
+        }
+
+        /// <summary>
+        /// The tooltip of an icon that has nothing else to read: its own enabled hook with a real tip, no text on or below
+        /// it, and visible. Null otherwise.
+        /// </summary>
+        internal static TooltipHook IconTooltip(GameObject go)
+        {
+            var hook = go.GetComponent<TooltipHook>();
+            if (hook == null || !hook.enabled || !TextUtil.HasContent(hook.toolTipText) || hook.toolTipText == "missing tip" || hook.toolTipText.StartsWith("<localization")) return null;
+            if (!IsVisible(go)) return null;
+            return VisibleTexts(go.transform).Count == 0 ? hook : null;
         }
 
         /// <summary>Localization term of a text, used to recognise windows independent of language.</summary>

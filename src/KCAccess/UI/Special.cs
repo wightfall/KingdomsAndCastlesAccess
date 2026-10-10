@@ -257,7 +257,7 @@ namespace KCAccess.UI
                     if (t.gameObject.name == "KeyActionText") return TextUtil.Clean(UIText.TextOf(t));
                 }
             }
-            return TextUtil.Humanize(((InputActions)kb.buttonNum).ToString());
+            return TextUtil.Capitalize(Game.ModSettingsMenu.GameActionName((InputActions)kb.buttonNum));
         }
 
         private static string KeyName(KeyButton kb)
@@ -370,9 +370,40 @@ namespace KCAccess.UI
             }
         }
 
+        /// <summary>The toolbar's speed buttons are pictures only (their handler, OnControlChanged, named all four the same).</summary>
+        private static string SpeedToggleName(Selectable s)
+        {
+            var ui = SpeedControlUI.inst;
+            if (ui == null || !(s is Toggle) || s == null) return null;
+            if (s == ui.pauseButton) return Loc.T("Pause");
+            if (s == ui.playButton1) return Loc.T("Normal speed");
+            if (s == ui.playButton2) return Loc.T("Fast speed");
+            if (s == ui.playButton3) return Loc.T("Fastest speed");
+            return null;
+        }
+
+        /// <summary>A troop ship's cargo slot in the army panel: a picture of the unit and a lock; null for other controls.</summary>
+        private static string OnBoardSlot(Selectable s)
+        {
+            var ui = UnitUI.inst;
+            if (ui == null || ui.shipOnBoardOptions == null || !(s is Toggle tg)) return null;
+            for (int i = 0; i < ui.shipOnBoardOptions.Length; i++)
+            {
+                if (ui.shipOnBoardOptions[i].toggle != tg) continue;
+                var ship = ui.currentUnitSelected as TroopTransportShip;
+                string who = ship != null && i < ship.CarryCount() && ship.GetCarried(i) != null
+                    ? Game.CellInfo.WithoutSelected(Game.CellInfo.UnitName(ship.GetCarried(i))) : Loc.T("unit");
+                return Loc.F("On board: {0}. Stays on the ship when it unloads, check box, {1}", who, tg.isOn ? Loc.T("checked") : Loc.T("not checked"));
+            }
+            return null;
+        }
+
         internal static string Describe(UIItem item)
         {
             if (item == null || item.Go == null) return null;
+            if (item.IsControl && SpeedToggleName(item.Control) is string speed)
+                return speed + ", " + Loc.T("radio button") + ", " + (((Toggle)item.Control).isOn ? Loc.T("selected") : Loc.T("not selected"));
+            if (item.IsControl && OnBoardSlot(item.Control) is string onBoard) return onBoard;
             if (item.IsControl && item.Go.GetComponentInParent<LogisticsDestUI>() is LogisticsDestUI stop)
             {
                 string d = Game.Routes.Describe(stop, item.Control);
@@ -427,6 +458,36 @@ namespace KCAccess.UI
                     name = stance == UnitUI.inst.unitAttackBehaviorHold ? Loc.T("Hold stance") : stance == UnitUI.inst.unitAttackBehaviorAttack ? Loc.T("Attack stance") : Loc.T("Pursue stance");
                 return name + ", " + Loc.T("radio button") + ", " + (stance.isOn ? Loc.T("selected") : Loc.T("not selected")); // the navigator adds the tooltip
             }
+            // Building panel: the demolish, rename and close buttons are pictures, and the name field is greyed out
+            // until the rename button is pressed.
+            var worker = GameUI.inst != null ? GameUI.inst.workerUI : null;
+            if (item.IsControl && worker != null)
+            {
+                if (item.Control == worker.trashButton) return Loc.T("Demolish, button");
+                if (item.Control == worker.editTitleButton) return Loc.T("Rename building, button");
+                if (worker.close != null && item.Go == worker.close) return Loc.T("Close, button");
+                if (item.Control == worker.titleText)
+                {
+                    string name = TextUtil.Clean(worker.titleText.text);
+                    if (worker.titleText.interactable) return Loc.F("Building name, edit, {0}", name.Length > 0 ? name : UIText.Blank);
+                    var b = GameUI.inst.GetBuildingSelected();
+                    if (name.Length == 0 && b != null) name = b.FriendlyName;
+                    return Loc.F("Building name: {0}", name) + (worker.editTitleButton != null && worker.editTitleButton.gameObject.activeInHierarchy ? ". " + Loc.T("The rename button changes it") : string.Empty);
+                }
+            }
+            // Construction site panel: run / pause toggles and the demolish button are pictures; the builder count is a bare "3 / 5".
+            var construct = GameUI.inst != null ? GameUI.inst.constructUI : null;
+            if (construct != null)
+            {
+                if (item.IsControl && (item.Control == construct.play || item.Control == construct.pause))
+                {
+                    var tg = (Toggle)item.Control;
+                    return (item.Control == construct.play ? Loc.T("Keep building") : Loc.T("Pause construction")) + ", " + Loc.T("radio button") + ", " + (tg.isOn ? Loc.T("selected") : Loc.T("not selected"));
+                }
+                if (item.IsControl && construct.trashUI != null && item.Go == construct.trashUI) return Loc.T("Demolish, button");
+                if (!item.IsControl && construct.infoTextUI != null && item.Go == construct.infoTextUI.gameObject)
+                    return Loc.F("Builders {0}", UIText.JoinTexts(item.Texts));
+            }
             // Kingdom overview: the island name field is greyed out until its Edit button is pressed.
             var region = item.IsControl ? item.Go.GetComponentInParent<RegionNameUI>() : null;
             if (region != null && region.regionNameInput != null && item.Go == region.regionNameInput.gameObject)
@@ -469,11 +530,19 @@ namespace KCAccess.UI
             if (item.IsControl && item.Go.GetComponentInParent<Assets.Code.UI.Confirmation>() is Assets.Code.UI.Confirmation conf
                 && conf.GetComponentInParent<Assets.Code.UI.SaveLoadUI>() != null && conf.yesButton != null && item.Control == conf.yesButton)
             {
-                // Save screen confirmations: say what "yes" does ("It's toast" = delete, or overwrite / load).
+                // Save screen confirmations: say what "yes" does ("It's toast" = delete, or overwrite / load). Told apart by
+                // which confirmation it is: the question text is in the game's language.
                 string yes = UIText.LabelOf(conf.yesButton);
-                string title = TextUtil.Clean(UIText.JoinTexts(UIText.VisibleTexts(conf.transform))).ToLowerInvariant();
-                if (title.Contains("delete")) return yes + ", " + Loc.T("yes, delete the save, button");
+                var saveUi = conf.GetComponentInParent<Assets.Code.UI.SaveLoadUI>();
+                if (conf == saveUi.deleteConfirmation) return yes + ", " + Loc.T("yes, delete the save, button");
+                if (conf == saveUi.saveConfirmation) return yes + ", " + Loc.T("yes, save over this game, button");
+                if (conf == saveUi.loadConfirmation) return yes + ", " + Loc.T("yes, load it, progress since your last save is lost, button");
             }
+            // Save slots: the autosave mark is a picture.
+            var saveSlot = item.IsControl && item.Control is Button ? item.Go.GetComponentInParent<Assets.Code.UI.SaveLoadOption>() : null;
+            if (saveSlot != null && item.Control != saveSlot.deleteButton && saveSlot.autosave != null && UIText.IsVisible(saveSlot.autosave)
+                && UIText.VisibleTexts(saveSlot.autosave.transform).Count == 0)
+                return TextUtil.Join(", ", UIText.LabelOf(item.Control), Loc.T("autosave"), UIText.ButtonRole);
             if (item.IsControl && item.Go.GetComponentInParent<DemolishWarningUI>() != null)
             {
                 if (item.Go.name == "Yes") return Loc.T("Yes, demolish, button");
@@ -618,6 +687,25 @@ namespace KCAccess.UI
                 nav.RequestFocus(g => g.transform.IsChildOf(list) && g.GetComponent<Button>() != null
                     && (modButton != null ? g.name == modButton
                         : currentButton != null ? g == currentButton.gameObject : UIText.LabelOf(g.GetComponent<Button>()).StartsWith(current)));
+                return true;
+            }
+            if (item.IsControl && SpeedToggleName(item.Control) is string speedName && (KInput.Plain(KeyCode.Return) || KInput.Plain(KeyCode.Space) || KInput.Plain(KeyCode.KeypadEnter)))
+            {
+                // Like a radio button: Enter selects it (turning the selected one off again left no speed chosen).
+                KInput.Consume(KeyCode.Return);
+                KInput.Consume(KeyCode.Space);
+                var tg = (Toggle)item.Control;
+                if (!tg.interactable)
+                {
+                    A.Cue(Cue.Error);
+                    A.Say(speedName + ", " + Loc.T("unavailable"));
+                }
+                else if (tg.isOn) A.Say(speedName + ", " + Loc.T("already selected"));
+                else
+                {
+                    A.Cue(Cue.Activate);
+                    tg.isOn = true; // the game's handler sets the speed; the change is announced by GameEvents
+                }
                 return true;
             }
             var keyBtn = item.IsControl ? item.Go.GetComponentInParent<KeyButton>() : null;

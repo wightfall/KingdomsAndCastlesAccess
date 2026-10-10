@@ -17,6 +17,8 @@ namespace KCAccess.UI
         public Vector2 Center;
         /// <summary>Group caption used when several controls share the same label ("Standard Mode" for "Accept").</summary>
         public string Context;
+        /// <summary>An icon whose meaning is only in its tooltip (no text, not a control): the item reads the tooltip.</summary>
+        public TooltipHook Hook;
 
         public bool IsControl => Control != null;
 
@@ -180,7 +182,7 @@ namespace KCAccess.UI
             foreach (var item in items)
             {
                 var last = merged.Count > 0 ? merged[merged.Count - 1] : null;
-                if (last != null && !last.IsControl && !item.IsControl && Mathf.Abs(last.Center.y - item.Center.y) <= 14f
+                if (last != null && !last.IsControl && !item.IsControl && last.Hook == null && item.Hook == null && Mathf.Abs(last.Center.y - item.Center.y) <= 14f
                     && last.Go.transform.parent == item.Go.transform.parent)
                 {
                     last.Texts.AddRange(item.Texts);
@@ -262,14 +264,19 @@ namespace KCAccess.UI
             }
             if (IncludeTexts)
             {
+                bool added = false;
                 foreach (var c in t.GetComponents<Component>())
                 {
                     if (!UIText.IsTextComponent(c)) continue;
                     if (!UIText.IsTextVisible(c) || !TextUtil.HasContent(UIText.TextOf(c))) continue;
                     if (c.GetComponentInParent<InputField>() != null || c.GetComponentInParent<TMP_InputField>() != null) continue;
                     items.Add(new UIItem { Texts = new List<Component> { c }, Go = c.gameObject, Center = UIText.ScreenCenter(c.transform) });
+                    added = true;
                     break;
                 }
+                // Status icons explained only by their tooltip (the dragon nest's needs, a troop ship's cargo ...).
+                if (!added && s == null && UIText.IconTooltip(t.gameObject) is TooltipHook hook)
+                    items.Add(new UIItem { Texts = new List<Component>(), Go = t.gameObject, Center = UIText.ScreenCenter(t), Hook = hook });
             }
             var ordered = Special.OrderedChildren(t);
             if (ordered != null) foreach (var c in ordered) Walk(c, root, items);
@@ -317,6 +324,7 @@ namespace KCAccess.UI
         public string Describe(UIItem item)
         {
             if (item == null) return string.Empty;
+            if (item.Hook != null) return UIText.TooltipOf(item.Go) ?? string.Empty;
             string special = Special.Describe(item);
             if (special != null) return special;
             if (!item.IsControl)

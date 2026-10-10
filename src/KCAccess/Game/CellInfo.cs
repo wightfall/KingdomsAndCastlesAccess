@@ -369,6 +369,8 @@ namespace KCAccess.Game
                 parts.Add(c.RoadCoverage > 0 || c.RoadConnectCoverage > 0 ? Loc.T("inside road coverage") : Loc.T("outside road coverage"));
                 if (c.IrrigationCoverage > 0) parts.Add(Loc.T("irrigated"));
             }
+            string left = DepositLeft(c);
+            if (left != null) parts.Add(left);
             if (c.wolfTerritory) parts.Add(Loc.T("wolf territory"));
             if (c.Danger > 0) parts.Add(Loc.T("dangerous area"));
             foreach (var b in c.OccupyingStructure)
@@ -376,6 +378,30 @@ namespace KCAccess.Game
                 if (b != null && b.IsBuilt() && b.WorkersForFullYield > 0 && b.CategoryName != "house") parts.Add(b.FriendlyName + ": " + Loc.F("{0} of {1} workers", b.WorkersAllocated, b.WorkersForFullYield));
             }
             return TextUtil.Sentences(parts.ToArray());
+        }
+
+        /// <summary>
+        /// Survival mode: stone and iron deposits run out. The tile panel shows "remaining / total" after an icon; null
+        /// for other tiles and other difficulties.
+        /// </summary>
+        internal static string DepositLeft(Cell c)
+        {
+            if (c == null || Player.inst == null || Player.inst.difficulty != Player.Difficulty.Survival) return null;
+            FreeResourceType t;
+            if (c.Type == ResourceType.Stone) t = FreeResourceType.Stone;
+            else if (c.Type == ResourceType.IronDeposit) t = FreeResourceType.IronOre;
+            else return null;
+            try
+            {
+                var tracker = ResourceTracker.GetTracker(c.Position);
+                if (tracker == null) return null;
+                int max = tracker.maxResources.Get(t);
+                return Loc.F("{0} of {1} left in this deposit", max - tracker.currentHarvestedResources.Get(t), max);
+            }
+            catch (System.Exception)
+            {
+                return null;
+            }
         }
 
         /// <summary>Fish swimming in this water tile (fishing huts need them nearby).</summary>
