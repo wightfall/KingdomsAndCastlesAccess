@@ -292,7 +292,9 @@ namespace KCAccess.UI
             if (paren > 0) n = n.Substring(0, paren);
             n = n.Replace("Button", "").Replace("Btn", "").Trim();
             if (n.Length == 0 || DefaultNames.Contains(n) || DefaultNames.Contains(TextUtil.Humanize(n))) return Unlabelled;
-            return TextUtil.Humanize(n);
+            // Object names are English: plain words ("Exit", "Close") are said in the player's language.
+            string words = TextUtil.Humanize(n);
+            return CommonWords.Contains(words) ? Loc.T(words) : words;
         }
 
         /// <summary>Picture buttons whose handler is known: the toolbar's tool modes (their method names were spoken in English).</summary>
@@ -305,10 +307,10 @@ namespace KCAccess.UI
             { "SetCursorModeConsole", Loc.N("Normal mode") },
         };
 
-        /// <summary>Handler names that are plain words (OnNextClicked → "Next"): spoken in the player's language.</summary>
+        /// <summary>Handler and object names that are plain words (OnNextClicked → "Next"): spoken in the player's language.</summary>
         private static readonly HashSet<string> CommonWords = new HashSet<string>
         {
-            Loc.N("Next"), Loc.N("Previous"), Loc.N("Back"), Loc.N("Close"), Loc.N("Accept"), Loc.N("Cancel"), Loc.N("Confirm"), Loc.N("Done"), Loc.N("Edit"),
+            Loc.N("Next"), Loc.N("Previous"), Loc.N("Back"), Loc.N("Close"), Loc.N("Accept"), Loc.N("Cancel"), Loc.N("Confirm"), Loc.N("Done"), Loc.N("Edit"), Loc.N("Exit"),
         };
 
         private static string MethodLabel(UnityEventBase ev)

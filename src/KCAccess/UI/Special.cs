@@ -610,6 +610,19 @@ namespace KCAccess.UI
                 if (!item.IsControl && construct.infoTextUI != null && item.Go == construct.infoTextUI.gameObject)
                     return Loc.F("Builders {0}", UIText.JoinTexts(item.Texts));
             }
+            // Stone slab: the text style buttons are pictures (their handlers are added in code, so no handler name either).
+            var slab = item.IsControl && GameUI.inst != null ? GameUI.inst.slabUI : null;
+            if (slab != null && item.Control is Button && item.Go.transform.IsChildOf(slab.transform) && UIText.JoinTexts(UIText.VisibleTexts(item.Go.transform)).Length <= 2)
+            {
+                string style = item.Control == slab.largeTextButton ? Loc.T("Larger text")
+                    : item.Control == slab.normalTextButton ? Loc.T("Normal text size")
+                    : item.Control == slab.smallTextButton ? Loc.T("Smaller text")
+                    : item.Control == slab.alignLeftButton ? Loc.T("Align left")
+                    : item.Control == slab.alignCenterButton ? Loc.T("Align centre")
+                    : item.Control == slab.alignRightButton ? Loc.T("Align right")
+                    : item.Control == slab.italicsButton ? Loc.T("Italic") : null;
+                if (style != null) return Loc.F("{0}, button: text typed after it gets this style", style);
+            }
             // Barracks, archery range, siege workshop, keep: the training bar has no caption.
             var barracks = GameUI.inst != null ? GameUI.inst.barracksUI : null;
             if (barracks != null && barracks.progressBar != null && item.Control == barracks.progressBar)
@@ -635,6 +648,16 @@ namespace KCAccess.UI
             }
             if (region != null && region.editButton != null && item.Go == region.editButton.gameObject)
                 return Loc.T("Rename island, button");
+            // Kingdom overview: the kingdom name works the same way, its rename button is a picture.
+            var town = item.IsControl ? TownNameUI.inst : null;
+            if (town != null && town.cityNameInput != null && item.Control == town.cityNameInput)
+            {
+                string name = TextUtil.Clean(town.cityNameInput.text);
+                if (town.cityNameInput.interactable) return Loc.F("Kingdom name, edit, {0}", name.Length > 0 ? name : UIText.Blank);
+                return Loc.F("Kingdom name: {0}", name) + (town.editButton != null && town.editButton.gameObject.activeInHierarchy ? ". " + Loc.T("The next button renames it") : string.Empty);
+            }
+            if (town != null && town.editButton != null && item.Control == town.editButton)
+                return Loc.T("Rename kingdom, button");
             if (item.IsControl && item.Go.GetComponent<ChangeLanguage>() is ChangeLanguage cl)
                 return Loc.F("Language: {0}, button, Enter opens the list", TextUtil.Clean(UIText.TextOf(cl.languageButtonText)))
                        + (ModLanguage.ActiveModOnly ? ". " + Loc.F("Screen reader language: {0}", ModLanguage.ActiveName) : string.Empty);
