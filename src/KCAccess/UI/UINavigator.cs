@@ -358,13 +358,8 @@ namespace KCAccess.UI
             }
             var s = item.Control;
             // Read-only fields and bars are really just text.
-            if (!s.interactable && (s is InputField || s is TMP_InputField))
-            {
-                // Say what the value is, when the field has a caption ("Seed: 1234" rather than a bare number).
-                string v = UIText.ValueOf(s), l = UIText.LabelOf(s);
-                if (v == UIText.Blank) return l;
-                return string.IsNullOrEmpty(l) || l == UIText.Unlabelled || l == v ? v : l + ": " + v;
-            }
+            // (No caption is added: the nearest text is often not the field's caption, e.g. the town size next to the town name.)
+            if (!s.interactable && (s is InputField || s is TMP_InputField)) return UIText.ValueOf(s) == UIText.Blank ? UIText.LabelOf(s) : UIText.ValueOf(s);
             if (s is Slider ro && UIText.IsReadOnlySlider(ro)) return TextUtil.Join(", ", UIText.LabelOf(ro), UIText.ValueOf(ro));
             string label = UIText.LabelOf(s);
             if (!string.IsNullOrEmpty(item.Context) && item.Context != label) label = item.Context + ", " + label;
