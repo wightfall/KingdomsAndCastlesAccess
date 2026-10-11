@@ -368,6 +368,44 @@ namespace KCAccess
                             Plugin.Log.LogInfo("[dbg] " + parts[0] + (raider != null ? " spawned at " + tp + (goal != null ? ", heading for " + goal.FriendlyName : string.Empty) : " not spawned"));
                             break;
                         }
+                        case "plague":
+                            // Developer only: "plague" starts one as a Twitch vote would, "plague cure" ends it.
+                            if (parts.Length > 1 && parts[1] == "cure") Player.inst.CurePlague();
+                            else Player.inst.PlagueStartNormal();
+                            Plugin.Log.LogInfo("[dbg] plague " + (parts.Length > 1 ? parts[1] : "started"));
+                            break;
+                        case "weather":
+                            // Developer only: "weather none|rain|heavy|storm|snow".
+                            var wt = parts.Length < 2 ? Weather.WeatherType.None : parts[1] == "rain" ? Weather.WeatherType.NormalRain : parts[1] == "heavy" ? Weather.WeatherType.HeavyRain
+                                : parts[1] == "storm" ? Weather.WeatherType.LightningStorm : parts[1] == "snow" ? Weather.WeatherType.Snow : Weather.WeatherType.None;
+                            Weather.CurrentWeather = wt;
+                            Plugin.Log.LogInfo("[dbg] weather " + wt);
+                            break;
+                        case "twitch":
+                        {
+                            // Developer only, Twitch voting without Twitch: "twitch show" switches the voting panel on for
+                            // this session (the setting is not changed), "twitch connect" acts as if the channel was joined,
+                            // "twitch vote <name> <n>" and "twitch chat <name> <text>" are chat lines, "twitch end" ends the
+                            // vote now, "twitch hide" switches it off again.
+                            var su = StreamerUI.inst;
+                            string sub = parts.Length > 1 ? parts[1] : string.Empty;
+                            if (sub == "show" || sub == "hide")
+                            {
+                                if (sub == "hide" && su != null) su.SetOnline(false);
+                                GameUI.inst.VotingFeature.SetActive(sub == "show");
+                            }
+                            else if (su == null) { Plugin.Log.LogInfo("[dbg] twitch: no voting panel"); break; }
+                            else if (sub == "connect") { su.pendingUsernameLookupTimer.Enabled = false; su.roomExistTimeout.Enabled = false; su.SetOnline(true); su.NewVoteSet(); }
+                            else if (sub == "vote" && parts.Length > 3) su.ChatProcessor(parts[3], parts[2]);
+                            else if (sub == "chat" && parts.Length > 3)
+                            {
+                                var irc = su.twitchIrc != null ? su.twitchIrc : su.GetComponent<TwitchIRC>();
+                                irc.messageRecievedEvent.Invoke(new TwitchChatMessage { username = parts[2], message = string.Join(" ", parts, 3, parts.Length - 3) });
+                            }
+                            else if (sub == "end") su.OnVotingEnd();
+                            Plugin.Log.LogInfo("[dbg] twitch " + sub + (su != null ? " mode=" + su.TwitchMode + " votes=" + su.activelyVotableUI.Count : string.Empty));
+                            break;
+                        }
                         case "log":
                             // Developer only: "log <text>" logs a kingdom notification with that text (as the game does).
                             KingdomLog.TryLog("dbglog" + Time.frameCount, line.Substring(4), KingdomLog.LogStatus.Neutral, 0f);

@@ -750,3 +750,58 @@ namespace KCAccess
         }
     }
 }
+
+namespace KCAccess
+{
+    /// <summary>An envoy picks a gift up from your Hall of Diplomacy when it walks close; only a parcel appears on it.</summary>
+    [HarmonyPatch(typeof(HallOfDiplomacy), nameof(HallOfDiplomacy.TakeGift))]
+    internal static class Patch_GiftTaken
+    {
+        private static void Postfix(HallOfDiplomacy __instance, Assets.Code.ResourceAmount __result)
+        {
+            try
+            {
+                var b = __instance != null ? __instance.GetComponent<Building>() : null;
+                if (b == null || b.TeamID() != 0) return;
+                var parts = new List<string>();
+                for (int i = 0; i < 12; i++)
+                {
+                    int n = __result.Get((FreeResourceType)i);
+                    if (n > 0) parts.Add(KCAccess.Core.ResourceNames.Name(((FreeResourceType)i).ToString()) + " " + n);
+                }
+                A.SayQueued(KCAccess.Core.Loc.F("Your envoy picked up the gift: {0}", string.Join(", ", parts.ToArray())));
+            }
+            catch
+            {
+                // announcement only
+            }
+        }
+    }
+}
+
+namespace KCAccess
+{
+    /// <summary>
+    /// Make Gift in the Hall of Diplomacy swaps the button for a row of amount fields: start on the first field
+    /// instead of where the pressed button was.
+    /// </summary>
+    [HarmonyPatch(typeof(ForeignMinistryUI), nameof(ForeignMinistryUI.OnClickedMakeCustomGift))]
+    internal static class Patch_GiftEditorOpened
+    {
+        private static void Postfix(ForeignMinistryUI __instance)
+        {
+            try
+            {
+                var container = __instance != null && __instance.giftAmountContainer != null ? __instance.giftAmountContainer.transform : null;
+                var first = container != null ? container.GetComponentInChildren<TMPro.TMP_InputField>() : null;
+                if (first == null || AccessController.Inst == null) return;
+                A.Say(KCAccess.Core.Loc.T("Gift: type an amount for each resource, then Make Gift."), force: true);
+                AccessController.Inst.Nav.RequestFocus(g => g == first.gameObject);
+            }
+            catch
+            {
+                // focus only
+            }
+        }
+    }
+}

@@ -31,6 +31,14 @@ namespace KCAccess.Tests
         }
 
         [Fact]
+        public void Clean_DropsZeroWidthCharacters()
+        {
+            // TextMeshPro input fields end their text with a zero width space.
+            Assert.Equal("0", TextUtil.Clean("0\u200B"));
+            Assert.Equal("Longvale", TextUtil.Clean("\uFEFFLong\u200Dvale\u2060"));
+        }
+
+        [Fact]
         public void Clean_DropsDecorativeSprites()
         {
             Assert.Equal("Fire at the farm", TextUtil.Clean("<sprite name=icon_magglass> Fire at the farm"));

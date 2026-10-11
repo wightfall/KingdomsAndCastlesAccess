@@ -276,6 +276,12 @@ namespace KCAccess.UI
             var s = t.GetComponent<Selectable>();
             if (s != null && s.enabled && IsUsableControl(s))
             {
+                // A button that is only a picture around another control: the control inside is the item.
+                if (Special.WrapperOnly(s))
+                {
+                    for (int i = 0; i < t.childCount; i++) WalkNested(t.GetChild(i), root, items);
+                    return;
+                }
                 items.Add(new UIItem { Control = s, Go = s.gameObject, Center = UIText.ScreenCenter(s.transform) });
                 // Texts inside a control are its label; nested controls (e.g. toggles inside a list row) are still visited.
                 for (int i = 0; i < t.childCount; i++) WalkNested(t.GetChild(i), root, items);

@@ -298,6 +298,14 @@ namespace KCAccess.UI
         }
 
         /// <summary>Hide parts of composite rows; the row is represented by one control.</summary>
+        /// <summary>
+        /// A button that is only a picture around another control: the Hall of Diplomacy's gift rows put each amount
+        /// field inside its resource icon button (which only focuses the field). The control inside is the item.
+        /// </summary>
+        internal static bool WrapperOnly(Selectable s) =>
+            s is Button && s.transform.parent != null && s.transform.parent.GetComponent<HoverHide>() != null
+            && s.GetComponentInParent<ResourceAmountUI>() != null && s.GetComponentInChildren<TMPro.TMP_InputField>() != null;
+
         internal static bool Exclude(GameObject go)
         {
             if (DragonBondCaption(go)) return true;
@@ -440,21 +448,27 @@ namespace KCAccess.UI
         /// </summary>
         private static string ResourceAmountField(Selectable s)
         {
-            if (!(s is TMPro.TMP_InputField field)) return null;
+            string res = AmountFieldResource(s);
+            if (res == null) return null;
+            var field = (TMPro.TMP_InputField)s;
+            string value = string.IsNullOrEmpty(field.text) ? "0" : field.text;
+            if (field.interactable) return Loc.F("{0}, edit, {1}", res, value);
+            // The reason ("this storage does not accept it") is the tooltip of the cover drawn over the field, not of the field.
+            var hover = field.GetComponentInParent<HoverHide>();
+            string why = (hover != null && hover.toHide != null ? UIText.TooltipOf(hover.toHide.gameObject) : null) ?? UIText.TooltipOf(field.gameObject);
+            // Without a reason the field only shows an amount (what an envoy carries as a gift).
+            return why == null ? TextUtil.Join(", ", res, value) : TextUtil.Join(", ", res, value, Loc.T("unavailable"), why);
+        }
+
+        /// <summary>The resource of an amount field in a cargo, gift or route stop row (ResourceAmountUI), else null.</summary>
+        private static string AmountFieldResource(Selectable s)
+        {
+            if (!(s is TMPro.TMP_InputField)) return null;
             var ui = s.GetComponentInParent<ResourceAmountUI>();
             var container = ui != null ? (ui.resourceContainer != null ? ui.resourceContainer : ui.transform) : null;
             if (container == null) return null;
             for (int i = 0; i < container.childCount && i < (int)FreeResourceType.NumTypes; i++)
-            {
-                if (!s.transform.IsChildOf(container.GetChild(i))) continue;
-                string res = TextUtil.Capitalize(ResourceNames.Name(((FreeResourceType)i).ToString()));
-                string value = string.IsNullOrEmpty(field.text) ? "0" : field.text;
-                if (field.interactable) return Loc.F("{0}, edit, {1}", res, value);
-                // The reason ("this storage does not accept it") is the tooltip of the cover drawn over the field, not of the field.
-                var hover = field.GetComponentInParent<HoverHide>();
-                string why = hover != null && hover.toHide != null ? UIText.TooltipOf(hover.toHide.gameObject) : null;
-                return TextUtil.Join(", ", res, value, Loc.T("unavailable"), why ?? UIText.TooltipOf(field.gameObject));
-            }
+                if (s.transform.IsChildOf(container.GetChild(i))) return TextUtil.Capitalize(ResourceNames.Name(((FreeResourceType)i).ToString()));
             return null;
         }
 
@@ -892,6 +906,9 @@ namespace KCAccess.UI
             var region = s.GetComponentInParent<RegionNameUI>();
             if (region != null && s == region.regionNameInput) return Loc.T("Island name");
             if (s.GetComponentInParent<DragonSlotUI>() is DragonSlotUI dragon && s == dragon.nameInput) return Loc.T("Dragon name");
+            // Amount fields: their text is only the number.
+            if (AmountFieldResource(s) is string res) return res;
+            if (s is TMPro.TMP_InputField && OrderRow(s.gameObject, out _, out var type)) return Loc.F("desired amount of {0}", ResourceNames.Name(type.ToString()));
             return null;
         }
 

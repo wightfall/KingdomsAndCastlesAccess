@@ -15,6 +15,8 @@ namespace KCAccess.Core
         private static readonly Regex MissingTranslation = new Regex(@"<!-\s*Missing Translation\s*\[(.*?)\]\s*-!>", RegexOptions.Compiled | RegexOptions.Singleline);
         private static readonly Regex RepeatedStops = new Regex(@"\.(\s*\.)+", RegexOptions.Compiled);
         private static readonly Regex Rules = new Regex(@"[-=_]{3,}", RegexOptions.Compiled);
+        // TextMeshPro input fields end their text with a zero width space; nothing to say.
+        private static readonly Regex ZeroWidth = new Regex("[\u200B-\u200D\u2060\uFEFF]", RegexOptions.Compiled);
         private static readonly Regex SpriteTag = new Regex(@"<sprite[^>]*name=""?([^"" >]+)""?[^>]*>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         /// <summary>
@@ -24,7 +26,7 @@ namespace KCAccess.Core
         public static string Clean(string text)
         {
             if (string.IsNullOrEmpty(text)) return string.Empty;
-            string s = MissingTranslation.Replace(text, "$1");
+            string s = MissingTranslation.Replace(ZeroWidth.Replace(text, string.Empty), "$1");
             s = SpriteTag.Replace(s, m => " " + SpriteWord(m.Groups[1].Value) + " ");
             s = RichTag.Replace(s, string.Empty);
             s = Rules.Replace(s, ". ");

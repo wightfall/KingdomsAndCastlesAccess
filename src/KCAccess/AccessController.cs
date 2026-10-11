@@ -143,6 +143,13 @@ namespace KCAccess
             if (ActiveMenu != null)
             {
                 if (!ActiveMenu.IsOpen) ActiveMenu = null;
+                else if (playing && NewGameWindow())
+                {
+                    // A game window (a new level, an effect banner such as a Twitch vote result, a confirmation) opened
+                    // over the mod's list: it pauses the game and waits for an answer, so the list closes and the
+                    // window is read below.
+                    ActiveMenu = null;
+                }
                 else
                 {
                     helpId = ActiveMenu.HelpId;
@@ -282,6 +289,17 @@ namespace KCAccess
                 A.Say(play ? Loc.T("Accessibility reset. Back on the map.") : Loc.T("Accessibility reset."), force: true);
                 if (play) Game.MapController.Inst.OnReturnToMap();
             }
+        }
+
+        private float nextMenuWindowCheck;
+
+        /// <summary>A game window opened while one of the mod's lists (status, log, keys, settings, build menu) is open.</summary>
+        private bool NewGameWindow()
+        {
+            if (Time.unscaledTime < nextMenuWindowCheck) return false;
+            nextMenuWindowCheck = Time.unscaledTime + 0.25f;
+            var w = Game.GameScreens.Detect();
+            return w != null && !w.SameAs(modal);
         }
 
         private void DetectModal()
