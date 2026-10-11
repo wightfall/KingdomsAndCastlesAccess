@@ -230,6 +230,18 @@ namespace KCAccess
                                 Plugin.Log.LogInfo("[dbg] completed " + fb.UniqueName);
                             }
                             break;
+                        case "buildnow":
+                            // Developer only: every construction site finishes on its next construction update, through
+                            // the game's own path (as with "build for free"), so the finished announcement can be tested.
+                            int sites = 0;
+                            foreach (var site in Building.ConstructionList)
+                            {
+                                if (site == null || site.IsBuilt()) continue;
+                                site.BuildTimeAtMax = -1f;
+                                sites++;
+                            }
+                            Plugin.Log.LogInfo("[dbg] buildnow " + sites + " sites");
+                            break;
                         case "ai":
                             var abc = AIBrainsContainer.inst;
                             var lsb = new StringBuilder("[ai] kingdoms=" + (abc != null ? abc.kingdoms.Count : -1));
@@ -295,6 +307,19 @@ namespace KCAccess
                         case "merchant":
                             ShipSystem.inst.merchantSpawnTimer = 0f;
                             break;
+                        case "threatyears":
+                            // Developer only: years until the next viking raid and dragon attack (the last-year warnings).
+                            if (parts.Length > 1)
+                            {
+                                int years = int.Parse(parts[1]);
+                                if (RaiderSystem.inst != null) RaiderSystem.inst.yearsUntilNextAttack = years;
+                                if (DragonSpawn.inst != null) DragonSpawn.inst.yearsUntilNextAttack = years;
+                                Plugin.Log.LogInfo("[dbg] threat years " + years + " timers=" + (Assets.Settings.inst != null && Assets.Settings.inst.VikingDragonTimers)
+                                    + " vikingsAllowed=" + (RaiderSystem.inst != null && RaiderSystem.inst.AllowSpawningVikings()) + " dragonsAllowed=" + (DragonSpawn.inst != null && DragonSpawn.inst.AllowSpawning())
+                                    + " raid=" + (RaiderSystem.inst != null && RaiderSystem.inst.IsRaidInProgress()) + " dragonAttack=" + (DragonSpawn.inst != null && DragonSpawn.inst.IsAttackInProgress())
+                                    + " difficulty=" + (Player.inst != null ? Player.inst.difficulty.ToString() : "-"));
+                            }
+                            break;
                         case "menu":
                             GameState.inst.playingMode.OnClickedMenu();
                             break;
@@ -302,6 +327,11 @@ namespace KCAccess
                             var nav = AccessController.Inst.Nav;
                             Plugin.Log.LogInfo("[nav] root=" + (nav.Root != null ? PathOf(nav.Root) : "null") + " count=" + nav.Count);
                             foreach (var it in nav.AllItems) Plugin.Log.LogInfo("[nav]  " + PathOf(it.Go.transform) + " => " + nav.Describe(it));
+                            break;
+                        case "tracespeech":
+                            // Developer only: log where texts starting with the given words are spoken from.
+                            A.TracePrefix = parts.Length > 1 ? line.Substring(12) : null;
+                            Plugin.Log.LogInfo("[dbg] tracing speech: " + (A.TracePrefix ?? "off"));
                             break;
                         case "say":
                             A.Say(line.Substring(4));

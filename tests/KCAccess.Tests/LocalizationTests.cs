@@ -70,7 +70,7 @@ namespace KCAccess.Tests
             new[] { "Speech, screens and menus", "AccessController", "UINavigator", "UIText", "Special", "ScreenDetector", "GameScreens", "ListMenu", "NavList", "TextUtil", "SteamOverlay", "Diagnostics", "DialoguePatches", "Plugin", "KeyboardGuard", "OsKeyboard", "WebLinks" },
             new[] { "Help and key lists", "HelpText", "KeyHelp", "KeysMenu", "Bindings" },
             new[] { "Mod settings, languages and sound cues", "ModSettingsMenu", "ModLanguage", "Cues", "AudioCues" },
-            new[] { "Map, tiles and cursor", "MapController", "CellInfo", "AreaSurvey", "GridMath", "ResourceNames", "VirtualPointer" },
+            new[] { "Map, tiles and cursor", "MapController", "CellInfo", "Overlays", "AreaSurvey", "GridMath", "ResourceNames", "VirtualPointer" },
             new[] { "Scanner, navigation and problems", "Scanner", "Navigator", "Navigation", "Problems", "Alerts", "Thoughts" },
             new[] { "Building and castle walls", "BuildMenu", "PlacementText", "CastleStacker", "CastleStack" },
             new[] { "Kingdom status, notifications and events", "StatusMenu", "GameEvents", "NotificationLog", "LogBrowser", "GamePatches" },
@@ -226,6 +226,9 @@ namespace KCAccess.Tests
         public const string LanguageRules =
             "# Rules: keep {0}, {1} ... and words in braces such as {Walk} exactly as they are, the mod fills them in;\r\n" +
             "# a translation with different braces is ignored and English is used. \\n is a line break.\r\n" +
+            "# Texts with a number, such as \"{0} trees\", can list one form per number group separated by |, in the order\r\n" +
+            "# one|few|many (Russian, Ukrainian, Polish, Czech, Romanian ...) or one|other; the mod picks the form for the\r\n" +
+            "# number by the plural rule of the file's language code (ru.txt), or of a \"# Plural rule: ru\" line.\r\n" +
             "# While the language is active, saving this file reloads it in the game within 2 seconds.\r\n" +
             "# Lines starting with # are comments.\r\n";
 
@@ -343,10 +346,18 @@ namespace KCAccess.Tests
                 if (file == "template.txt") continue;
                 var t = LocTable.Parse(File.ReadAllText(path, Encoding.UTF8));
                 if (t.LanguageName.Length == 0) problems.Add(file + ": no \"# Language:\" header");
+                string code = Path.GetFileNameWithoutExtension(path);
                 foreach (var key in t.Keys)
                 {
                     if (!template.Has(key)) problems.Add(file + ": unknown key \"" + key + "\"");
                     else if (t.Raw(key).Length > 0 && !Loc.PlaceholdersMatch(key, t.Raw(key))) problems.Add(file + ": placeholders differ in \"" + key + "\"");
+                    else if (t.Raw(key).Contains("|"))
+                    {
+                        // Plural forms: no more than the language has, each with every placeholder of the text.
+                        var forms = t.Raw(key).Split('|');
+                        if (forms.Length > Plurals.FormCount(code)) problems.Add(file + ": more plural forms than " + code + " has in \"" + key + "\"");
+                        if (forms.Any(f => !Loc.PlaceholdersMatch(key, f))) problems.Add(file + ": a plural form lacks a placeholder in \"" + key + "\"");
+                    }
                 }
                 if (!t.Keys.SequenceEqual(template.Keys)) problems.Add(file + ": keys are not all there or not in the template's order (run tools/loc-extract.ps1)");
             }
@@ -440,6 +451,65 @@ namespace KCAccess.Tests
             Loc.Use(LocTable.Parse("{0} tree = ต้นไม้ {0} ต้น\n{0} trees = ต้นไม้ {0} ต้น\n"));
             Assert.Equal("ต้นไม้ 1 ต้น", Loc.P(1, "{0} tree", "{0} trees"));
             Assert.Equal("ต้นไม้ 4 ต้น", Loc.P(4, "{0} tree", "{0} trees"));
+        }
+
+        [Fact]
+        public void PluralFormsFollowTheLanguageRule()
+        {
+            var ru = LocTable.Parse("{0} tree = {0} дерево\n{0} trees = {0} дерево|{0} дерева|{0} деревьев\n");
+            ru.Code = "ru";
+            Loc.Use(ru);
+            string Ru(int n) => Loc.P(n, "{0} tree", "{0} trees");
+            Assert.Equal("1 дерево", Ru(1));
+            Assert.Equal("21 дерево", Ru(21));
+            Assert.Equal("101 дерево", Ru(101));
+            Assert.Equal("3 дерева", Ru(3));
+            Assert.Equal("24 дерева", Ru(24));
+            Assert.Equal("0 деревьев", Ru(0));
+            Assert.Equal("5 деревьев", Ru(5));
+            Assert.Equal("11 деревьев", Ru(11));
+            Assert.Equal("12 деревьев", Ru(12));
+            Assert.Equal("111 деревьев", Ru(111));
+
+            var pl = LocTable.Parse("{0} trees = {0} drzewo|{0} drzewa|{0} drzew\n");
+            pl.Code = "pl";
+            Loc.Use(pl);
+            Assert.Equal("22 drzewa", Loc.P(22, "{0} tree", "{0} trees"));
+            Assert.Equal("21 drzew", Loc.P(21, "{0} tree", "{0} trees"));
+            Assert.Equal("13 drzew", Loc.P(13, "{0} tree", "{0} trees"));
+
+            var ro = LocTable.Parse("{0} trees = {0} copac|{0} copaci|{0} de copaci\n");
+            ro.Code = "ro";
+            Loc.Use(ro);
+            Assert.Equal("2 copaci", Loc.P(2, "{0} tree", "{0} trees"));
+            Assert.Equal("19 copaci", Loc.P(19, "{0} tree", "{0} trees"));
+            Assert.Equal("20 de copaci", Loc.P(20, "{0} tree", "{0} trees"));
+            Assert.Equal("0 copaci", Loc.P(0, "{0} tree", "{0} trees"));
+            Assert.Equal("105 copaci", Loc.P(105, "{0} tree", "{0} trees"));
+            Assert.Equal("120 de copaci", Loc.P(120, "{0} tree", "{0} trees"));
+        }
+
+        [Fact]
+        public void PluralRuleHeaderAndMissingFormsFallBack()
+        {
+            // A file named after something else can name its rule; a form that is missing falls back to the last one.
+            var t = LocTable.Parse("# Plural rule: uk\n{0} trees = {0} дерево|{0} дерева\n");
+            t.Code = "my-ukrainian";
+            Loc.Use(t);
+            Assert.Equal("uk", t.RuleLanguage);
+            Assert.Equal("21 дерево", Loc.P(21, "{0} tree", "{0} trees"));
+            Assert.Equal("7 дерева", Loc.P(7, "{0} tree", "{0} trees"));
+            // Two-form languages and texts without forms.
+            var de = LocTable.Parse("{0} trees = {0} Baum|{0} Bäume\nHello = Hallo|Welt\n");
+            de.Code = "de";
+            Loc.Use(de);
+            Assert.Equal("4 Bäume", Loc.P(4, "{0} tree", "{0} trees"));
+            Assert.Equal("Hallo|Welt", Loc.T("Hello"));
+            Assert.Equal(2, Plurals.FormCount("pt-BR"));
+            Assert.Equal(3, Plurals.FormCount("ru"));
+            Assert.Equal(1, Plurals.FormCount("zh-Hans"));
+            Assert.Equal(0, Plurals.Index("fr", 0));
+            Assert.Equal(1, Plurals.Index("en", 0));
         }
 
         [Fact]

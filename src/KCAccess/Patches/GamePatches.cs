@@ -156,24 +156,71 @@ namespace KCAccess
 
 namespace KCAccess
 {
-    /// <summary>Saving from the save screen gives no visible confirmation either; say it (autosaves stay quiet).</summary>
+    /// <summary>
+    /// Saving from the save screen gives no visible confirmation either; say it once the save file is written: the game
+    /// writes it on a thread of its own after Save returns. Autosaves stay quiet.
+    /// </summary>
     [HarmonyPatch(typeof(LoadSave), nameof(LoadSave.Save))]
     internal static class Patch_ManualSave
     {
-        private static void Postfix()
+        /// <summary>Set (by the writing thread too) when the game logs a problem with the save.</summary>
+        internal static volatile bool Failed;
+
+        private static void Prefix() => Failed = false;
+
+        private static void Postfix(System.Threading.Thread __result)
         {
             try
             {
-                if (GameState.inst != null && GameState.inst.IsMainMenuMode() && GameState.inst.mainMenuMode.GetState() == MainMenuMode.State.Save)
-                {
-                    A.Cue(KCAccess.Core.Cue.Placed);
-                    A.SayQueued(KCAccess.Core.Loc.T("Game saved"));
-                }
+                if (GameState.inst != null && GameState.inst.IsMainMenuMode() && GameState.inst.mainMenuMode.GetState() == MainMenuMode.State.Save && AccessController.Inst != null)
+                    AccessController.Inst.StartCoroutine(Confirm(__result));
             }
             catch
             {
                 // Announcement only.
             }
+        }
+
+        private static System.Collections.IEnumerator Confirm(System.Threading.Thread writer)
+        {
+            float waited = 0f;
+            while (writer != null && writer.IsAlive && waited < 300f)
+            {
+                waited += Time.unscaledDeltaTime;
+                yield return null;
+            }
+            if (Failed)
+            {
+                A.Cue(KCAccess.Core.Cue.Error);
+                A.Say(KCAccess.Core.Loc.T("Saving failed"));
+            }
+            else
+            {
+                A.Cue(KCAccess.Core.Cue.Placed);
+                A.SayQueued(KCAccess.Core.Loc.T("Game saved"));
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(LoadSave), nameof(LoadSave.AppendToLocalErrorLog))]
+    internal static class Patch_SaveProblem
+    {
+        private static void Prefix(string str)
+        {
+            if (str != null && str.StartsWith("Problem during save", StringComparison.Ordinal)) Patch_ManualSave.Failed = true;
+        }
+    }
+
+    /// <summary>The creative menu's team colours (who spawned units belong to) change with a click sound only.</summary>
+    [HarmonyPatch(typeof(CreativeModeOptions), nameof(CreativeModeOptions.UpdatePalette))]
+    internal static class Patch_CreativeTeamChosen
+    {
+        private static void Prefix(CreativeModeOptions __instance, out int __state) => __state = __instance.currentPalette;
+
+        private static void Postfix(CreativeModeOptions __instance, int idx, bool force, int __state)
+        {
+            if (force || __state == __instance.currentPalette || __instance.currentPalette != idx) return;
+            A.Say(KCAccess.Core.Loc.F("Spawned units now belong to {0}", UI.Special.CreativeTeam(__instance, idx)), force: true);
         }
     }
 }

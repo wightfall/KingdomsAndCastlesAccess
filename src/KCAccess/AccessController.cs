@@ -515,7 +515,7 @@ namespace KCAccess
             {
                 string id = HelpText.Has(modal.Id) ? modal.Id : "Dialog";
                 string desc = HelpText.For(id);
-                string title = desc.StartsWith(modal.Title ?? " ") ? null : modal.Title; // "Settings. Settings." otherwise
+                string title = desc.StartsWith(modal.Title ?? "\0") ? null : modal.Title; // "Settings. Settings." otherwise
                 var features = Nav.Features(false, playing);
                 features.CanGoBack = modal.Id != "Menu";
                 return TextUtil.Sentences(title, desc, Special.Help(Nav.Current), KeyHelp.NavKeys(features));

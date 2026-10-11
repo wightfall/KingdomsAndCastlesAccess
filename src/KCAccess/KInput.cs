@@ -25,6 +25,7 @@ namespace KCAccess
         internal static void Inject(KeyCode key, bool shift = false, bool ctrl = false, bool alt = false)
         {
             pending.Add(new Injected { Key = key, Shift = shift, Ctrl = ctrl, Alt = alt });
+            if (A.TracePrefix != null) Plugin.Log.LogInfo("[trace] injected " + key + " | " + System.Environment.StackTrace.Replace(System.Environment.NewLine, " <- "));
         }
 
         /// <summary>Call once per frame before reading keys.</summary>
@@ -109,7 +110,11 @@ namespace KCAccess
             if (current.HasValue && current.Value.Key >= KeyCode.A && current.Value.Key <= KeyCode.Z) return (char)('a' + (current.Value.Key - KeyCode.A));
             for (KeyCode k = KeyCode.A; k <= KeyCode.Z; k++)
             {
-                if (Input.GetKeyDown(k)) return (char)('a' + (k - KeyCode.A));
+                if (Input.GetKeyDown(k))
+                {
+                    if (A.TracePrefix != null) Plugin.Log.LogInfo("[trace] Unity letter " + k + " frame " + Time.frameCount);
+                    return (char)('a' + (k - KeyCode.A));
+                }
             }
             return null;
         }

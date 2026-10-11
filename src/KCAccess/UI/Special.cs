@@ -617,18 +617,7 @@ namespace KCAccess.UI
             if (creative != null && creative.paletteContainer != null && item.Go.transform.parent != null && item.Go.transform.parent.parent == creative.paletteContainer)
             {
                 int idx = item.Go.transform.parent.GetSiblingIndex();
-                string team = Loc.T("your kingdom");
-                if (idx > 0 && creative.paletteIdxs != null && idx < creative.paletteIdxs.Length)
-                {
-                    var owner = World.GetLandmassOwnerByBannerIdx(creative.paletteIdxs[idx]);
-                    team = owner != null && owner.teamId == 0 ? Loc.T("your kingdom") : Loc.T("a foreign kingdom");
-                    if (owner != null && owner.teamId != 0 && owner.ownedLandMasses != null && owner.ownedLandMasses.Count > 0)
-                    {
-                        int lm = owner.ownedLandMasses.data[0];
-                        if (lm >= 0 && lm < Player.inst.LandMassNames.Count && TextUtil.HasContent(Player.inst.LandMassNames[lm])) team = Player.inst.LandMassNames[lm];
-                    }
-                }
-                return Loc.F("Spawned units belong to {0}, radio button, {1}", team, creative.currentPalette == idx ? Loc.T("selected") : Loc.T("not selected"));
+                return Loc.F("Spawned units belong to {0}, radio button, {1}", CreativeTeam(creative, idx), creative.currentPalette == idx ? Loc.T("selected") : Loc.T("not selected"));
             }
             // Stone slab: the text style buttons are pictures (their handlers are added in code, so no handler name either).
             var slab = item.IsControl && GameUI.inst != null ? GameUI.inst.slabUI : null;
@@ -770,9 +759,9 @@ namespace KCAccess.UI
             {
                 string n = item.Go.name;
                 string value = UIText.JoinTexts(UIText.VisibleTexts(item.Go.transform));
-                if (n == "HappinessButton") return Loc.F("Happiness {0}, button, shows what affects happiness", value);
-                if (n == "HealthButton") return Loc.F("Health {0}, button", value);
-                if (n == "StructuralIntegrityButton") return Loc.F("Building integrity {0}, button", value);
+                if (n == "HappinessButton") return Loc.F("Happiness {0}, button", value) + ", " + Game.Overlays.ButtonHint(Game.Overlays.Kind.Happiness);
+                if (n == "HealthButton") return Loc.F("Health {0}, button", value) + ", " + Game.Overlays.ButtonHint(Game.Overlays.Kind.Health);
+                if (n == "StructuralIntegrityButton") return Loc.F("Building integrity {0}, button", value) + ", " + Game.Overlays.ButtonHint(Game.Overlays.Kind.Integrity);
             }
             if (!item.IsControl && item.Go.name == "TotalText" && item.Go.GetComponentInParent<PopulationUI>() != null)
                 return Loc.F("Population {0}", UIText.JoinTexts(item.Texts));
@@ -785,14 +774,64 @@ namespace KCAccess.UI
             return null;
         }
 
+        /// <summary>
+        /// Name of a text field whose nearest text is something else: the kingdom name field sits next to the town size
+        /// ("A Small Village"). Null for other fields.
+        /// </summary>
+        internal static string FieldName(Selectable s)
+        {
+            if (s == null) return null;
+            var town = TownNameUI.inst;
+            if (town != null && s == town.cityNameInput) return Loc.T("Kingdom name");
+            var region = s.GetComponentInParent<RegionNameUI>();
+            if (region != null && s == region.regionNameInput) return Loc.T("Island name");
+            return null;
+        }
+
+        /// <summary>The kingdom a creative-menu team colour stands for: yours, or the foreign island's name.</summary>
+        internal static string CreativeTeam(CreativeModeOptions creative, int idx)
+        {
+            string team = Loc.T("your kingdom");
+            if (idx > 0 && creative.paletteIdxs != null && idx < creative.paletteIdxs.Length)
+            {
+                var owner = World.GetLandmassOwnerByBannerIdx(creative.paletteIdxs[idx]);
+                team = owner != null && owner.teamId == 0 ? Loc.T("your kingdom") : Loc.T("a foreign kingdom");
+                if (owner != null && owner.teamId != 0 && owner.ownedLandMasses != null && owner.ownedLandMasses.Count > 0)
+                {
+                    int lm = owner.ownedLandMasses.data[0];
+                    if (lm >= 0 && lm < Player.inst.LandMassNames.Count && TextUtil.HasContent(Player.inst.LandMassNames[lm])) team = Player.inst.LandMassNames[lm];
+                }
+            }
+            return team;
+        }
+
         private static string PriorityRow(BuildPriorityItem row)
         {
             bool on = row.DisableToggle.isOn;
             string prio = on && !string.IsNullOrEmpty(row.Priority.text) ? Loc.F("Priority {0}", row.Priority.text) : Loc.T("Disabled");
             string name = TextUtil.Clean(row.Name != null ? row.Name.text : row.Category.ToString());
             string filled = row.FilledWorkers != null ? TextUtil.Clean(row.FilledWorkers.text) : string.Empty;
-            string allowed = row.AvailableWorkersInput != null ? row.AvailableWorkersInput.text : string.Empty;
-            return TextUtil.Join(", ", prio, name, filled.Length > 0 ? Loc.F("{0} workers", filled) : null, allowed.Length > 0 ? Loc.F("allowed {0} of {1}", allowed, row.MaxAvailableJobs) : null);
+            int closed = 0;
+            if (row.ClosedWorkers != null) int.TryParse(TextUtil.Clean(row.ClosedWorkers.text), out closed);
+            return TextUtil.Join(", ", prio, name, filled.Length > 0 ? Loc.F("{0} workers", filled) : null, AllowedText(row),
+                closed > 0 ? Loc.P(closed, "{0} job in closed buildings", "{0} jobs in closed buildings") : null);
+        }
+
+        /// <summary>
+        /// The row's worker column: all its job positions, or the limit the player set with the total in brackets (the
+        /// game explains that number only in a hover text: total available job positions that could be filled).
+        /// </summary>
+        private static string AllowedText(BuildPriorityItem row)
+        {
+            string allowed = row.AvailableWorkersInput != null ? TextUtil.Clean(row.AvailableWorkersInput.text) : string.Empty;
+            if (allowed.Length == 0) return null;
+            int n;
+            int.TryParse(allowed, out n);
+            if (row.Category == JobCategory.Builders) return Loc.P(n, "up to {0} builder", "up to {0} builders");
+            bool limited = row.MaxAvailableWorkers != null && row.MaxAvailableWorkers.gameObject.activeSelf;
+            if (!limited) return Loc.P(n, "{0} job position", "{0} job positions");
+            string total = TextUtil.Clean(row.MaxAvailableWorkers.text).Trim('(', ')', ' ');
+            return Loc.F("limited to {0} of {1} job positions", allowed, total);
         }
 
         private static string ResourceName(InfoBase info)
@@ -998,10 +1037,19 @@ namespace KCAccess.UI
             }
             if (KInput.Plain(KeyCode.RightArrow) || KInput.Plain(KeyCode.LeftArrow))
             {
+                // The game's arrows stop at 0 and at the job positions there are (builders have no upper limit).
                 int delta = KInput.Down(KeyCode.RightArrow) ? 1 : -1;
+                int land = Player.inst.FocusedLandMass;
+                int now = land >= 0 ? Player.inst.JobFilledAvailable.data[land][(int)row.Category, 1] : 0;
+                if (land < 0 || now + delta < 0 || now + delta > row.GetMax())
+                {
+                    A.Cue(Cue.Edge);
+                    A.Say(AllowedText(row));
+                    return true;
+                }
                 row.AddToAvailable(delta);
                 A.Cue(Cue.Value);
-                A.Say(Loc.F("allowed {0} of {1}", row.AvailableWorkersInput.text, row.MaxAvailableJobs));
+                A.Say(AllowedText(row));
                 return true;
             }
             if (KInput.Plain(KeyCode.Return) || KInput.Plain(KeyCode.Space))

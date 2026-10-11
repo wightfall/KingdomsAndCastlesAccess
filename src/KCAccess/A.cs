@@ -17,9 +17,14 @@ namespace KCAccess
             prism = prismSpeech;
         }
 
+        /// <summary>Debug command "tracespeech": texts starting with this are logged with the code that said them.</summary>
+        internal static string TracePrefix;
+
         internal static void Say(string text, Priority priority = Priority.Normal, bool force = false)
         {
             if (Announcer == null) return;
+            if (TracePrefix != null && text != null && text.StartsWith(TracePrefix, StringComparison.Ordinal))
+                Plugin.Log?.LogInfo("[trace] " + text + " | " + Environment.StackTrace.Replace(Environment.NewLine, " <- "));
             try
             {
                 Announcer.Say(text, priority, force);

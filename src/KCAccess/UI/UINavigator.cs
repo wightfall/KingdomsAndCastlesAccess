@@ -787,7 +787,7 @@ namespace KCAccess.UI
         {
             editSession = new InputEditSession(s);
             A.Cue(Cue.Open);
-            string label = UIText.LabelOf(s);
+            string label = Special.FieldName(s) ?? UIText.LabelOf(s);
             if (label.IndexOf("Input Field", StringComparison.OrdinalIgnoreCase) >= 0 || label == UIText.Unlabelled) label = Loc.T("text");
             A.Say(Loc.F("Editing {0}. {1}. Type, then press Enter to confirm or Escape to cancel.", label, editSession.Text.Length > 0 ? editSession.Text : UIText.Blank));
         }

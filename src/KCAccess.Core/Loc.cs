@@ -30,6 +30,15 @@ namespace KCAccess.Core
         /// <summary>The game's language (I2 name, e.g. "German") from the "# Game language:" header; empty for mod-only languages.</summary>
         public string GameLanguage = string.Empty;
 
+        /// <summary>The language code: the file name without .txt ("ru", "pt-BR"), set by whoever loads the file.</summary>
+        public string Code = string.Empty;
+
+        /// <summary>A language code from a "# Plural rule:" header, for a file whose name is not a language code.</summary>
+        public string PluralRule = string.Empty;
+
+        /// <summary>The language whose plural rule chooses among "form|form|form" translations.</summary>
+        public string RuleLanguage => PluralRule.Length > 0 ? PluralRule : Code;
+
         /// <summary>Called once per broken translation (placeholder mismatch), for the log.</summary>
         public Action<string> Warn;
 
@@ -78,6 +87,7 @@ namespace KCAccess.Core
                 {
                     if (TryHeader(line, "Language:", out var name)) table.LanguageName = name;
                     else if (TryHeader(line, "Game language:", out var game)) table.GameLanguage = game;
+                    else if (TryHeader(line, "Plural rule:", out var rule)) table.PluralRule = rule;
                     continue;
                 }
                 if (TrySplit(line, out var key, out var value)) table.Set(key, value);
@@ -206,14 +216,28 @@ namespace KCAccess.Core
 
         /// <summary>
         /// Count with the right form: <paramref name="one"/> for 1, otherwise <paramref name="many"/>. {0} is the count,
-        /// {1} … are <paramref name="more"/>. Languages without plurals translate both the same.
+        /// {1} … are <paramref name="more"/>. Languages without plurals translate both the same. A translation can list
+        /// several forms separated by | ("{0} клетка|{0} клетки|{0} клеток"); the language's plural rule picks one.
         /// </summary>
         public static string P(int count, string one, string many, params object[] more)
         {
             var args = new object[1 + (more != null ? more.Length : 0)];
             args[0] = count;
             if (more != null) Array.Copy(more, 0, args, 1, more.Length);
-            return Format(T(count == 1 ? one : many), args);
+            return Format(Form(T(count == 1 ? one : many), count), args);
+        }
+
+        /// <summary>
+        /// The form of a "form|form|form" text for <paramref name="count"/> by the active language's plural rule (a
+        /// missing form falls back to the last one). A text without | is returned unchanged.
+        /// </summary>
+        public static string Form(string text, int count)
+        {
+            if (string.IsNullOrEmpty(text) || text.IndexOf('|') < 0) return text;
+            var forms = text.Split('|');
+            int i = Plurals.Index(Table != null ? Table.RuleLanguage : null, count);
+            if (i >= forms.Length) i = forms.Length - 1;
+            return forms[i].Trim();
         }
 
         /// <summary>
@@ -243,5 +267,82 @@ namespace KCAccess.Core
 
         /// <summary>A translation must use exactly the {placeholders} of the English text (in any order).</summary>
         public static bool PlaceholdersMatch(string english, string translation) => Placeholders(english).SetEquals(Placeholders(translation));
+    }
+
+    /// <summary>
+    /// Plural rules for whole numbers (from the Unicode CLDR): which form of a "form|form|form" translation a count
+    /// takes. Forms are numbered in the order one, few, many (or one, other for two-form languages).
+    /// </summary>
+#if INSTALLER
+    internal
+#else
+    public
+#endif
+    static class Plurals
+    {
+        /// <summary>Number of forms the rule of <paramref name="language"/> uses (1 for languages without plurals).</summary>
+        public static int FormCount(string language)
+        {
+            switch (Base(language))
+            {
+                case "ru": case "uk": case "be": case "pl": case "cs": case "sk": case "hr": case "sr": case "bs": case "ro": case "lt": case "lv":
+                    return 3;
+                case "ja": case "ko": case "zh": case "th": case "vi": case "id": case "ms":
+                    return 1;
+                default:
+                    return 2;
+            }
+        }
+
+        /// <summary>Index of the form a count takes in <paramref name="language"/> (a code such as "ru" or "pt-BR").</summary>
+        public static int Index(string language, int n)
+        {
+            if (n < 0) n = -n;
+            int d = n % 10, h = n % 100;
+            bool teen = h >= 11 && h <= 19;
+            switch (Base(language))
+            {
+                case "ru": case "uk": case "be": case "hr": case "sr": case "bs":
+                    // 1, 21, 31 … | 2-4, 22-24 … | 0, 5-20, 25-30 …
+                    if (d == 1 && h != 11) return 0;
+                    return d >= 2 && d <= 4 && (h < 12 || h > 14) ? 1 : 2;
+                case "pl":
+                    // 1 | 2-4, 22-24 … | 0, 5-21, 25-31 …
+                    if (n == 1) return 0;
+                    return d >= 2 && d <= 4 && (h < 12 || h > 14) ? 1 : 2;
+                case "cs": case "sk":
+                    // 1 | 2-4 | everything else
+                    if (n == 1) return 0;
+                    return n >= 2 && n <= 4 ? 1 : 2;
+                case "ro":
+                    // 1 | 0, 2-19, 101-119 … | 20 and more ("20 de ...")
+                    if (n == 1) return 0;
+                    return n == 0 || h >= 1 && h <= 19 ? 1 : 2;
+                case "lt":
+                    // 1, 21 … | 2-9, 22-29 … | 0, 10-20, 30 …
+                    if (d == 1 && !teen) return 0;
+                    return d >= 2 && !teen ? 1 : 2;
+                case "lv":
+                    // 0, 10-20, 30 … | 1, 21 … | everything else
+                    if (d == 0 || teen) return 0;
+                    return d == 1 && h != 11 ? 1 : 2;
+                case "fr": case "pt":
+                    // 0 and 1 take the singular
+                    return n <= 1 ? 0 : 1;
+                case "ja": case "ko": case "zh": case "th": case "vi": case "id": case "ms":
+                    return 0;
+                default:
+                    return n == 1 ? 0 : 1;
+            }
+        }
+
+        /// <summary>"pt-BR" → "pt", "zh-Hans" → "zh"; lower case.</summary>
+        private static string Base(string language)
+        {
+            if (string.IsNullOrEmpty(language)) return "en";
+            string s = language.Trim().ToLowerInvariant();
+            int i = s.IndexOfAny(new[] { '-', '_' });
+            return i > 0 ? s.Substring(0, i) : s;
+        }
     }
 }

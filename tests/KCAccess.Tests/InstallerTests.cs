@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.IO.Compression;
 using System.Text;
 using KCAccess.Installer;
@@ -323,6 +324,73 @@ namespace KCAccess.Tests
             Assert.True(o.InstallNow);
             Assert.Equal(@"C:\Games\KC", o.GameDir);
             Assert.False(Options.Parse(new string[0]).InstallNow);
+            var q = Options.Parse(new[] { "--quiet", "--mod-language", "th", "--start-game" });
+            Assert.Equal("th", q.ModLanguage);
+            Assert.True(q.StartGame);
+            Assert.Null(Options.Parse(new[] { "--quiet" }).ModLanguage);
+            Assert.False(Options.Parse(new[] { "--quiet" }).StartGame);
+        }
+    }
+
+    public class SetupLanguageTests
+    {
+        private const string BepInExConfig =
+            "## Settings file was created by plugin KCAccess v1.13.1\r\n\r\n[Debug]\r\n\r\nCommandFile = false\r\n\r\n" +
+            "[Language]\r\n\r\n## Language the mod speaks\r\n# Setting type: String\r\n# Default value: auto\r\nLanguage = auto\r\n\r\n[Speech]\r\n\r\nVerbose = true\r\n";
+
+        [Fact]
+        public void LanguageLineIsReplacedAndTheRestKept()
+        {
+            string text = ModConfig.SetLanguage(BepInExConfig, "th");
+            Assert.Equal("th", InstallerLanguage.SettingFromConfig(text));
+            Assert.Contains("CommandFile = false", text);
+            Assert.Contains("Verbose = true", text);
+            Assert.Contains("# Default value: auto", text);
+            Assert.Single(System.Text.RegularExpressions.Regex.Matches(text, @"(?m)^Language = ").Cast<object>());
+        }
+
+        [Fact]
+        public void MissingSectionOrFileIsCreated()
+        {
+            string fresh = ModConfig.SetLanguage(null, "de");
+            Assert.Equal("de", InstallerLanguage.SettingFromConfig(fresh));
+            Assert.Contains("[Language]", fresh);
+            string other = ModConfig.SetLanguage("[Speech]\r\n\r\nVerbose = true\r\n", "en");
+            Assert.Equal("en", InstallerLanguage.SettingFromConfig(other));
+            Assert.Contains("Verbose = true", other);
+            string emptySection = ModConfig.SetLanguage("[Language]\r\n\r\n[Speech]\r\nVerbose = true\r\n", "ja");
+            Assert.Equal("ja", InstallerLanguage.SettingFromConfig(emptySection));
+            Assert.True(emptySection.IndexOf("Language = ja", StringComparison.Ordinal) < emptySection.IndexOf("[Speech]", StringComparison.Ordinal));
+        }
+
+        [Fact]
+        public void WriteLanguageSavesTheConfigInTheGameFolder()
+        {
+            using (var tmp = new TempDir())
+            {
+                ModConfig.WriteLanguage(tmp.Path, "th");
+                string path = ModConfig.PathIn(tmp.Path);
+                Assert.True(File.Exists(path));
+                Assert.Equal("th", InstallerLanguage.SettingFromConfig(File.ReadAllText(path)));
+                Assert.Equal("th", InstallerLanguage.Choose(tmp.Path, new System.Globalization.CultureInfo("de-DE")));
+                ModConfig.WriteLanguage(tmp.Path, "auto");
+                Assert.Equal("de", InstallerLanguage.Choose(tmp.Path, new System.Globalization.CultureInfo("de-DE")));
+            }
+        }
+
+        [Fact]
+        public void LanguageListHasEnglishFirstAndNamesFromTheFiles()
+        {
+            Assert.Equal("th", InstallerLanguage.LanguageCode("th.txt"));
+            Assert.Null(InstallerLanguage.LanguageCode("template.txt"));
+            Assert.Null(InstallerLanguage.LanguageCode("retired.keys"));
+            Assert.Equal("ไทย (Thai)", InstallerLanguage.NameFromText("# Language: ไทย (Thai)\r\n# Game language:\r\nA = b\r\n", "th"));
+            Assert.Equal("eo", InstallerLanguage.NameFromText("A = b\r\n", "eo"));
+            var list = InstallerLanguage.Sorted(new System.Collections.Generic.Dictionary<string, string> { { "th", "ไทย (Thai)" }, { "de", "Deutsch (German)" } });
+            Assert.Null(list[0].Code);
+            Assert.Equal("English", list[0].Name);
+            Assert.Equal(3, list.Count);
+            Assert.Equal("de", list[1].Code);
         }
     }
 

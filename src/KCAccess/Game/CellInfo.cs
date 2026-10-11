@@ -67,8 +67,8 @@ namespace KCAccess.Game
             if (c == null) return "edge";
             if (!Explored(c)) return "fog";
             var b = c.TopMostStructure;
-            if (b != null) return "b:" + b.UniqueName;
-            return "t:" + Terrain(c);
+            if (b != null) return "b:" + b.UniqueName + Overlays.SignaturePart(c);
+            return "t:" + Terrain(c) + Overlays.SignaturePart(c);
         }
 
         /// <summary>Building names on the tile, top to bottom, merging stacked castle blocks.</summary>
@@ -103,7 +103,9 @@ namespace KCAccess.Game
             if (!b.IsBuilt()) parts.Add(Loc.F("under construction {0}", TextUtil.Percent(Mathf.Clamp01(b.constructionProgress))));
             else
             {
-                if (b.Life < 0.999f && b.Life > 0f) parts.Add(Loc.F("damaged, {0} health", TextUtil.Percent(b.Life)));
+                float health = Overlays.Integrity(b); // stacked castle blocks can take more than one building's damage
+                bool mapSaysIt = brief && b.decayChance != 0 && Overlays.Active == Overlays.Kind.Integrity; // the tile ends with "integrity N percent"
+                if (health < 0.999f && b.Life > 0f && !mapSaysIt) parts.Add(Loc.F("damaged, {0} health", TextUtil.Percent(health)));
                 if (!b.Open) parts.Add(Loc.T("closed"));
                 if (!brief && b.WorkersForFullYield > 0 && b.CategoryName != "house")
                 {
@@ -330,6 +332,8 @@ namespace KCAccess.Game
                 if (c.TreeAmount > 0) terrain = Loc.T("forest") + ", " + Loc.P(c.TreeAmount, "{0} tree", "{0} trees");
             }
             if (structures.Count == 0 || c.Type != ResourceType.None) parts.Add(terrain);
+            string map = Overlays.TileText(c);
+            if (map != null) parts.Add(map);
             if (c.TreeAmount > 0 && GameUI.inst != null && GameUI.inst.GetClearCutterJob(c) != null) parts.Add(Loc.T("marked for chopping"));
             if (verbose && !IsWater(c) && c.Type == ResourceType.None) parts.Add(Fertility(c)); // soil only matters on open ground
             int villagers = VillagerCount(c);

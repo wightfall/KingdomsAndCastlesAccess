@@ -1,14 +1,20 @@
-using System;
+﻿using System;
 using System.Windows.Forms;
 
 namespace KCAccess.Installer
 {
-    /// <summary>Command line: [--install] [--quiet] [--game "folder"]. --quiet installs the built-in package without any window.</summary>
+    /// <summary>
+    /// Command line: [--install] [--quiet] [--game "folder"] [--mod-language code] [--start-game]. --quiet installs the
+    /// built-in package without any window; --mod-language sets the mod's language (a language file code, en or auto);
+    /// --start-game starts Kingdoms and Castles afterwards.
+    /// </summary>
     public sealed class Options
     {
         public bool InstallNow;
         public bool Quiet;
         public string GameDir;
+        public string ModLanguage;
+        public bool StartGame;
 
         public static Options Parse(string[] args)
         {
@@ -19,6 +25,8 @@ namespace KCAccess.Installer
                 if (a == "--install" || a == "/install") o.InstallNow = true;
                 else if (a == "--quiet" || a == "/quiet" || a == "/s") o.Quiet = true;
                 else if ((a == "--game" || a == "/game") && i + 1 < args.Length) o.GameDir = args[++i].Trim('"');
+                else if ((a == "--mod-language" || a == "/mod-language") && i + 1 < args.Length) o.ModLanguage = args[++i].Trim('"');
+                else if (a == "--start-game" || a == "/start-game") o.StartGame = true;
             }
             return o;
         }
@@ -64,6 +72,8 @@ namespace KCAccess.Installer
                 var inst = new ModInstaller(game);
                 using (stream) inst.Install(stream);
                 inst.InstallUpdaterCopy(Application.ExecutablePath);
+                if (options.ModLanguage != null) ModConfig.WriteLanguage(game, options.ModLanguage);
+                if (options.StartGame) GameLauncher.Start(game);
                 return 0;
             }
             catch

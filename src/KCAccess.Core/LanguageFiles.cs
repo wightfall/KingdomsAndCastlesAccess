@@ -251,7 +251,12 @@ namespace KCAccess.Core
             return LocTable.Parse(sb.ToString());
         }
 
-        public LocTable Load(string code) => LocTable.Parse(File.ReadAllText(UserPath(code), Encoding.UTF8));
+        public LocTable Load(string code)
+        {
+            var table = LocTable.Parse(File.ReadAllText(UserPath(code), Encoding.UTF8));
+            table.Code = code;
+            return table;
+        }
 
         /// <summary>
         /// Which file to use: null means English. <paramref name="setting"/> is "auto" (follow the game's language
