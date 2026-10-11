@@ -328,6 +328,11 @@ namespace KCAccess
                             Plugin.Log.LogInfo("[nav] root=" + (nav.Root != null ? PathOf(nav.Root) : "null") + " count=" + nav.Count);
                             foreach (var it in nav.AllItems) Plugin.Log.LogInfo("[nav]  " + PathOf(it.Go.transform) + " => " + nav.Describe(it));
                             break;
+                        case "tracespeech":
+                            // Developer only: log where texts starting with the given words are spoken from.
+                            A.TracePrefix = parts.Length > 1 ? line.Substring(12) : null;
+                            Plugin.Log.LogInfo("[dbg] tracing speech: " + (A.TracePrefix ?? "off"));
+                            break;
                         case "say":
                             A.Say(line.Substring(4));
                             break;
