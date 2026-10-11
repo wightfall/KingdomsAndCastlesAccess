@@ -267,6 +267,21 @@ Ctrl+Arrows stop where the value changes, and **Escape** on the map turns the ma
 The K status list has the kingdom's building integrity next to happiness and health; Enter reads the game's
 explanation.
 
+### Dragons (Dragon Roost)
+
+A **Dragon Roost** (Advanced town) houses two adult dragons and their young. In its panel (select it, F6) each slot
+has an **Add a gold pile** button (1000 gold; it says when you do not have enough): a slot with a gold pile waits
+for the next dragon that flies in ("A dragon will try nesting here during the next invasion in 11 years"). The
+needs (pork or fish, aqueduct water, dragon doctor, dragon bath, obstacle course) are read with what they give.
+A dragon's slot reads its name (an edit field; the rename button next to it), status, age, **health**,
+**happiness** and **bond**, each followed by the game's explanation (what raises or lowers it, warnings such as
+starving); **Release** asks for confirmation, because a released dragon attacks the kingdom.
+
+Your dragons resting on the roost (or at a bath, doctor or obstacle course) are named in the tile description
+("your dragon Smaug, resting") and **Shift+Enter** on the roost selects one; F6 then opens its army panel with
+status, energy, health, happiness, bond and **Return To Roost**. A dragon follows orders only once its bond is
+complete: until then selecting it says so; afterwards **M** sends it to the cursor like soldiers.
+
 ### Creative mode
 
 F6 reaches **Creative mode options**: press the Creative Mode button to open the menu with its check
@@ -317,6 +332,15 @@ build roads out from your keep first (I tells you whether a tile is covered).
    lists happiness, food, fire risk and its residents (Enter on a resident selects the villager).
 8. Save from the pause menu (Escape, Save, Make New Save); "Game saved" confirms it once the file is written
    ("Saving failed" when the game could not write it).
+
+### Kingdom share
+
+The toolbar's **Share** button (and **Kingdom Share** on the main menu) uploads your kingdom or visits another
+player's. Share Kingdom: your share code is read in the code field; **Take Picture** switches to picture mode
+(said; **Accept Picture** takes the current camera view), then **Upload**, and the code is read in the result.
+Visit Kingdom: type the code in the code field, **Check Code**: you hear "Share code found", then the kingdom's
+summary once it is downloaded, and **Visit** loads it ("Kingdom loaded"). To return to your own kingdom, load your
+save.
 
 ### Saved games
 
