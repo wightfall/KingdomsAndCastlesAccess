@@ -301,6 +301,8 @@ namespace KCAccess.UI
         internal static bool Exclude(GameObject go)
         {
             if (DragonBondCaption(go)) return true;
+            // Stockpile and dock order forms: the "current" and "desired" column captions; each row says both already.
+            if ((go.name == "current" || go.name == "desired") && go.GetComponent<TMPro.TMP_Text>() != null && go.GetComponentInParent<ResourceOrderFormUI>() != null) return true;
             // Cargo amount rows (route stops, envoy gifts): the resource icon is a button that only focuses the field next to it.
             if (go.name == "icon" && go.GetComponent<Button>() != null && go.transform.parent != null && go.transform.parent.GetComponent<HoverHide>() != null) return true;
             // The fire risk bar is a picture with "Low" and "High" at its ends; the title row speaks the risk instead.
@@ -558,6 +560,11 @@ namespace KCAccess.UI
             if (!item.IsControl && item.Go.name == "InstructionsText" && UnitUI.inst != null && item.Go.transform.IsChildOf(UnitUI.inst.transform))
                 return TextUtil.Sentences(UIText.JoinTexts(item.Texts), KeyHelp.Resolve(Loc.T("With the keyboard: move the cursor and press {MoveSoldiers}.")));
             if (DragonStat(item, out string statTitle, out _)) return statTitle;
+            // Stockpile and dock order forms: stored total and capacity are two bare numbers ("0 990").
+            var orderForm = !item.IsControl ? item.Go.GetComponentInParent<ResourceOrderFormUI>() : null;
+            if (orderForm != null && orderForm.currTxt != null && orderForm.maxTxt != null && item.Texts != null
+                && (item.Texts.Contains(orderForm.currTxt) || item.Texts.Contains(orderForm.maxTxt)))
+                return Loc.F("{0} of {1}", TextUtil.Clean(UIText.TextOf(orderForm.currTxt)), TextUtil.Clean(UIText.TextOf(orderForm.maxTxt)));
             // Chamber of War: the hazard pay toggle only shows "4x".
             var war = item.IsControl && GameUI.inst != null ? GameUI.inst.chamberOfWarUI : null;
             if (war != null && war.hazardPayToggle != null && item.Control == war.hazardPayToggle)

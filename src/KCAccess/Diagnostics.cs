@@ -330,6 +330,20 @@ namespace KCAccess
                             Plugin.Log.LogInfo("[dbg] dragon spawned at " + dp);
                             break;
                         }
+                        case "army":
+                        {
+                            // Developer only: "army knight|archer|settler|envoy [team]" makes that army at the cursor, as the
+                            // creative brushes do (team 0 = yours).
+                            var ap = Game.MapController.Inst.CursorPos;
+                            var acell = World.inst.GetCellData(ap.X, ap.Z);
+                            var kind = parts.Length > 1 && parts[1] == "archer" ? UnitSystem.ArmyType.Archer
+                                : parts.Length > 1 && parts[1] == "settler" ? UnitSystem.ArmyType.Settler
+                                : parts.Length > 1 && parts[1] == "envoy" ? UnitSystem.ArmyType.Envoy : UnitSystem.ArmyType.Default;
+                            int team = parts.Length > 2 ? int.Parse(parts[2]) : 0;
+                            var made = acell != null ? UnitSystem.inst.MakeArmy(World.GetCellHeightPos(acell), team, kind, addUnits: true) : null;
+                            Plugin.Log.LogInfo("[dbg] army " + kind + " team " + team + (made != null ? " made at " + ap : " not made"));
+                            break;
+                        }
                         case "nest":
                         {
                             // Developer only: "nest egg|hatch|mature|happy|bond" on the selected dragon nest (breeding stages, taming).
