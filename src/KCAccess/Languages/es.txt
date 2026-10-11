@@ -6,6 +6,9 @@
 # mod add new texts to your copy and keep your changes.
 # Rules: keep {0}, {1} ... and words in braces such as {Walk} exactly as they are, the mod fills them in;
 # a translation with different braces is ignored and English is used. \n is a line break.
+# Texts with a number, such as "{0} trees", can list one form per number group separated by |, in the order
+# one|few|many (Russian, Ukrainian, Polish, Czech, Romanian ...) or one|other; the mod picks the form for the
+# number by the plural rule of the file's language code (ru.txt), or of a "# Plural rule: ru" line.
 # While the language is active, saving this file reloads it in the game within 2 seconds.
 # Lines starting with # are comments.
 
@@ -120,7 +123,6 @@ Keep building = Seguir construyendo
 Pause construction = Pausar la construcción
 Construction progress, {0} = Progreso de la construcción, {0}
 Builders {0} = Constructores {0}
-your kingdom = tu reino
 Spawned units belong to {0}, radio button, {1} = Las unidades generadas pertenecen a {0}, botón de opción, {1}
 Larger text = Texto más grande
 Normal text size = Tamaño de texto normal
@@ -167,15 +169,24 @@ Enter selects it, then choose Accept = Intro lo selecciona, luego elige Aceptar
 Open custom banner folder, button = Abrir la carpeta de estandartes personalizados, botón
 button, press Enter to hear their advice = botón, pulsa Intro para oír su consejo
 press Enter for the yearly report = pulsa Intro para el informe anual
-Happiness {0}, button, shows what affects happiness = Felicidad {0}, botón, muestra lo que afecta a la felicidad
+Happiness {0}, button = Felicidad {0}, botón
 Health {0}, button = Salud {0}, botón
 Building integrity {0}, button = Integridad de los edificios {0}, botón
 Increase tax rate = Subir la tasa de impuestos
 Decrease tax rate = Bajar la tasa de impuestos
 unavailable, build a Treasure Room first, Castle category = no disponible, construye primero una Sala del Tesoro, categoría Castillo
+Kingdom name = Nombre del reino
+Island name = Nombre de la isla
+your kingdom = tu reino
 Priority {0} = Prioridad {0}
 Disabled = Desactivada
-allowed {0} of {1} = permitidos {0} de {1}
+{0} job in closed buildings = {0} puesto en edificios cerrados
+{0} jobs in closed buildings = {0} puestos en edificios cerrados
+up to {0} builder = hasta {0} constructor
+up to {0} builders = hasta {0} constructores
+{0} job position = {0} puesto de trabajo
+{0} job positions = {0} puestos de trabajo
+limited to {0} of {1} job positions = limitado a {0} de {1} puestos de trabajo
 Wood = Madera
 Charcoal = Carbón vegetal
 Tools = Herramientas
@@ -859,6 +870,19 @@ Demolish mode = Modo demolición
 Rebuild mode = Modo reconstrucción
 Ship route mode = Modo ruta de barco
 {0} mode = Modo {0}
+Happiness map on: the cursor reads the happiness bonus of each tile and the happiness of each house. Escape turns it off. = Mapa de felicidad activado: el cursor lee la bonificación de felicidad de cada casilla y la felicidad de cada casa. Escape lo desactiva.
+Health map on: the cursor reads the health of the residents of each house. Escape turns it off. = Mapa de salud activado: el cursor lee la salud de los habitantes de cada casa. Escape lo desactiva.
+Building integrity map on: the cursor reads the integrity of each building that needs repairs from masons. Escape turns it off. = Mapa de integridad de los edificios activado: el cursor lee la integridad de cada edificio que los canteros deben reparar. Escape lo desactiva.
+Happiness map off = Mapa de felicidad desactivado
+Health map off = Mapa de salud desactivado
+Building integrity map off = Mapa de integridad de los edificios desactivado
+its map is on, Enter turns it off = su mapa está activado, Intro lo desactiva
+Enter shows its map = Intro muestra su mapa
+no residents = sin habitantes
+house happiness {0} = felicidad de la casa {0}
+happiness bonus {0} = bonificación de felicidad {0}
+residents' health {0} = salud de los habitantes {0}
+integrity {0} = integridad {0}
 
 # ===== Scanner, navigation and problems =====
 homeless = sin hogar
@@ -1078,6 +1102,8 @@ Happiness {0} = Felicidad {0}
 trending to {0} = tendiendo a {0}
 Health unknown = Salud desconocida
 Health {0} = Salud {0}
+Building integrity unknown = Integridad de los edificios desconocida
+Building integrity {0} = Integridad de los edificios {0}
 Food {0}: wheat {1}, apples {2}, fish {3}, pork {4} = Comida {0}: trigo {1}, manzanas {2}, pescado {3}, cerdo {4}
 Wood {0}, stone {1}, iron {2}, charcoal {3}, tools {4}, armaments {5} = Madera {0}, piedra {1}, hierro {2}, carbón vegetal {3}, herramientas {4}, armamento {5}
 Tax rate unknown = Tasa de impuestos desconocida
@@ -1103,7 +1129,7 @@ Charcoal {0} = Carbón vegetal {0}
 Tools {0} = Herramientas {0}
 Armaments {0} = Armamento {0}
 No active effects = No hay efectos activos
-Press Enter on gold, food, a material, happiness or health for the detailed report. F6 from the map reaches the kingdom overview panel with the tax buttons. = Pulsa Intro sobre el oro, la comida, un material, la felicidad o la salud para el informe detallado. F6 desde el mapa llega al panel de resumen del reino con los botones de impuestos.
+Press Enter on gold, food, a material, happiness, health or building integrity for the detailed report. F6 from the map reaches the kingdom overview panel with the tax buttons and the buttons for the happiness, health and building integrity maps. = Pulsa Intro sobre el oro, la comida, un material, la felicidad, la salud o la integridad de los edificios para el informe detallado. F6 desde el mapa llega al panel de resumen del reino con los botones de impuestos y los botones de los mapas de felicidad, salud e integridad de los edificios.
 Report not available = Informe no disponible
 Vikings are attacking! = ¡Los vikingos están atacando!
 Dragons are attacking! = ¡Los dragones están atacando!
@@ -1111,7 +1137,9 @@ A merchant ship has arrived. = Ha llegado un barco mercante.
 {0} skipped, {1} = {0} omitidos, {1}
 Trees marked for chopping. Idle villagers will cut them for wood. = Árboles marcados para talar. Los aldeanos desocupados los cortarán para obtener madera.
 Chopping cancelled on this tile. = Tala cancelada en esta casilla.
+Saving failed = Error al guardar
 Game saved = Partida guardada
+Spawned units now belong to {0} = Las unidades generadas pertenecen ahora a {0}
 Villager details are added at the end of this panel. = Los detalles del aldeano se añaden al final de este panel.
 Save deleted = Partida guardada borrada
 {0} cannot be demolished = {0} no se puede demoler

@@ -6,6 +6,9 @@
 # mod add new texts to your copy and keep your changes.
 # Rules: keep {0}, {1} ... and words in braces such as {Walk} exactly as they are, the mod fills them in;
 # a translation with different braces is ignored and English is used. \n is a line break.
+# Texts with a number, such as "{0} trees", can list one form per number group separated by |, in the order
+# one|few|many (Russian, Ukrainian, Polish, Czech, Romanian ...) or one|other; the mod picks the form for the
+# number by the plural rule of the file's language code (ru.txt), or of a "# Plural rule: ru" line.
 # While the language is active, saving this file reloads it in the game within 2 seconds.
 # Lines starting with # are comments.
 
@@ -120,7 +123,6 @@ Keep building = สร้างต่อ
 Pause construction = หยุดก่อสร้างชั่วคราว
 Construction progress, {0} = ความคืบหน้าการก่อสร้าง {0}
 Builders {0} = คนงานก่อสร้าง {0}
-your kingdom = อาณาจักรของคุณ
 Spawned units belong to {0}, radio button, {1} = ยูนิตที่เสกขึ้นเป็นของ {0} ปุ่มตัวเลือก {1}
 Larger text = ตัวอักษรใหญ่ขึ้น
 Normal text size = ขนาดตัวอักษรปกติ
@@ -167,15 +169,24 @@ Enter selects it, then choose Accept = Enter เพื่อเลือก แ�
 Open custom banner folder, button = เปิดโฟลเดอร์ธงที่สร้างเอง ปุ่ม
 button, press Enter to hear their advice = ปุ่ม กด Enter เพื่อฟังคำแนะนำ
 press Enter for the yearly report = กด Enter เพื่อฟังรายงานประจำปี
-Happiness {0}, button, shows what affects happiness = ความสุข {0} ปุ่ม แสดงสิ่งที่มีผลต่อความสุข
+Happiness {0}, button = ความสุข {0} ปุ่ม
 Health {0}, button = สุขภาพ {0} ปุ่ม
 Building integrity {0}, button = ความแข็งแรงของสิ่งก่อสร้าง {0} ปุ่ม
 Increase tax rate = เพิ่มอัตราภาษี
 Decrease tax rate = ลดอัตราภาษี
 unavailable, build a Treasure Room first, Castle category = ใช้ไม่ได้ ให้สร้าง Treasure Room ก่อน หมวดปราสาท
+Kingdom name = ชื่ออาณาจักร
+Island name = ชื่อเกาะ
+your kingdom = อาณาจักรของคุณ
 Priority {0} = ลำดับที่ {0}
 Disabled = ปิดอยู่
-allowed {0} of {1} = อนุญาต {0} จาก {1}
+{0} job in closed buildings = งาน {0} ตำแหน่งในสิ่งก่อสร้างที่ปิดอยู่
+{0} jobs in closed buildings = งาน {0} ตำแหน่งในสิ่งก่อสร้างที่ปิดอยู่
+up to {0} builder = คนงานก่อสร้างได้สูงสุด {0} คน
+up to {0} builders = คนงานก่อสร้างได้สูงสุด {0} คน
+{0} job position = ตำแหน่งงาน {0} ตำแหน่ง
+{0} job positions = ตำแหน่งงาน {0} ตำแหน่ง
+limited to {0} of {1} job positions = จำกัดไว้ {0} จาก {1} ตำแหน่งงาน
 Wood = ไม้
 Charcoal = ถ่านไม้
 Tools = เครื่องมือ
@@ -859,6 +870,19 @@ Demolish mode = โหมดรื้อถอน
 Rebuild mode = โหมดสร้างใหม่
 Ship route mode = โหมดเส้นทางเรือ
 {0} mode = โหมด {0}
+Happiness map on: the cursor reads the happiness bonus of each tile and the happiness of each house. Escape turns it off. = เปิดแผนที่ความสุขแล้ว: เคอร์เซอร์จะอ่านโบนัสความสุขของแต่ละช่องและความสุขของแต่ละบ้าน กด Escape เพื่อปิด
+Health map on: the cursor reads the health of the residents of each house. Escape turns it off. = เปิดแผนที่สุขภาพแล้ว: เคอร์เซอร์จะอ่านสุขภาพของผู้อยู่อาศัยในแต่ละบ้าน กด Escape เพื่อปิด
+Building integrity map on: the cursor reads the integrity of each building that needs repairs from masons. Escape turns it off. = เปิดแผนที่ความแข็งแรงของสิ่งก่อสร้างแล้ว: เคอร์เซอร์จะอ่านความแข็งแรงของสิ่งก่อสร้างแต่ละหลังที่ต้องให้ช่างหินซ่อม กด Escape เพื่อปิด
+Happiness map off = ปิดแผนที่ความสุขแล้ว
+Health map off = ปิดแผนที่สุขภาพแล้ว
+Building integrity map off = ปิดแผนที่ความแข็งแรงของสิ่งก่อสร้างแล้ว
+its map is on, Enter turns it off = แผนที่ของปุ่มนี้เปิดอยู่ กด Enter เพื่อปิด
+Enter shows its map = กด Enter เพื่อแสดงแผนที่ของปุ่มนี้
+no residents = ไม่มีผู้อยู่อาศัย
+house happiness {0} = ความสุขของบ้าน {0}
+happiness bonus {0} = โบนัสความสุข {0}
+residents' health {0} = สุขภาพผู้อยู่อาศัย {0}
+integrity {0} = ความแข็งแรง {0}
 
 # ===== Scanner, navigation and problems =====
 homeless = ไม่มีบ้าน
@@ -1078,6 +1102,8 @@ Happiness {0} = ความสุข {0}
 trending to {0} = มีแนวโน้มเป็น {0}
 Health unknown = ไม่ทราบสุขภาพ
 Health {0} = สุขภาพ {0}
+Building integrity unknown = ไม่ทราบความแข็งแรงของสิ่งก่อสร้าง
+Building integrity {0} = ความแข็งแรงของสิ่งก่อสร้าง {0}
 Food {0}: wheat {1}, apples {2}, fish {3}, pork {4} = อาหาร {0}: ข้าวสาลี {1}, แอปเปิล {2}, ปลา {3}, หมู {4}
 Wood {0}, stone {1}, iron {2}, charcoal {3}, tools {4}, armaments {5} = ไม้ {0}, หิน {1}, เหล็ก {2}, ถ่านไม้ {3}, เครื่องมือ {4}, อาวุธยุทโธปกรณ์ {5}
 Tax rate unknown = ไม่ทราบอัตราภาษี
@@ -1103,7 +1129,7 @@ Charcoal {0} = ถ่านไม้ {0}
 Tools {0} = เครื่องมือ {0}
 Armaments {0} = อาวุธยุทโธปกรณ์ {0}
 No active effects = ไม่มีเอฟเฟกต์ที่ทำงานอยู่
-Press Enter on gold, food, a material, happiness or health for the detailed report. F6 from the map reaches the kingdom overview panel with the tax buttons. = กด Enter บนทอง อาหาร วัสดุ ความสุข หรือสุขภาพ เพื่อฟังรายงานละเอียด F6 จากแผนที่จะไปถึงแผงภาพรวมอาณาจักรที่มีปุ่มภาษี
+Press Enter on gold, food, a material, happiness, health or building integrity for the detailed report. F6 from the map reaches the kingdom overview panel with the tax buttons and the buttons for the happiness, health and building integrity maps. = กด Enter บนทอง อาหาร วัสดุ ความสุข สุขภาพ หรือความแข็งแรงของสิ่งก่อสร้าง เพื่อฟังรายงานละเอียด F6 จากแผนที่จะไปถึงแผงภาพรวมอาณาจักรที่มีปุ่มภาษีและปุ่มแผนที่ความสุข สุขภาพ และความแข็งแรงของสิ่งก่อสร้าง
 Report not available = ไม่มีรายงาน
 Vikings are attacking! = ไวกิ้งกำลังโจมตี!
 Dragons are attacking! = มังกรกำลังโจมตี!
@@ -1111,7 +1137,9 @@ A merchant ship has arrived. = เรือสินค้ามาถึงแ�
 {0} skipped, {1} = ข้าม {0} ชิ้น {1}
 Trees marked for chopping. Idle villagers will cut them for wood. = กำหนดให้ตัดต้นไม้แล้ว ชาวบ้านที่ว่างงานจะมาตัดเป็นไม้
 Chopping cancelled on this tile. = ยกเลิกการตัดต้นไม้ในช่องนี้แล้ว
+Saving failed = บันทึกไม่สำเร็จ
 Game saved = บันทึกเกมแล้ว
+Spawned units now belong to {0} = ยูนิตที่เสกขึ้นเป็นของ {0} แล้ว
 Villager details are added at the end of this panel. = รายละเอียดชาวบ้านอยู่ท้ายแผงนี้
 Save deleted = ลบเกมที่บันทึกไว้แล้ว
 {0} cannot be demolished = รื้อ {0} ไม่ได้

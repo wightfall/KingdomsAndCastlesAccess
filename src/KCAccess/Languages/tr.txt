@@ -6,6 +6,9 @@
 # mod add new texts to your copy and keep your changes.
 # Rules: keep {0}, {1} ... and words in braces such as {Walk} exactly as they are, the mod fills them in;
 # a translation with different braces is ignored and English is used. \n is a line break.
+# Texts with a number, such as "{0} trees", can list one form per number group separated by |, in the order
+# one|few|many (Russian, Ukrainian, Polish, Czech, Romanian ...) or one|other; the mod picks the form for the
+# number by the plural rule of the file's language code (ru.txt), or of a "# Plural rule: ru" line.
 # While the language is active, saving this file reloads it in the game within 2 seconds.
 # Lines starting with # are comments.
 
@@ -120,7 +123,6 @@ Keep building = İnşaata devam et
 Pause construction = İnşaatı duraklat
 Construction progress, {0} = İnşaat ilerlemesi, {0}
 Builders {0} = Yapı Ustaları {0}
-your kingdom = krallığın
 Spawned units belong to {0}, radio button, {1} = Oluşturulan birimlerin sahibi: {0}, radyo düğmesi, {1}
 Larger text = Daha büyük yazı
 Normal text size = Normal yazı boyutu
@@ -167,15 +169,24 @@ Enter selects it, then choose Accept = Enter onu seçer, sonra Kabul et'i seç
 Open custom banner folder, button = Özel sancak klasörünü aç, düğme
 button, press Enter to hear their advice = düğme, tavsiyelerini duymak için Enter'a bas
 press Enter for the yearly report = yıllık rapor için Enter'a bas
-Happiness {0}, button, shows what affects happiness = Mutluluk {0}, düğme, mutluluğu neyin etkilediğini gösterir
+Happiness {0}, button = Mutluluk {0}, düğme
 Health {0}, button = Sağlık {0}, düğme
 Building integrity {0}, button = Bina sağlamlığı {0}, düğme
 Increase tax rate = Vergi oranını artır
 Decrease tax rate = Vergi oranını azalt
 unavailable, build a Treasure Room first, Castle category = kullanılamaz, önce Kale kategorisinden bir Hazine Odası inşa et
+Kingdom name = Krallık adı
+Island name = Ada adı
+your kingdom = krallığın
 Priority {0} = Öncelik {0}
 Disabled = Devre dışı
-allowed {0} of {1} = izin verilen {0} / {1}
+{0} job in closed buildings = kapalı binalarda {0} iş
+{0} jobs in closed buildings = kapalı binalarda {0} iş
+up to {0} builder = en fazla {0} yapı ustası
+up to {0} builders = en fazla {0} yapı ustası
+{0} job position = {0} iş pozisyonu
+{0} job positions = {0} iş pozisyonu
+limited to {0} of {1} job positions = {1} iş pozisyonundan {0} ile sınırlı
 Wood = Odun
 Charcoal = Kömür
 Tools = Aletler
@@ -859,6 +870,19 @@ Demolish mode = Yıkma modu
 Rebuild mode = Yeniden inşa modu
 Ship route mode = Gemi rotası modu
 {0} mode = {0} modu
+Happiness map on: the cursor reads the happiness bonus of each tile and the happiness of each house. Escape turns it off. = Mutluluk haritası açık: imleç her karenin mutluluk bonusunu ve her evin mutluluğunu okur. Escape kapatır.
+Health map on: the cursor reads the health of the residents of each house. Escape turns it off. = Sağlık haritası açık: imleç her evdeki sakinlerin sağlığını okur. Escape kapatır.
+Building integrity map on: the cursor reads the integrity of each building that needs repairs from masons. Escape turns it off. = Bina sağlamlığı haritası açık: imleç taş ustalarının onarması gereken her binanın sağlamlığını okur. Escape kapatır.
+Happiness map off = Mutluluk haritası kapalı
+Health map off = Sağlık haritası kapalı
+Building integrity map off = Bina sağlamlığı haritası kapalı
+its map is on, Enter turns it off = haritası açık, Enter kapatır
+Enter shows its map = Enter haritasını gösterir
+no residents = sakin yok
+house happiness {0} = ev mutluluğu {0}
+happiness bonus {0} = mutluluk bonusu {0}
+residents' health {0} = sakinlerin sağlığı {0}
+integrity {0} = sağlamlık {0}
 
 # ===== Scanner, navigation and problems =====
 homeless = evsiz
@@ -1078,6 +1102,8 @@ Happiness {0} = Mutluluk {0}
 trending to {0} = {0} yönünde gidiyor
 Health unknown = Sağlık bilinmiyor
 Health {0} = Sağlık {0}
+Building integrity unknown = Bina sağlamlığı bilinmiyor
+Building integrity {0} = Bina sağlamlığı {0}
 Food {0}: wheat {1}, apples {2}, fish {3}, pork {4} = Yiyecek {0}: buğday {1}, elma {2}, balık {3}, domuz eti {4}
 Wood {0}, stone {1}, iron {2}, charcoal {3}, tools {4}, armaments {5} = Odun {0}, taş {1}, demir {2}, kömür {3}, aletler {4}, silahlar {5}
 Tax rate unknown = Vergi oranı bilinmiyor
@@ -1103,7 +1129,7 @@ Charcoal {0} = Kömür {0}
 Tools {0} = Aletler {0}
 Armaments {0} = Silahlar {0}
 No active effects = Etkin etki yok
-Press Enter on gold, food, a material, happiness or health for the detailed report. F6 from the map reaches the kingdom overview panel with the tax buttons. = Ayrıntılı rapor için altın, yiyecek, bir malzeme, mutluluk veya sağlık üzerinde Enter'a bas. Haritadan F6 vergi düğmelerinin olduğu krallık genel görünümü paneline ulaşır.
+Press Enter on gold, food, a material, happiness, health or building integrity for the detailed report. F6 from the map reaches the kingdom overview panel with the tax buttons and the buttons for the happiness, health and building integrity maps. = Ayrıntılı rapor için altın, yiyecek, bir malzeme, mutluluk, sağlık veya bina sağlamlığı üzerinde Enter'a bas. Haritadan F6, vergi düğmelerinin ve mutluluk, sağlık ve bina sağlamlığı haritalarının düğmelerinin olduğu krallık genel görünümü paneline ulaşır.
 Report not available = Rapor mevcut değil
 Vikings are attacking! = Vikingler saldırıyor!
 Dragons are attacking! = Ejderhalar saldırıyor!
@@ -1111,7 +1137,9 @@ A merchant ship has arrived. = Bir ticaret gemisi geldi.
 {0} skipped, {1} = {0} atlandı, {1}
 Trees marked for chopping. Idle villagers will cut them for wood. = Ağaçlar kesim için işaretlendi. Boştaki köylüler onları odun için kesecek.
 Chopping cancelled on this tile. = Bu karede kesim iptal edildi.
+Saving failed = Kaydetme başarısız oldu
 Game saved = Oyun kaydedildi
+Spawned units now belong to {0} = Oluşturulan birimler artık şuna ait: {0}
 Villager details are added at the end of this panel. = Köylü ayrıntıları bu panelin sonuna eklenir.
 Save deleted = Kayıt silindi
 {0} cannot be demolished = {0} yıkılamaz

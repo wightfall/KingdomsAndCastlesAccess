@@ -6,6 +6,9 @@
 # mod add new texts to your copy and keep your changes.
 # Rules: keep {0}, {1} ... and words in braces such as {Walk} exactly as they are, the mod fills them in;
 # a translation with different braces is ignored and English is used. \n is a line break.
+# Texts with a number, such as "{0} trees", can list one form per number group separated by |, in the order
+# one|few|many (Russian, Ukrainian, Polish, Czech, Romanian ...) or one|other; the mod picks the form for the
+# number by the plural rule of the file's language code (ru.txt), or of a "# Plural rule: ru" line.
 # While the language is active, saving this file reloads it in the game within 2 seconds.
 # Lines starting with # are comments.
 
@@ -120,7 +123,6 @@ Keep building = 繼續建造
 Pause construction = 暫停建造
 Construction progress, {0} = 建造進度，{0}
 Builders {0} = 建築工 {0}
-your kingdom = 你的王國
 Spawned units belong to {0}, radio button, {1} = 生成的單位屬於{0}，選項按鈕，{1}
 Larger text = 大號文字
 Normal text size = 正常文字大小
@@ -167,15 +169,24 @@ Enter selects it, then choose Accept = Enter 選擇，然後選擇「接受」
 Open custom banner folder, button = 開啟自訂旗幟資料夾，按鈕
 button, press Enter to hear their advice = 按鈕，按 Enter 聽取建議
 press Enter for the yearly report = 按 Enter 檢視年度報告
-Happiness {0}, button, shows what affects happiness = 幸福度 {0}，按鈕，顯示影響幸福度的因素
+Happiness {0}, button = 幸福度 {0}，按鈕
 Health {0}, button = 健康 {0}，按鈕
 Building integrity {0}, button = 建築完好度 {0}，按鈕
 Increase tax rate = 提高稅率
 Decrease tax rate = 降低稅率
 unavailable, build a Treasure Room first, Castle category = 不可用，請先建造寶庫，位於城堡類別
+Kingdom name = 王國名稱
+Island name = 島嶼名稱
+your kingdom = 你的王國
 Priority {0} = 優先順序 {0}
 Disabled = 已停用
-allowed {0} of {1} = 允許 {0}/{1}
+{0} job in closed buildings = 關閉的建築中有 {0} 個工作職位
+{0} jobs in closed buildings = 關閉的建築中有 {0} 個工作職位
+up to {0} builder = 最多 {0} 名建築工
+up to {0} builders = 最多 {0} 名建築工
+{0} job position = {0} 個工作職位
+{0} job positions = {0} 個工作職位
+limited to {0} of {1} job positions = 限制為 {0}/{1} 個工作職位
 Wood = 木材
 Charcoal = 木炭
 Tools = 工具
@@ -859,6 +870,19 @@ Demolish mode = 拆除模式
 Rebuild mode = 重建模式
 Ship route mode = 船隻路線模式
 {0} mode = {0}模式
+Happiness map on: the cursor reads the happiness bonus of each tile and the happiness of each house. Escape turns it off. = 幸福度地圖已開啟：游標會讀出每格的幸福度加成和每座房屋的幸福度。按 Esc 關閉。
+Health map on: the cursor reads the health of the residents of each house. Escape turns it off. = 健康地圖已開啟：游標會讀出每座房屋居民的健康。按 Esc 關閉。
+Building integrity map on: the cursor reads the integrity of each building that needs repairs from masons. Escape turns it off. = 建築完好度地圖已開啟：游標會讀出每座需要石匠修理的建築的完好度。按 Esc 關閉。
+Happiness map off = 幸福度地圖已關閉
+Health map off = 健康地圖已關閉
+Building integrity map off = 建築完好度地圖已關閉
+its map is on, Enter turns it off = 其地圖已開啟，按 Enter 關閉
+Enter shows its map = 按 Enter 顯示其地圖
+no residents = 無居民
+house happiness {0} = 房屋幸福度 {0}
+happiness bonus {0} = 幸福度加成 {0}
+residents' health {0} = 居民健康 {0}
+integrity {0} = 完好度 {0}
 
 # ===== Scanner, navigation and problems =====
 homeless = 無家可歸
@@ -1078,6 +1102,8 @@ Happiness {0} = 幸福度 {0}
 trending to {0} = 趨向 {0}
 Health unknown = 健康未知
 Health {0} = 健康 {0}
+Building integrity unknown = 建築完好度未知
+Building integrity {0} = 建築完好度 {0}
 Food {0}: wheat {1}, apples {2}, fish {3}, pork {4} = 食物 {0}：小麥 {1}，蘋果 {2}，魚 {3}，豬肉 {4}
 Wood {0}, stone {1}, iron {2}, charcoal {3}, tools {4}, armaments {5} = 木材 {0}，石頭 {1}，鐵 {2}，木炭 {3}，工具 {4}，軍備 {5}
 Tax rate unknown = 稅率未知
@@ -1103,7 +1129,7 @@ Charcoal {0} = 木炭 {0}
 Tools {0} = 工具 {0}
 Armaments {0} = 軍備 {0}
 No active effects = 沒有生效中的效果
-Press Enter on gold, food, a material, happiness or health for the detailed report. F6 from the map reaches the kingdom overview panel with the tax buttons. = 在金幣、食物、材料、幸福度或健康上按 Enter 檢視詳細報告。在地圖上按 F6 可到達帶有稅率按鈕的王國概況面板。
+Press Enter on gold, food, a material, happiness, health or building integrity for the detailed report. F6 from the map reaches the kingdom overview panel with the tax buttons and the buttons for the happiness, health and building integrity maps. = 在金幣、食物、材料、幸福度、健康或建築完好度上按 Enter 檢視詳細報告。在地圖上按 F6 可到達王國概況面板，其中有稅率按鈕以及幸福度、健康和建築完好度地圖的按鈕。
 Report not available = 報告不可用
 Vikings are attacking! = 海盜來襲！
 Dragons are attacking! = 巨龍來襲！
@@ -1111,7 +1137,9 @@ A merchant ship has arrived. = 一艘商船已到達。
 {0} skipped, {1} = 跳過 {0} 處，{1}
 Trees marked for chopping. Idle villagers will cut them for wood. = 已標記要砍伐的樹木。空閒的市民會砍伐它們取得木材。
 Chopping cancelled on this tile. = 已取消此地塊的砍伐。
+Saving failed = 儲存失敗
 Game saved = 遊戲已儲存
+Spawned units now belong to {0} = 生成的單位現在屬於{0}
 Villager details are added at the end of this panel. = 市民詳情附在此面板末尾。
 Save deleted = 存檔已刪除
 {0} cannot be demolished = {0}無法拆除

@@ -112,9 +112,11 @@ Press **F1** at any time for help about the current screen: what it is and only 
 echoed, Backspace says what was deleted), Enter to confirm, Escape to cancel. Up, Down or F2 read
 the field.
 
-**Job priority window** (J): each job is one row – "Priority 2, Castle jobs, 3 workers, allowed 5 of 8".
-Space turns the job on or off, **Shift+Up / Shift+Down** change its priority (this replaces the
-mouse drag), Left / Right change how many workers are allowed.
+**Job priority window** (J): each job is one row – "Priority 2, Farmers, 3 workers, 8 job positions";
+with a limit you set, "limited to 5 of 8 job positions" (the number in brackets on screen, which the game
+explains only when the mouse rests on it); builders say "up to 3 builders"; jobs in closed buildings are
+counted at the end. Space turns the job on or off, **Shift+Up / Shift+Down** change its priority (this
+replaces the mouse drag), Left / Right change the limit, from 0 up to the job positions there are.
 
 ### Map
 
@@ -133,8 +135,8 @@ mouse drag), Left / Right change how many workers are allowed.
 | O | Area survey: land, open, fertile, forest, stone, iron and water tiles within 6 tiles, plus the nearest stone, iron or water when none is close |
 | Shift+C | Chop trees mode on / off (Shift+Enter one corner, Enter the other) |
 | B | Build menu |
-| F6 / Shift+F6 | Move into the open panels: selected building or tile → kingdom overview (population, happiness, tax buttons, resources) → toolbar (speed, chop / demolish / rebuild modes, menu). F6 at the end, or Escape, returns to the map |
-| K | Kingdom status list, including years until the next viking raid and dragon attack, a summary of the problems the game shows as thought bubbles, active timed effects and the running Twitch vote (Enter on a line reads the game's detailed report; on the Twitch line it opens the voting settings) |
+| F6 / Shift+F6 | Move into the open panels: selected building or tile → kingdom overview (population, the happiness, health and building integrity map buttons, tax buttons, resources) → toolbar (speed, chop / demolish / rebuild modes, menu). F6 at the end, or Escape, returns to the map |
+| K | Kingdom status list (happiness, health, building integrity …), including years until the next viking raid and dragon attack, a summary of the problems the game shows as thought bubbles, active timed effects and the running Twitch vote (Enter on a line reads the game's detailed report; on the Twitch line it opens the voting settings) |
 | T | Year, season, weather and game speed |
 | L | Notification history; Enter jumps to where it happened, Shift+Enter makes it the navigation target |
 | Shift+L | Repeat the last notification |
@@ -250,12 +252,28 @@ coloured markers. With the mod:
    list add stops, "Remove stop" deletes one, and the pick up / drop off check boxes choose the cargo; on a checked
    one, **Shift+Enter** opens the amounts again for changes.
 
+### Happiness, health and building integrity maps
+
+The kingdom overview (F6) has a button for each of the game's three colour maps: **Happiness**, **Health** and
+**Building integrity**. Enter turns a map on (the others go off) and the mod says what it shows. While a map
+is on, moving the cursor adds its value to each tile:
+
+* **Happiness:** "happiness bonus 12" on open ground (what churches, gardens, statues and taverns around give a
+  house built there) and "house happiness 56" on houses.
+* **Health:** "residents' health 74" on houses.
+* **Building integrity:** "integrity 80 percent" on buildings that wear down and need repairs from masons.
+
+Ctrl+Arrows stop where the value changes, and **Escape** on the map turns the map off ("Happiness map off").
+The K status list has the kingdom's building integrity next to happiness and health; Enter reads the game's
+explanation.
+
 ### Creative mode
 
 F6 reaches **Creative mode options**: press the Creative Mode button to open the menu with its check
 boxes (Build For Free, Hide Fog of War, Viking Attacks …) and brushes (spawn knights, archers, vikings,
 dragons, resource stacks, fire, trees, removal tool). Picking a brush returns you to the map; **Enter**
-applies it at the cursor, **Escape** turns the brush off. On the map setup screen the map editor
+applies it at the cursor, **Escape** turns the brush off. The team buttons choose who spawned units belong
+to (your kingdom or a foreign island) and say the new team when pressed. On the map setup screen the map editor
 brushes work the same way: pick a brush, press Ctrl+M, move the cursor and press Enter to paint; you hear
 what was painted and the brush size ("Painted very fertile land, brush size 2").
 
@@ -297,7 +315,8 @@ build roads out from your keep first (I tells you whether a tile is covered).
 6. **Gold:** build a Treasure Room (Castle), then F6 to the kingdom overview and raise the tax rate.
 7. Advisors in the keep (select the keep, F6, Advisors) tell you what the kingdom needs; a house panel
    lists happiness, food, fire risk and its residents (Enter on a resident selects the villager).
-8. Save from the pause menu (Escape, Save, Make New Save); "Game saved" confirms it.
+8. Save from the pause menu (Escape, Save, Make New Save); "Game saved" confirms it once the file is written
+   ("Saving failed" when the game could not write it).
 
 ### Saved games
 
@@ -382,6 +401,13 @@ The files are in `BepInEx\plugins\KCAccess\Languages` and open in Notepad. Each 
 are comments. Keep `{0}`, `{1}` and words in braces like `{Walk}` exactly as they are: the mod fills in numbers,
 names and your current keys there. A translation whose braces do not match the English text is ignored (English
 is used) and noted in the BepInEx log, so a typo never breaks the mod. `\n` is a line break.
+
+**Numbers and plural forms.** Texts with a count come in pairs, for example `{0} tree` and `{0} trees`: the
+first is used for 1, the second for every other number. When your language has more forms, write all of them in
+the second line, separated by `|`, in the order of your language's rule: Russian, Ukrainian, Polish, Czech,
+Slovak, Croatian and Serbian one|few|many (`{0} дерево|{0} дерева|{0} деревьев`), Romanian 1|2 to 19|20 and more
+(`{0} copac|{0} copaci|{0} de copaci`), French and Portuguese 0 and 1|more. The mod picks the form for each number
+by the file's language code (`ru.txt`); a file with another name can name its rule in a `# Plural rule: ru` line.
 
 While a language is active, the mod checks its file every 2 seconds: save it in Notepad and you hear
 "Language file reloaded" (in that language) with your changes in effect, no restart needed.

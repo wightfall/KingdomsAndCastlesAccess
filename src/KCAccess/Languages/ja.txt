@@ -6,6 +6,9 @@
 # mod add new texts to your copy and keep your changes.
 # Rules: keep {0}, {1} ... and words in braces such as {Walk} exactly as they are, the mod fills them in;
 # a translation with different braces is ignored and English is used. \n is a line break.
+# Texts with a number, such as "{0} trees", can list one form per number group separated by |, in the order
+# one|few|many (Russian, Ukrainian, Polish, Czech, Romanian ...) or one|other; the mod picks the form for the
+# number by the plural rule of the file's language code (ru.txt), or of a "# Plural rule: ru" line.
 # While the language is active, saving this file reloads it in the game within 2 seconds.
 # Lines starting with # are comments.
 
@@ -120,7 +123,6 @@ Keep building = 建設を続ける
 Pause construction = 建設を一時停止
 Construction progress, {0} = 建設の進行状況、{0}
 Builders {0} = 建設作業員 {0}
-your kingdom = あなたの王国
 Spawned units belong to {0}, radio button, {1} = 出現させたユニットの所属: {0}、ラジオボタン、{1}
 Larger text = 大きい文字
 Normal text size = 通常の文字サイズ
@@ -167,15 +169,24 @@ Enter selects it, then choose Accept = Enter で選び、「決定」を選ん�
 Open custom banner folder, button = カスタム旗のフォルダーを開く、ボタン
 button, press Enter to hear their advice = ボタン、Enter で助言を聞く
 press Enter for the yearly report = Enter で年次レポート
-Happiness {0}, button, shows what affects happiness = 幸福度 {0}、ボタン、幸福度に影響するものを表示
+Happiness {0}, button = 幸福度 {0}、ボタン
 Health {0}, button = 健康 {0}、ボタン
 Building integrity {0}, button = 建物の耐久 {0}、ボタン
 Increase tax rate = 税率を上げる
 Decrease tax rate = 税率を下げる
 unavailable, build a Treasure Room first, Castle category = 使用不可、先に宝物庫を建ててください、城カテゴリ
+Kingdom name = 王国の名前
+Island name = 島の名前
+your kingdom = あなたの王国
 Priority {0} = 優先度 {0}
 Disabled = 無効
-allowed {0} of {1} = 許可 {0} / {1}
+{0} job in closed buildings = 閉鎖中の建物の仕事 {0} 件
+{0} jobs in closed buildings = 閉鎖中の建物の仕事 {0} 件
+up to {0} builder = 建設作業員 最大 {0} 人
+up to {0} builders = 建設作業員 最大 {0} 人
+{0} job position = 仕事の枠 {0} 件
+{0} job positions = 仕事の枠 {0} 件
+limited to {0} of {1} job positions = 仕事の枠 {1} 件のうち {0} 件に制限
 Wood = 木材
 Charcoal = 木炭
 Tools = 道具
@@ -859,6 +870,19 @@ Demolish mode = 取り壊しモード
 Rebuild mode = 再建モード
 Ship route mode = 船ルートモード
 {0} mode = {0} モード
+Happiness map on: the cursor reads the happiness bonus of each tile and the happiness of each house. Escape turns it off. = 幸福度マップ オン: カーソルが各マスの幸福度ボーナスと各家の幸福度を読み上げます。Escape でオフにします。
+Health map on: the cursor reads the health of the residents of each house. Escape turns it off. = 健康マップ オン: カーソルが各家の住人の健康を読み上げます。Escape でオフにします。
+Building integrity map on: the cursor reads the integrity of each building that needs repairs from masons. Escape turns it off. = 建物の耐久マップ オン: カーソルが石工の修理が必要な各建物の耐久を読み上げます。Escape でオフにします。
+Happiness map off = 幸福度マップ オフ
+Health map off = 健康マップ オフ
+Building integrity map off = 建物の耐久マップ オフ
+its map is on, Enter turns it off = このマップはオン、Enter でオフ
+Enter shows its map = Enter でこのマップを表示
+no residents = 住人なし
+house happiness {0} = 家の幸福度 {0}
+happiness bonus {0} = 幸福度ボーナス {0}
+residents' health {0} = 住人の健康 {0}
+integrity {0} = 耐久 {0}
 
 # ===== Scanner, navigation and problems =====
 homeless = 家がない
@@ -1078,6 +1102,8 @@ Happiness {0} = 幸福度 {0}
 trending to {0} = {0} に向かっています
 Health unknown = 健康不明
 Health {0} = 健康 {0}
+Building integrity unknown = 建物の耐久 不明
+Building integrity {0} = 建物の耐久 {0}
 Food {0}: wheat {1}, apples {2}, fish {3}, pork {4} = 食料 {0}: 小麦 {1}、リンゴ {2}、魚 {3}、豚肉 {4}
 Wood {0}, stone {1}, iron {2}, charcoal {3}, tools {4}, armaments {5} = 木材 {0}、石 {1}、鉄 {2}、木炭 {3}、道具 {4}、武具 {5}
 Tax rate unknown = 税率不明
@@ -1103,7 +1129,7 @@ Charcoal {0} = 木炭 {0}
 Tools {0} = 道具 {0}
 Armaments {0} = 武具 {0}
 No active effects = 有効な効果はありません
-Press Enter on gold, food, a material, happiness or health for the detailed report. F6 from the map reaches the kingdom overview panel with the tax buttons. = ゴールド、食料、資材、幸福度、健康の上で Enter を押すと詳しいレポートを聞けます。マップから F6 で、税のボタンがある王国概要パネルへ移動します。
+Press Enter on gold, food, a material, happiness, health or building integrity for the detailed report. F6 from the map reaches the kingdom overview panel with the tax buttons and the buttons for the happiness, health and building integrity maps. = ゴールド、食料、資材、幸福度、健康、建物の耐久の上で Enter を押すと詳しいレポートを聞けます。マップから F6 で、税のボタンと、幸福度・健康・建物の耐久マップのボタンがある王国概要パネルへ移動します。
 Report not available = レポートはありません
 Vikings are attacking! = バイキングが攻めてきました！
 Dragons are attacking! = ドラゴンが攻めてきました！
@@ -1111,7 +1137,9 @@ A merchant ship has arrived. = 商船が到着しました。
 {0} skipped, {1} = {0} をスキップ、{1}
 Trees marked for chopping. Idle villagers will cut them for wood. = 木に伐採の印を付けました。手すきの村人が木材のために切ります。
 Chopping cancelled on this tile. = このマスの伐採を取り消しました。
+Saving failed = 保存に失敗しました
 Game saved = ゲームを保存しました
+Spawned units now belong to {0} = 出現させたユニットは {0} の所属になりました
 Villager details are added at the end of this panel. = 村人の詳細はこのパネルの最後に追加されています。
 Save deleted = セーブを削除しました
 {0} cannot be demolished = {0} は取り壊せません
