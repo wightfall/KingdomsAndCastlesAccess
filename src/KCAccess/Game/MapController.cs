@@ -639,6 +639,12 @@ namespace KCAccess.Game
                 ui.brushMode = GameUI.CursorBrushes.None;
                 return;
             }
+            if (KInput.Plain(KeyCode.Escape) && !IsPlacing && Overlays.Active != Overlays.Kind.None)
+            {
+                KInput.Consume(KeyCode.Escape);
+                Overlays.HideOnEscape();
+                return;
+            }
             if (KInput.Pressed("ChopMode") && !IsPlacing)
             {
                 // Shortcut for the toolbar's chop mode: mark whole areas with Shift Enter.

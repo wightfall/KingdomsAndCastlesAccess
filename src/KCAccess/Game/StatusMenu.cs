@@ -97,6 +97,13 @@ namespace KCAccess.Game
             return h == null ? Loc.T("Health unknown") : Loc.F("Health {0}", h.currHealth);
         }
 
+        /// <summary>Average integrity of the buildings: they wear down and masons repair them.</summary>
+        internal static string IntegrityLine()
+        {
+            var i = Player.inst.IntegrityForFocusedLandMass;
+            return i == null ? Loc.T("Building integrity unknown") : Loc.F("Building integrity {0}", i.currentIntegrity);
+        }
+
         internal static string FoodLine()
         {
             int wheat = Res(FreeResourceType.Wheat), apples = Res(FreeResourceType.Apples), fish = Res(FreeResourceType.Fish), pork = Res(FreeResourceType.Pork);
@@ -203,6 +210,7 @@ namespace KCAccess.Game
             Add(Status.PopulationLine);
             Add(Status.HappinessLine, () => SpeakExplanation(() => HappinessUI.inst.GetHappinessExplanation()));
             Add(Status.HealthLine, () => SpeakExplanation(() => GameUI.inst.islandInfoUI.GetComponentInChildren<HealthUI>(true).GetHappinessExplanation()));
+            Add(Status.IntegrityLine, () => SpeakExplanation(() => GameUI.inst.islandInfoUI.GetComponentInChildren<IntegrityUI>(true).GetIntegrityExplanation()));
             Add(Status.FoodLine, () => Examine(GameUI.inst.islandInfoUI.GetComponentInChildren<FoodInfo>(true)));
             Add(() => Loc.F("Wood {0}", Status.Res(FreeResourceType.Tree)), () => Examine(GameUI.inst.islandInfoUI.GetComponentInChildren<WoodInfo>(true)));
             Add(() => Loc.F("Stone {0}", Status.Res(FreeResourceType.Stone)), () => Examine(GameUI.inst.islandInfoUI.GetComponentInChildren<StoneInfo>(true)));
@@ -215,7 +223,7 @@ namespace KCAccess.Game
             Add(Problems.SummaryLine);
             if (Status.EffectsLine() != null) Add(() => Status.EffectsLine() ?? Loc.T("No active effects"));
             if (Twitch.Enabled) Add(Twitch.StatusLine, () => { Close(announce: false); Twitch.OpenSettings(); });
-            Add(() => Loc.T("Press Enter on gold, food, a material, happiness or health for the detailed report. F6 from the map reaches the kingdom overview panel with the tax buttons."));
+            Add(() => Loc.T("Press Enter on gold, food, a material, happiness, health or building integrity for the detailed report. F6 from the map reaches the kingdom overview panel with the tax buttons and the buttons for the happiness, health and building integrity maps."));
         }
 
         private static void SpeakExplanation(Func<string> get)

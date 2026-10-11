@@ -58,7 +58,9 @@ namespace KCAccess.Installer
             }
             string text = ReadUserFile(gameDir, code) ?? ReadPayloadFile(code);
             if (text == null) return false;
-            Loc.Use(LocTable.Parse(text));
+            var table = LocTable.Parse(text);
+            table.Code = code;
+            Loc.Use(table);
             Current = code;
             return true;
         }
