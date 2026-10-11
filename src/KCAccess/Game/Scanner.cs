@@ -22,7 +22,7 @@ namespace KCAccess.Game
         private static readonly string[] Categories =
         {
             Loc.N("Your buildings"), Loc.N("Construction sites"), Loc.N("Your soldiers and ships"), Loc.N("Alerts"), Loc.N("Problems"), Loc.N("Threats"), Loc.N("Stone"), Loc.N("Iron"),
-            Loc.N("Fertile land"), Loc.N("Forests"), Loc.N("Fresh water"), Loc.N("Fishing grounds"), Loc.N("Foreign kingdoms"), Loc.N("Special places")
+            Loc.N("Fertile land"), Loc.N("Forests"), Loc.N("Fresh water"), Loc.N("Fishing grounds"), Loc.N("Foreign kingdoms"), Loc.N("Islands"), Loc.N("Special places")
         };
 
         private int category;
@@ -275,11 +275,69 @@ namespace KCAccess.Game
                     }
                     break;
                 }
+                case "Islands":
+                    AddIslands(found);
+                    break;
                 case "Special places":
                     AddClusters(found, c => c.Type == ResourceType.WitchHut && CellInfo.Explored(c), n => Loc.T("witch hut"));
                     AddClusters(found, c => c.Type == ResourceType.EmptyCave && CellInfo.Explored(c), n => Loc.T("cave"));
                     AddClusters(found, c => c.Type == ResourceType.WolfDen && CellInfo.Explored(c), n => Loc.T("wolf den"));
                     break;
+            }
+        }
+
+        /// <summary>
+        /// Every island with its owner and size, near its middle: an exploration ship claims an unclaimed one with an
+        /// outpost, and the map shows them only as shapes in the sea.
+        /// </summary>
+        private static void AddIslands(List<Item> found)
+        {
+            var w = World.inst;
+            int n = w.NumLandMasses;
+            if (n <= 1) return;
+            var count = new int[n];
+            var sumX = new long[n];
+            var sumZ = new long[n];
+            var explored = new bool[n];
+            for (int z = 0; z < w.GridHeight; z++)
+                for (int x = 0; x < w.GridWidth; x++)
+                {
+                    var c = w.GetCellDataUnsafe(x, z);
+                    if (c == null || c.landMassIdx < 0 || c.landMassIdx >= n) continue;
+                    int lm = c.landMassIdx;
+                    count[lm]++;
+                    sumX[lm] += x;
+                    sumZ[lm] += z;
+                    if (!explored[lm] && CellInfo.Explored(c)) explored[lm] = true;
+                }
+            // The average may fall in a bay or lake: take the island's tile nearest to it.
+            var best = new GridPos[n];
+            var bestD = new double[n];
+            for (int i = 0; i < n; i++) bestD[i] = double.MaxValue;
+            for (int z = 0; z < w.GridHeight; z++)
+                for (int x = 0; x < w.GridWidth; x++)
+                {
+                    var c = w.GetCellDataUnsafe(x, z);
+                    if (c == null || c.landMassIdx < 0 || c.landMassIdx >= n) continue;
+                    int lm = c.landMassIdx;
+                    double dx = x - (double)sumX[lm] / count[lm], dz = z - (double)sumZ[lm] / count[lm];
+                    double d = dx * dx + dz * dz;
+                    if (d < bestD[lm]) { bestD[lm] = d; best[lm] = new GridPos(x, z); }
+                }
+            for (int lm = 0; lm < n; lm++)
+            {
+                if (count[lm] == 0) continue;
+                string name = lm < Player.inst.LandMassNames.Count ? Player.inst.LandMassNames[lm] : null;
+                bool named = !string.IsNullOrEmpty(name);
+                string owner;
+                if (Player.inst.LandMassIsAPlayerLandMass(lm)) owner = named ? Loc.F("{0}, your island", name) : Loc.T("your island");
+                else if (World.GetLandmassOwner(lm) != null) owner = named ? Loc.F("{0} kingdom", name) : Loc.T("foreign kingdom");
+                else owner = Loc.T("unclaimed island");
+                found.Add(new Item
+                {
+                    Label = TextUtil.Join(", ", owner, Loc.P(count[lm], "{0} tile", "{0} tiles"), explored[lm] ? null : Loc.T("unexplored")),
+                    Pos = best[lm]
+                });
             }
         }
 

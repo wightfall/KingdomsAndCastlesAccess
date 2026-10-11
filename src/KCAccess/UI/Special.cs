@@ -330,7 +330,7 @@ namespace KCAccess.UI
             var person = go.GetComponentInParent<PersonListItemUI>();
             if (person != null && person.MagGlass != null && go.transform != person.MagGlass.transform && !person.MagGlass.transform.IsChildOf(go.transform)) return true;
             // Portrait captions duplicate the advisor buttons' names.
-            if (AdvisorUI.inst != null && go.name.StartsWith("Text") && go.GetComponent<TMPro.TMP_Text>() != null && go.transform.parent != null
+            if (AdvisorUI.inst != null && go.name.StartsWith("Text", System.StringComparison.Ordinal) && go.GetComponent<TMPro.TMP_Text>() != null && go.transform.parent != null
                 && go.transform.IsChildOf(AdvisorUI.inst.transform) && go.transform.parent.Find("bottomgradient") != null) return true;
             // Each advisor has two overlapping buttons (portrait and speech bubble): keep the first.
             if (AdvisorName(go.transform) != null && go.GetComponent<Button>() != null)
@@ -461,12 +461,61 @@ namespace KCAccess.UI
         private static bool HasText(UIItem item, Component text) =>
             text != null && item.Texts != null && item.Texts.Contains(text);
 
+        /// <summary>Soldiers, archers, settlers and envoys can board a troop ship; ships and dragons cannot.</summary>
+        private static bool SelectionCanBoard()
+        {
+            var ui = GameUI.inst;
+            if (ui == null) return false;
+            foreach (var s in ui.selectedObjs)
+            {
+                var u = ui.GetUnitFromSelectable(s);
+                if (u != null && u.CanBeCarried()) return true;
+            }
+            return false;
+        }
+
         /// <summary>
-        /// A dragon's health, happiness and bond (dragon nest panel, army panel): what affects them is only in a tooltip the
-        /// panel draws itself on hover (an EventTrigger, no TooltipHook). Returns the details of that text (below its title
-        /// line, which <see cref="Describe"/> uses as the label) for those items, else null.
+        /// Hover text the mod builds itself; it replaces the game's tooltip of the item. A dragon's health, happiness and
+        /// bond (dragon nest panel, army panel): what affects them is only in a tooltip the panel draws itself on hover
+        /// (an EventTrigger, no TooltipHook); the details of that text (below its title line, which <see cref="Describe"/>
+        /// uses as the label). The train button's squad cost (<see cref="TrainCost"/>). Null for other items.
         /// </summary>
-        internal static string ExtraTooltip(UIItem item) => DragonStat(item, out _, out string details) ? details : null;
+        internal static string ExtraTooltip(UIItem item) => DragonStat(item, out _, out string details) ? details : TrainCost(item);
+
+        /// <summary>
+        /// Barracks, archer school, siege workshop and the keep's settlers: what one squad costs (villagers of the island,
+        /// gold, armaments ...) is the train button's hover text, which shows missing amounts only in red. Null for other items.
+        /// </summary>
+        private static string TrainCost(UIItem item)
+        {
+            var ui = GameUI.inst != null ? GameUI.inst.barracksUI : null;
+            if (ui == null || !item.IsControl || item.Control != ui.TrainButton || ui.selectedBarracks == null) return null;
+            var barracks = ui.selectedBarracks;
+            int lm = barracks.LandMass();
+            var owner = World.GetLandmassOwner(lm);
+            if (lm < 0 || owner == null) return null;
+            int people = World.inst.GetVillagersForLandMass(lm).Count;
+            Assets.Code.ResourceAmount cost = barracks.GetUnitCost();
+            Assets.Code.ResourceAmount have = barracks.resourcesStored;
+            have.Add(in Player.inst.resourcesPerLandmass[lm]);
+            have.Set(FreeResourceType.Gold, owner.Gold);
+            const int n = 12;
+            var names = new string[n];
+            var need = new int[n];
+            var got = new int[n];
+            for (int i = 0; i < n; i++)
+            {
+                names[i] = ((FreeResourceType)i).ToString();
+                need[i] = cost.Get((FreeResourceType)i);
+                got[i] = have.Get((FreeResourceType)i);
+            }
+            bool anyResource = false;
+            for (int i = 0; i < n; i++) if (need[i] > 0) anyResource = true;
+            string villagers = barracks.peopleInSquad > 0
+                ? Loc.P(barracks.peopleInSquad, "{0} villager", "{0} villagers") + (people < barracks.peopleInSquad ? " " + Loc.F("(have {0})", people) : string.Empty)
+                : null;
+            return Loc.F("Each squad costs {0}", TextUtil.Join(", ", villagers, anyResource ? ResourceNames.Cost(names, need, got) : null));
+        }
 
         /// <summary>
         /// The tooltip of a dragon stat split into its title ("Health 86, Very Good", "Happiness 13 - Trending towards 40")
@@ -558,7 +607,9 @@ namespace KCAccess.UI
             if (DragonRoostItem(item) is string roost) return roost;
             // The army panel's instructions are for the mouse ("Right click to move/attack").
             if (!item.IsControl && item.Go.name == "InstructionsText" && UnitUI.inst != null && item.Go.transform.IsChildOf(UnitUI.inst.transform))
-                return TextUtil.Sentences(UIText.JoinTexts(item.Texts), KeyHelp.Resolve(Loc.T("With the keyboard: move the cursor and press {MoveSoldiers}.")));
+                return TextUtil.Sentences(UIText.JoinTexts(item.Texts), KeyHelp.Resolve(SelectionCanBoard()
+                    ? Loc.T("With the keyboard: move the cursor and press {MoveSoldiers}; on your troop ship, {MoveSoldiers} boards it.")
+                    : Loc.T("With the keyboard: move the cursor and press {MoveSoldiers}.")));
             if (DragonStat(item, out string statTitle, out _)) return statTitle;
             // Stockpile and dock order forms: stored total and capacity are two bare numbers ("0 990").
             var orderForm = !item.IsControl ? item.Go.GetComponentInParent<ResourceOrderFormUI>() : null;

@@ -333,7 +333,7 @@ namespace KCAccess.Game
                 case ShipBase.ShipType.TroopTransport: kind = Loc.T("troop ship"); break;
                 case ShipBase.ShipType.VikingTroopTransport: kind = Loc.T("viking ship"); break;
                 case ShipBase.ShipType.OgreTroopTransport: kind = Loc.T("ogre ship"); break;
-                case ShipBase.ShipType.SeedShip: kind = Loc.T("seed ship"); break;
+                case ShipBase.ShipType.SeedShip: kind = Loc.T("exploration ship"); break;
                 default: kind = Loc.T("transport ship"); break;
             }
             if (s.type == ShipBase.ShipType.Merchant || s.type == ShipBase.ShipType.PlayerMerchant) return kind;

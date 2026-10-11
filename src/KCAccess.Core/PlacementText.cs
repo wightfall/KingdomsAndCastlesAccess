@@ -44,7 +44,7 @@ namespace KCAccess.Core
             { "MustBeOnCorrectLandMass", Loc.N("must be on the selected island") },
             { "BuildAnOutpostOnUnclaimedLand", Loc.N("outposts must be on unclaimed land") },
             { "OneOutpostPerLandmass", Loc.N("only one outpost per island") },
-            { "OutpostTooFarFromSeedShip", Loc.N("too far from your seed ship") },
+            { "OutpostTooFarFromSeedShip", Loc.N("too far from your exploration ship") },
             { "CannotBuildOnWater", Loc.N("cannot build on water") },
             { "TooCloseToWolves", Loc.N("too close to wolves") },
             { "CannotBuildOnOthersIsland", Loc.N("this island belongs to another kingdom") },

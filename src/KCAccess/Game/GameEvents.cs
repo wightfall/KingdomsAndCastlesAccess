@@ -43,6 +43,8 @@ namespace KCAccess.Game
                 lastWeather = null;
                 built.Clear();
                 EnvoyWatch.Reset();
+                ShipWatch.Reset();
+                FireWatch.Reset();
                 Twitch.Reset();
                 MapController.Inst.OnEnterPlayMode();
             }
@@ -57,6 +59,8 @@ namespace KCAccess.Game
         {
             TrackAttacks();
             FlushBuilt();
+            ShipWatch.Tick();
+            FireWatch.Tick();
             if (Weather.inst != null)
             {
                 var s = Weather.inst.season;
@@ -133,6 +137,12 @@ namespace KCAccess.Game
                 Log.Add(message, Severity.Info, Player.inst != null ? Player.inst.CurrYear : 0);
                 return;
             }
+            // Messages about one island start with its name ("Longvale: ..."); an island without a name yet (a new
+            // outpost) leaves a bare ": ..." in the game's text.
+            string bare = TextUtil.Clean(message);
+            int skip = 0;
+            while (skip < bare.Length && (char.IsWhiteSpace(bare[skip]) || char.GetUnicodeCategory(bare[skip]) == System.Globalization.UnicodeCategory.Format)) skip++;
+            if (skip < bare.Length && bare[skip] == ':') message = Loc.T("Unnamed island") + bare.Substring(skip);
             var sev = NotificationLog.Classify(id, status == KingdomLog.LogStatus.Warning, status == KingdomLog.LogStatus.Important);
             GridPos? where = null;
             if (pos.HasValue) where = new GridPos((int)pos.Value.x, (int)pos.Value.z);

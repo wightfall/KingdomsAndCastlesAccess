@@ -46,8 +46,8 @@ namespace KCAccess.Game
             {
                 // "VotableBountifulHarvestTitle" -> "Bountiful Harvest"
                 string id = term;
-                if (id.StartsWith("Votable")) id = id.Substring(7);
-                if (id.EndsWith("Title")) id = id.Substring(0, id.Length - 5);
+                if (id.StartsWith("Votable", System.StringComparison.Ordinal)) id = id.Substring(7);
+                if (id.EndsWith("Title", System.StringComparison.Ordinal)) id = id.Substring(0, id.Length - 5);
                 t = TextUtil.Humanize(id);
             }
             return TextUtil.Clean(t);

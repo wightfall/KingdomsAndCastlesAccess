@@ -711,3 +711,42 @@ namespace KCAccess
         }
     }
 }
+
+namespace KCAccess
+{
+    /// <summary>
+    /// The unit panel's Settle and Disband turn the units back into villagers (one per soldier or settler); the panel
+    /// only switches to its unit list. Say what happened and how many villagers that made.
+    /// </summary>
+    [HarmonyPatch]
+    internal static class Patch_UnitsDisbanded
+    {
+        private static IEnumerable<System.Reflection.MethodBase> TargetMethods()
+        {
+            yield return AccessTools.Method(typeof(UnitUI), nameof(UnitUI.OnSettle));
+            yield return AccessTools.Method(typeof(UnitUI), nameof(UnitUI.OnDisband));
+        }
+
+        private static void Prefix(out int __state) => __state = Player.inst != null ? Player.inst.Workers.Count : -1;
+
+        private static void Postfix(int __state, System.Reflection.MethodBase __originalMethod)
+        {
+            try
+            {
+                if (__state < 0 || Player.inst == null) return;
+                // Settle on an exploration ship starts placing its outpost instead; that is announced as placement.
+                if (GameUI.inst != null && GameUI.inst.CurrPlacementMode != null && GameUI.inst.CurrPlacementMode.IsPlacing()) return;
+                int added = Player.inst.Workers.Count - __state;
+                bool settle = __originalMethod != null && __originalMethod.Name == nameof(UnitUI.OnSettle);
+                string text = added > 0
+                    ? (settle ? KCAccess.Core.Loc.P(added, "Settled: {0} new villager", "Settled: {0} new villagers") : KCAccess.Core.Loc.P(added, "Disbanded: {0} new villager", "Disbanded: {0} new villagers"))
+                    : (settle ? null : KCAccess.Core.Loc.T("Disbanded"));
+                if (text != null) A.Say(text, force: true);
+            }
+            catch
+            {
+                // announcement only
+            }
+        }
+    }
+}

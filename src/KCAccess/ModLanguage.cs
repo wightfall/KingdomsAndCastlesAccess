@@ -249,7 +249,7 @@ namespace KCAccess
         {
             string extra = Loc.T("screen reader only");
             string name = info.Name ?? info.Code;
-            return name.EndsWith(")") ? name.Substring(0, name.Length - 1) + ", " + extra + ")" : name + " (" + extra + ")";
+            return name.EndsWith(")", System.StringComparison.Ordinal) ? name.Substring(0, name.Length - 1) + ", " + extra + ")" : name + " (" + extra + ")";
         }
     }
 }

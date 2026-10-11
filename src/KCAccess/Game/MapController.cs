@@ -1002,13 +1002,17 @@ namespace KCAccess.Game
                 for (int i = 0; i < shipsHere.Count; i++) if (ui.IsSelected((ISelectable)shipsHere[i])) idx = i + 1;
                 var ship = shipsHere[idx % shipsHere.Count];
                 ui.ClearSelection();
-                ui.AddToSelection((ISelectable)ship);
+                // Troop and exploration ships have the unit panel (who is on board, Settle): the game opens it on a click.
+                if (ui.AddToSelection((ISelectable)ship) && ship is IMoveableUnit movable && ui.DisplayIMovableUI(movable)) ui.ClearCellSelected();
                 A.Cue(Cue.Activate);
                 bool merchant = ship.type == ShipBase.ShipType.Merchant || ship.type == ShipBase.ShipType.PlayerMerchant;
                 string how;
                 if (merchant) how = Loc.T("F6 opens the trade window.");
                 else if (ship.teamID != 0) how = null;
                 else if (ship is ILogisticTransport) how = Loc.T("F6 opens its route panel: each stop with its cargo, and {MoveSoldiers} on a stop moves it to the cursor.");
+                else if (ship is TroopTransportShip) how = Loc.T("{MoveSoldiers} sends it to the cursor; on land it unloads the units on board there. To board, select soldiers with Shift Enter, put the cursor on this ship and press {MoveSoldiers}. F6 opens its panel.");
+                else if (ship is SeedShip seed) how = Loc.T("Sail it next to an unclaimed island with {MoveSoldiers}; then Settle in its panel (F6) places an outpost that claims the island.")
+                    + " " + (seed.CanSettle ? Loc.T("Unclaimed land is in reach now.") : Loc.T("No unclaimed land in reach here."));
                 else how = Loc.T("{MoveSoldiers} sends it to the cursor, F6 opens its panel.");
                 // A troop ship's cargo is shown only as pictures of the units on board.
                 string cargo = null;
@@ -1089,8 +1093,37 @@ namespace KCAccess.Game
             var b = ui.highlightBuilding;
             if (target == null && b != null && b.TeamID() != 0)
                 target = World.inst.RelationBetween(0, b.TeamID()) == World.Relations.Enemy ? Loc.F("Attacking {0}", CellInfo.BuildingSummary(b, brief: true)) : Loc.F("Going to {0}", CellInfo.BuildingSummary(b, brief: true));
+            // Boarding: soldiers go onto a troop ship when the order points at it. The game takes the ship from what the
+            // pointer hovers (nothing while the mouse rests over a panel): take your troop ship on the cursor tile.
+            // A troop ship with units on board unloads them when sent onto land or a road over water.
+            TroopTransportShip boardShip = null;
+            bool carriable = false, unloading = false;
+            foreach (var s in ui.selectedObjs)
+            {
+                var mu = ui.GetUnitFromSelectable(s);
+                if (mu == null) continue;
+                if (mu.CanBeCarried()) carriable = true;
+                if (mu is TroopTransportShip loaded && loaded.TeamID() == 0 && loaded.CarryCount() > 0
+                    && (cell.Type != ResourceType.Water || cell.StructureCompareCategoryNameAll(World.pathHash))) unloading = true;
+            }
+            if (carriable)
+            {
+                foreach (var h in ui.highlightedObjs) if (h is TroopTransportShip hs && hs.TeamID() == 0 && !ui.IsSelected(hs)) boardShip = hs;
+                if (boardShip == null && ShipSystem.inst != null)
+                {
+                    var ships = ShipSystem.inst.ships;
+                    for (int i = 0; i < ships.Count && boardShip == null; i++)
+                        if (ships.data[i] is TroopTransportShip ts && ts.TeamID() == 0 && !ui.IsSelected(ts) && Near(ts.GetPos(), cell)) boardShip = ts;
+                    if (boardShip != null) ui.highlightedObjs.Add(boardShip);
+                }
+            }
+            bool full = boardShip != null && (boardShip.IsPendingFullCapacity() || boardShip.IsFullCapacity());
             ui.MoveUnitsToPosition(cell.Center);
             A.Cue(Cue.Activate);
+            if (boardShip != null) target = full
+                ? Loc.F("{0} is full", TextUtil.Capitalize(CellInfo.WithoutSelected(CellInfo.ShipName(boardShip))))
+                : Loc.F("Boarding {0}", CellInfo.WithoutSelected(CellInfo.ShipName(boardShip)));
+            else if (target == null && unloading) target = Loc.F("Unloading at {0}", cursor.Pos);
             A.Say(target ?? Loc.F("Moving to {0}", cursor.Pos));
         }
 
@@ -1215,7 +1248,53 @@ namespace KCAccess.Game
                 string fp = FootprintProblems();
                 if (fp.Length > 0) text += ", " + fp;
             }
+            if (r == PlacementValidationResult.OutpostTooFarFromSeedShip)
+            {
+                var near = NearestOutpostTile(out _);
+                if (near.HasValue) text += ". " + Loc.F("Nearest unclaimed land in reach: {0}", Directions.Relative(cursor.Pos, near.Value));
+            }
             return text;
+        }
+
+        /// <summary>
+        /// An outpost from an exploration ship's Settle goes on unclaimed flat land within the ship's reach: every tile it
+        /// covers (World.CanPlace: OutpostTooFarFromSeedShip). The cursor spot nearest to the cursor where the whole
+        /// outpost fits, and the reach in tiles.
+        /// </summary>
+        private GridPos? NearestOutpostTile(out int reach)
+        {
+            reach = 0;
+            var held = GameUI.inst.CurrPlacementMode.GetHoverBuilding();
+            var outpost = held != null ? held.GetComponent<Outpost>() : null;
+            if (outpost == null || outpost.seedShip == null) return null;
+            reach = outpost.placementRadius;
+            int sx = Mathf.Max(1, Mathf.RoundToInt(held.size.x)), sz = Mathf.Max(1, Mathf.RoundToInt(held.size.z));
+            if (Mathf.RoundToInt(held.transform.eulerAngles.y / 90f) % 2 != 0) { int t = sx; sx = sz; sz = t; }
+            var w = World.inst;
+            Vector3 sp = outpost.seedShip.GetPos();
+            int r = reach;
+            bool Fits(int x, int z)
+            {
+                var c = w.GetCellData(x, z);
+                if (c == null || c.Type != ResourceType.None || c.landMassIdx < 0 || World.GetLandmassOwner(c.landMassIdx) != null) return false;
+                if (c.OccupyingStructure.Count > 0 || c.TreeAmount > 0) return false;
+                float dx = x + 0.5f - sp.x, dz = z + 0.5f - sp.z;
+                return dx * dx + dz * dz <= r * r;
+            }
+            GridPos? best = null;
+            double bestD = double.MaxValue;
+            for (int z = (int)sp.z - reach; z <= (int)sp.z + reach; z++)
+                for (int x = (int)sp.x - reach; x <= (int)sp.x + reach; x++)
+                {
+                    bool ok = true;
+                    for (int fz = 0; fz < sz && ok; fz++)
+                        for (int fx = 0; fx < sx && ok; fx++)
+                            ok = Fits(x + fx, z + fz);
+                    if (!ok) continue;
+                    double d = Directions.Euclid(cursor.Pos, new GridPos(x, z));
+                    if (d < bestD) { bestD = d; best = new GridPos(x, z); }
+                }
+            return best;
         }
 
         private string lastPlacedName;
@@ -1298,6 +1377,11 @@ namespace KCAccess.Game
                         UpdatePointer(follow: true);
                         string size = hover != null && (hover.size.x > 1 || hover.size.z > 1) ? " " + Loc.F("The cursor is the south west corner, the building covers {0} by {1} tiles.", (int)hover.size.x, (int)hover.size.z) : string.Empty;
                         A.SayQueued(Loc.F("Placing {0}.", name) + size + " " + Loc.T("Move with arrows, Enter to build, R to rotate, Escape to cancel."));
+                        // An exploration ship's outpost: only the reach circle around the ship shows where it may go.
+                        var outpostNear = NearestOutpostTile(out int reach);
+                        if (reach > 0)
+                            A.SayQueued(Loc.F("It goes on unclaimed flat land within {0} tiles of your exploration ship.", reach) + " "
+                                + (outpostNear.HasValue ? Loc.F("Nearest: {0}.", Directions.Relative(cursor.Pos, outpostNear.Value)) : Loc.T("There is no free unclaimed land in reach.")));
                         if (CastleStacker.IsCastleBlock(hover) && Stacker.Setting.Levels > 1)
                             A.SayQueued(KeyHelp.Resolve(Loc.P(Stacker.Setting.Levels, "{0} level with each placement; {StackMore} and {StackLess} change it.", "{0} levels with each placement; {StackMore} and {StackLess} change it.")));
                     }

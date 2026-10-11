@@ -36,7 +36,7 @@ namespace KCAccess.Core
             s = s.Replace(":.", ":").Replace("!.", "!").Replace("?.", "?").Replace(",.", ",");
             s = Spaces.Replace(s, " ");
             s = s.Trim();
-            if (s.StartsWith(".")) s = s.Substring(1).TrimStart();
+            if (s.StartsWith(".", System.StringComparison.Ordinal)) s = s.Substring(1).TrimStart();
             return s;
         }
 
@@ -45,7 +45,7 @@ namespace KCAccess.Core
         {
             if (string.IsNullOrEmpty(sprite)) return string.Empty;
             string n = sprite.ToLowerInvariant();
-            if (n.StartsWith("icon_")) n = n.Substring(5);
+            if (n.StartsWith("icon_", System.StringComparison.Ordinal)) n = n.Substring(5);
             switch (n)
             {
                 case "magglass":

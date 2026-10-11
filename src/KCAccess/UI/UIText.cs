@@ -288,7 +288,7 @@ namespace KCAccess.UI
             if (string.IsNullOrEmpty(name)) return string.Empty;
             string n = name.Replace("(Clone)", "").Trim();
             if (DefaultNames.Contains(n)) return Unlabelled;
-            int paren = n.IndexOf(" (");
+            int paren = n.IndexOf(" (", System.StringComparison.Ordinal);
             if (paren > 0) n = n.Substring(0, paren);
             n = n.Replace("Button", "").Replace("Btn", "").Trim();
             if (n.Length == 0 || DefaultNames.Contains(n) || DefaultNames.Contains(TextUtil.Humanize(n))) return Unlabelled;
@@ -467,7 +467,7 @@ namespace KCAccess.UI
             var hook = go.GetComponent<TooltipHook>() ?? go.GetComponentInParent<TooltipHook>();
             if (hook == null || !hook.enabled) return null; // the game disables hooks whose tip no longer applies
             string tip = hook.toolTipText;
-            if (!TextUtil.HasContent(tip) || tip == "missing tip" || tip.StartsWith("<localization")) return null;
+            if (!TextUtil.HasContent(tip) || tip == "missing tip" || tip.StartsWith("<localization", System.StringComparison.Ordinal)) return null;
             return TextUtil.Clean(tip);
         }
 
@@ -478,7 +478,7 @@ namespace KCAccess.UI
         internal static TooltipHook IconTooltip(GameObject go)
         {
             var hook = go.GetComponent<TooltipHook>();
-            if (hook == null || !hook.enabled || !TextUtil.HasContent(hook.toolTipText) || hook.toolTipText == "missing tip" || hook.toolTipText.StartsWith("<localization")) return null;
+            if (hook == null || !hook.enabled || !TextUtil.HasContent(hook.toolTipText) || hook.toolTipText == "missing tip" || hook.toolTipText.StartsWith("<localization", System.StringComparison.Ordinal)) return null;
             if (!IsVisible(go)) return null;
             return VisibleTexts(go.transform).Count == 0 ? hook : null;
         }

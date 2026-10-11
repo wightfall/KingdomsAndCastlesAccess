@@ -344,6 +344,35 @@ namespace KCAccess
                             Plugin.Log.LogInfo("[dbg] army " + kind + " team " + team + (made != null ? " made at " + ap : " not made"));
                             break;
                         }
+                        case "fire":
+                        case "ogre":
+                        case "viking":
+                        {
+                            // Developer only: what the creative brushes Fire, Ogre and Viking / Elite Viking do at the cursor
+                            // ("viking elite"); raiders head for the building the creative menu would pick.
+                            var tp = Game.MapController.Inst.CursorPos;
+                            var tc = World.inst.GetCellData(tp.X, tp.Z);
+                            if (tc == null) break;
+                            var creative = CreativeModeOptions.inst;
+                            if (parts[0] == "fire")
+                            {
+                                var f = Assets.Code.FireManager.inst.StartFireAt(tc);
+                                Plugin.Log.LogInfo("[dbg] fire at " + tp + (f != null ? " started" : " did not start"));
+                                break;
+                            }
+                            IMoveableUnit raider = parts[0] == "ogre"
+                                ? RaiderSystem.inst.SpawnOgre(tc.Center, untracked: true)
+                                : RaiderSystem.inst.SpawnArmy(World.GetCellHeightPos(tc), parts.Length > 1 && parts[1] == "elite" ? UnitSystem.ArmyType.Elite : UnitSystem.ArmyType.Default, untracked: true);
+                            var goal = creative == null ? null : parts[0] == "ogre" ? creative.PickTargetForOgre(tc.landMassIdx) : creative.PickTargetForViking(tc.landMassIdx);
+                            if (raider != null && goal != null) OrdersManager.inst.MoveTo(raider, goal);
+                            Plugin.Log.LogInfo("[dbg] " + parts[0] + (raider != null ? " spawned at " + tp + (goal != null ? ", heading for " + goal.FriendlyName : string.Empty) : " not spawned"));
+                            break;
+                        }
+                        case "log":
+                            // Developer only: "log <text>" logs a kingdom notification with that text (as the game does).
+                            KingdomLog.TryLog("dbglog" + Time.frameCount, line.Substring(4), KingdomLog.LogStatus.Neutral, 0f);
+                            Plugin.Log.LogInfo("[dbg] logged [" + line.Substring(4) + "]");
+                            break;
                         case "nest":
                         {
                             // Developer only: "nest egg|hatch|mature|happy|bond" on the selected dragon nest (breeding stages, taming).
