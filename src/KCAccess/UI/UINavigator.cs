@@ -163,6 +163,8 @@ namespace KCAccess.UI
             focusRequest = match;
             focusRequestUntil = Time.unscaledTime + 3f;
             nextRefresh = 0f;
+            // The new focus speaks for the click; texts that appeared with it are not read on top.
+            textSnapshot = null;
         }
 
         public void Refresh(bool force = false)

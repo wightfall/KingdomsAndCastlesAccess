@@ -177,6 +177,15 @@ namespace KCAccess.UI
         /// <summary>
         /// The army panel (UnitUI): its tabs and its list of selected units are pictures only. Names them, or returns null.
         /// </summary>
+        /// <summary>The unit count text of a unit panel tab ("All", "Knights", "Transport ships" ...).</summary>
+        private static bool UnitTabCount(GameObject go)
+        {
+            var ui = UnitUI.inst;
+            if (ui == null || ui.tabRoot == null || go == null || go.name != "UnitCountText" || go.transform.parent == null) return false;
+            foreach (var root in ui.tabRoot) if (root != null && go.transform.parent == root.transform) return true;
+            return false;
+        }
+
         private static string UnitPanelItem(GameObject go)
         {
             var ui = UnitUI.inst;
@@ -309,6 +318,8 @@ namespace KCAccess.UI
         internal static bool Exclude(GameObject go)
         {
             if (DragonBondCaption(go)) return true;
+            // A unit panel tab with a button: the button names the tab and its count, the bare count is not needed.
+            if (UnitTabCount(go) && go.transform.parent.GetComponentInChildren<Button>() != null) return true;
             // Stockpile and dock order forms: the "current" and "desired" column captions; each row says both already.
             if ((go.name == "current" || go.name == "desired") && go.GetComponent<TMPro.TMP_Text>() != null && go.GetComponentInParent<ResourceOrderFormUI>() != null) return true;
             // Cargo amount rows (route stops, envoy gifts): the resource icon is a button that only focuses the field next to it.
@@ -653,7 +664,9 @@ namespace KCAccess.UI
             }
             if (item.IsControl && item.Control is Slider ns && NegotiationResource(ns) is string nres)
                 return Loc.F("{0} price, slider, {1}", nres, NegotiationValue(ns, false));
-            string unit = item.IsControl ? UnitPanelItem(item.Go) : null;
+            // Unit panel tabs: only "All" has a button; the others are a picture and a count clicked through an
+            // event trigger (Enter clicks them as a text).
+            string unit = item.IsControl || UnitTabCount(item.Go) ? UnitPanelItem(item.Go) : null;
             if (unit != null) return unit;
             if (item.IsControl && item.Go.GetComponentInParent<PersonListItemUI>() is PersonListItemUI pli && pli.MagGlass != null && item.Control == pli.MagGlass)
             {
