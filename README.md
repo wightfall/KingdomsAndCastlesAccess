@@ -126,7 +126,7 @@ replaces the mouse drag), Left / Right change the limit, from 0 up to the job po
 | Shift+Arrows | Move 5 tiles |
 | Ctrl+Arrows | Jump to the next tile that is different (edge of a forest, a building, water …) |
 | Enter | Select the building or tile under the cursor; while placing: build; in chop / demolish mode: apply |
-| Shift+Enter | While placing roads, walls or fields: set the start point, then Enter at the end point builds the whole line or area. In chop / demolish mode: mark one corner of an area. Otherwise: select soldiers, a siege catapult, your dragon, a ship (merchant ships open the trade window), a transport cart or a villager on the tile (press again to cycle) |
+| Shift+Enter | While placing roads, walls or fields: set the start point, then Enter at the end point builds the whole line or area. In chop / demolish mode: mark one corner of an area. Otherwise: select soldiers, a siege catapult, your dragon, a ship (merchant ships open the trade window; troop and exploration ships open their panel), a transport cart or a villager on the tile (press again to cycle) |
 | Ctrl+Shift+Enter | Add the soldiers (siege catapults, dragons) on the tile to the selection, so several armies move together with M |
 | I | Everything about the tile (terrain, fertility, road coverage, workers …) |
 | Shift+I | Details of the selected building |
@@ -144,7 +144,7 @@ replaces the mouse drag), Left / Right change the limit, from 0 up to the job po
 | End | Jump to the selected building |
 | Ctrl+Shift+1 … 9 | Store a bookmark at the cursor (saved per kingdom) |
 | Ctrl+1 … 9 | Jump to a bookmark |
-| Page Up / Page Down | Choose a scan category: your buildings, construction sites, your soldiers and ships (also siege catapults, your dragons and transport carts), alerts, problems (hungry, starving, plague, unpaid wages, homeless, rats, unburied dead, buildings that cannot work), threats (enemy armies and ships, viking siege catapults, wild dragons, ogres, fires, hunting wolves, wolf dens), stone, iron, open fertile land, forests, fresh water, fishing grounds, foreign kingdoms, special places |
+| Page Up / Page Down | Choose a scan category: your buildings, construction sites, your soldiers and ships (also siege catapults, your dragons and transport carts), alerts, problems (hungry, starving, plague, unpaid wages, homeless, rats, unburied dead, buildings that cannot work), threats (enemy armies and ships, viking siege catapults, wild dragons, ogres, fires, hunting wolves, wolf dens), stone, iron, open fertile land, forests, fresh water, fishing grounds, foreign kingdoms, islands (every island with its owner, size and whether it is explored), special places |
 | [ and ] | Choose the previous / next item of that category as the navigation target, nearest first (the list refreshes itself) |
 | N | Auto-walk the cursor to the target along a route villagers can walk (ends next to it if the target itself is blocked) |
 | Ctrl+N | Walk to the target in a straight line, over water and buildings |
@@ -155,7 +155,7 @@ replaces the mouse drag), Left / Right change the limit, from 0 up to the job po
 | Any arrow / Escape | Stop an auto-walk |
 | V | While placing: why the spot is (in)valid; for towers also their shooting range, which grows with every castle level they stand on |
 | Shift+Page Up / Shift+Page Down | Castle blocks (stone and wooden walls): build more / fewer levels on top of each other with each Enter or Shift+Enter line (1 to 10). The mod repeats the placement at the same tiles until the levels are built or the game refuses (for example wooden walls reach their height limit), then says how many levels and pieces were built. Enter or Escape stops early |
-| M | Send the selected soldiers (also siege catapults and your dragons) to the cursor; on a route stop in a ship or cart panel: move the stop to the cursor |
+| M | Send the selected soldiers (also siege catapults, your dragons, troop and exploration ships) to the cursor. With soldiers, settlers or an envoy selected and the cursor on your troop ship: board it. With a loaded troop ship selected and the cursor on land: unload there. On a route stop in a ship or cart panel: move the stop to the cursor |
 | Ctrl+E | Respond to the nearest alert (the game's exclamation marks): advisor news at the keep, a foreign envoy waiting to speak, a stopped transport cart, a ship needing orders |
 
 **Demolishing:** select a building and press Delete (or the panel's Demolish button), or turn on
@@ -177,6 +177,10 @@ unburied bodies, rats) are announced when they appear. Water tiles say how many 
 **Fishing grounds** category finds them for fishing huts, and O counts them. Sick villagers are mentioned
 on their tile and in the villager description. Heavy rain (farms may flood) and thunderstorms (fires) are
 announced, as are newly unlocked achievements. Stacked castle blocks are read as "stacked 4 high".
+
+**Fires** are announced when they break out in your kingdom ("Fire at Hovel", with the direction; the fire
+spreading to the next tiles is not repeated) and when the last one is out; the game itself only reports a
+building that burnt down. Fires are in the Threats category and in the notification history (L).
 
 ### Streaming
 
@@ -233,7 +237,15 @@ focus on the current language; Enter switches language, Escape closes the list.
 * **Feasts:** the food buttons say the feast and its cost ("Apple feast, costs 50 apples"); afterwards you
   hear how they liked it (their favourite food, one they dislike, or some of it).
 * **Army panel (F6 with soldiers selected):** the unit type tabs and the list of selected units are named
-  ("Siege catapults, 2, tab"); Enter on a unit shows its details.
+  ("Siege catapults, 2, tab"); Enter on a unit shows its details. **Settle** and **Disband** say how many
+  villagers the units became.
+* **Training:** the train buttons of the barracks, archer school, siege workshop, Hall of Diplomacy and the
+  keep (settlers) say what one squad costs and what is missing ("Each squad costs 17 villagers (have 5),
+  gold 34, armaments 17 (have 0)"), which the game shows only when hovering.
+* **Gifts (Hall of Diplomacy):** Make Gift opens a row of amount fields and starts on the first ("Wheat, edit,
+  0"); Enter, type the amount, Enter. Then the second Make Gift. Send an envoy to the hall with M: "Your envoy
+  picked up the gift: gold 10". The envoy's panel then shows the gift ("Gold, 10") and Drop Gift; take the
+  envoy to a foreign keep to hand it over.
 * **Research (Great Library):** select the library, F6, Research. Each technology reads its effect and
   gold cost, or "already researched"; Enter starts it, or tells you how much gold is missing. While research
   runs the window reads progress and years remaining.
@@ -251,6 +263,27 @@ coloured markers. With the mod:
    drop off nothing". Press **M** on a stop to move it to the cursor. The add buttons at the start and end of the
    list add stops, "Remove stop" deletes one, and the pick up / drop off check boxes choose the cargo; on a checked
    one, **Shift+Enter** opens the amounts again for changes.
+
+### Islands, exploration ships and settlers
+
+On maps with more than one island you can claim new islands:
+
+1. **Find islands:** the scanner category **Islands** lists every island ("unclaimed island, 1484 tiles,
+   unexplored, 43 tiles north east"); [ and ] choose one, \ jumps there.
+2. **Exploration Ship** (build menu, Maritime, next to water): select it with Shift+Enter (its panel opens),
+   put the cursor on or near the unclaimed island and press M. "Your exploration ship is in reach of unclaimed
+   land" tells when it is close enough.
+3. F6 into its panel and press **Settle**: you place an **Outpost**. You hear how far it may be from the ship and
+   the nearest spot where the whole outpost fits ("Nearest: 4 tiles west, 1 south"); V and the "too far" reason
+   repeat it. The outpost claims the island; name it in the kingdom overview (Island name). Messages about an
+   island without a name start with "Unnamed island".
+4. **Settlers:** once you have an outpost, the keep's panel can **Train Settlers**. Settlers (or soldiers) go
+   to another island on a **troop ship**: select them with Shift+Enter, put the cursor on your troop ship and
+   press M ("Boarding your troop ship", then "Your settlers boarded your troop ship, 1 of 3 places taken. The
+   ship is selected."). Put the cursor on land at the other island and press M ("Unloading at 108, 109"); when
+   they are ashore you hear "Your troop ship unloaded your settlers. They are selected." F6 and **Settle** turn
+   them into villagers of that island ("Settled: 16 new villagers").
+5. A troop ship's panel lists who is on board, each with a check box "Stays on the ship when it unloads".
 
 ### Happiness, health and building integrity maps
 
@@ -578,7 +611,11 @@ Project layout:
 
 Developer helpers: with `[Debug] CommandFile = true` in the config the mod reads test commands from
 `BepInEx\kcaccess_commands.txt` (`key DownArrow`, `key Return shift`, `nav`, `state`, `place`, `dump`),
-and Ctrl+Shift+F12 writes the live UI hierarchy to `BepInEx\kcaccess_ui_dump.txt`.
+and Ctrl+Shift+F12 writes the live UI hierarchy to `BepInEx\kcaccess_ui_dump.txt`. Commands that set up
+situations for testing at the cursor: `devbuild <name> [any] [clear]` (place a finished building), `army
+knight|archer|settler|envoy`, `dragon [mama]`, `nest egg|hatch|mature|happy|bond`, `fire`, `ogre`, `viking
+[elite]`, `plague [cure]`, `weather none|rain|heavy|storm|snow`, `twitch show|connect|vote <name> <n>|chat <name>
+<text>|end|hide` (Twitch voting without Twitch), `log <text>`, `threatyears`, `buildnow`, `tracespeech <words>`.
 
 ## License
 
