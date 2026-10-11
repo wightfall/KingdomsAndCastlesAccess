@@ -184,10 +184,10 @@ namespace KCAccess.Game
                     result.Add(Units_ArmyName(a));
                 }
             }
-            if (ShipSystem.inst != null)
+            if (ShipSystem.inst != null && ShipSystem.inst.unitPosGrid != null) // the grid is rebuilt for a few frames after a load
             {
                 var ships = ShipSystem.inst.GetShipsAt(c.x, c.z);
-                for (int i = 0; i < ships.Count; i++)
+                for (int i = 0; ships != null && i < ships.Count; i++)
                 {
                     var s = ships.data[i];
                     if (s == null) continue;
@@ -201,6 +201,7 @@ namespace KCAccess.Game
                 Vector3 p = m.GetPos();
                 if ((int)p.x == c.x && (int)p.z == c.z) result.Add(Loc.T("ogre"));
             }
+            foreach (var puppet in RestingDragons(c)) result.Add(UnitName(puppet) + ", " + Loc.T("resting"));
             if (DragonSpawn.inst != null)
             {
                 var dragons = DragonSpawn.inst.currentDragons;
@@ -253,6 +254,46 @@ namespace KCAccess.Game
 
         private static string Selected(ISelectable s) => GameUI.inst != null && s != null && GameUI.inst.IsSelected(s) ? SelectedSuffix : string.Empty;
 
+        /// <summary>
+        /// Dragons of the player's roosts that are not flying: on their roost or at a dragon bath, doctor or obstacle course.
+        /// The game selects them by their model (DragonPuppet). Those standing on this tile, or whose building covers it.
+        /// </summary>
+        internal static List<DragonPuppet> RestingDragons(Cell c)
+        {
+            var result = new List<DragonPuppet>();
+            if (c == null || Player.inst == null) return result;
+            try
+            {
+                var nests = Player.inst.GetBuildingList(World.dragonNestHash);
+                for (int n = 0; n < nests.Count; n++)
+                {
+                    var nest = nests.data[n] != null ? nests.data[n].GetComponent<DragonNest>() : null;
+                    if (nest == null || nest.slots == null) continue;
+                    foreach (var slot in nest.slots)
+                    {
+                        if (slot == null || !slot.hasDragon || slot.dController != null) continue;
+                        Building home = nest.b;
+                        GameObject model = slot.CurrPuppet;
+                        if (slot.currDockBuilding is DragonBuilding db)
+                        {
+                            home = db.b;
+                            model = db.CurrPuppet;
+                        }
+                        var puppet = model != null && model.activeInHierarchy ? model.GetComponent<DragonPuppet>() : null;
+                        if (puppet == null) continue;
+                        Vector3 p = puppet.transform.position;
+                        bool onTile = (int)p.x == c.x && (int)p.z == c.z;
+                        if (onTile || home != null && c.OccupyingStructure.Contains(home)) result.Add(puppet);
+                    }
+                }
+            }
+            catch (System.Exception e)
+            {
+                Plugin.Log.LogWarning("Resting dragons failed: " + e.Message);
+            }
+            return result;
+        }
+
         /// <summary>"your dragon" (from a dragon nest), "wild dragon" (an attacking one) or "enemy dragon".</summary>
         internal static string DragonName(Dragon d)
         {
@@ -275,7 +316,7 @@ namespace KCAccess.Game
                 case Dragon d: return DragonName(d);
                 case ShipBase s: return ShipName(s);
                 case SiegeMonster _: return Loc.T("ogre");
-                case DragonPuppet _: return Loc.T("your dragon");
+                case DragonPuppet p: return (p.dSlot != null && TextUtil.HasContent(p.dSlot.name) ? Loc.F("your dragon {0}", p.dSlot.name) : Loc.T("your dragon")) + Selected(p);
                 default: return Loc.T("unit");
             }
         }

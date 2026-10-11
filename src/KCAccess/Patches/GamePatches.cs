@@ -124,7 +124,11 @@ namespace KCAccess
             yield return AccessTools.Method(typeof(World), nameof(World.Generate));
         }
 
-        private static void Postfix() => GameEvents.WorldChanged = true;
+        private static void Postfix()
+        {
+            GameEvents.WorldChanged = true;
+            GameEvents.WorldChangedFrame = Time.frameCount;
+        }
     }
 
     // No hook on SaveLoadUI.ClickSaveItem: it only opens the "overwrite?" confirmation, so "Game saved" was spoken
@@ -485,6 +489,60 @@ namespace KCAccess
                 A.Say(msg + (string.IsNullOrEmpty(code) ? string.Empty : ". " + KCAccess.Core.Loc.F("Code: {0}", code)), force: true);
                 var ok = __instance.okayButton;
                 if (ok != null) AccessController.Inst.Nav.RequestFocus(g => g == ok.gameObject);
+            }
+            catch
+            {
+                // announcement only
+            }
+        }
+    }
+}
+
+namespace KCAccess
+{
+    /// <summary>Kingdom share, upload: "Take Picture" hides the window and shows only an Accept button over the map.</summary>
+    [HarmonyPatch(typeof(TourismModalUI), nameof(TourismModalUI.TakeScreenshot))]
+    internal static class Patch_TourismPicture
+    {
+        private static void Postfix()
+        {
+            A.Cue(KCAccess.Core.Cue.Open);
+            A.Say(KCAccess.Core.Loc.T("Picture mode: the map as the camera shows it now becomes your kingdom's picture. Accept Picture takes it."), force: true);
+        }
+    }
+
+    /// <summary>Kingdom share, visit: checking a code asks the server and answers seconds later, without a word.</summary>
+    [HarmonyPatch(typeof(TourismModalUI), nameof(TourismModalUI.LCodeExistence))]
+    internal static class Patch_TourismCodeChecked
+    {
+        private static void Postfix(bool exists)
+        {
+            // An unknown code is answered by the game's message pop-up (Patch_TourismPopup).
+            if (exists) A.Say(KCAccess.Core.Loc.T("Share code found, downloading the kingdom ..."), force: true);
+        }
+    }
+
+    [HarmonyPatch(typeof(TourismModalUI), nameof(TourismModalUI.LGetSaveData))]
+    internal static class Patch_TourismKingdomDownloaded
+    {
+        private static void Postfix(TourismModalUI __instance, bool success)
+        {
+            if (!success || AccessController.Inst == null) return; // the game shows an error pop-up
+            AccessController.Inst.StartCoroutine(Announce(__instance));
+        }
+
+        private static System.Collections.IEnumerator Announce(TourismModalUI ui)
+        {
+            // The kingdom's summary texts are set with TMP SetText, which shows in .text only after the next layout pass.
+            yield return null;
+            yield return null;
+            try
+            {
+                var option = ui.L_saveLoadOption;
+                string info = option != null ? UI.UIText.JoinTexts(UI.UIText.VisibleTexts(option.transform)) : null;
+                A.Cue(KCAccess.Core.Cue.Open);
+                A.Say(KCAccess.Core.TextUtil.Sentences(KCAccess.Core.Loc.T("Kingdom downloaded"), info, KCAccess.Core.Loc.T("Visit loads it.")), force: true);
+                AccessController.Inst?.Nav.RequestFocus(g => g.name == "Visit Button");
             }
             catch
             {

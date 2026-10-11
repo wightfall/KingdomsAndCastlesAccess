@@ -123,6 +123,14 @@ namespace KCAccess
                     if (ActiveMenu != null) ActiveMenu = null;
                 }
             }
+            else if (playing && Game.GameEvents.WorldChanged && !LoadSave.Loading && Time.frameCount > Game.GameEvents.WorldChangedFrame + 5)
+            {
+                // Another world loaded without leaving play mode: visiting a shared kingdom from the in-game share window
+                // (LoadSave.OpenSaveFromRepo). Without this the mod kept the previous kingdom's state and said nothing.
+                panel = null;
+                if (ActiveMenu != null) ActiveMenu = null;
+                Game.GameEvents.OnEnterPlayMode();
+            }
             if (playing)
             {
                 Game.GameEvents.Tick();

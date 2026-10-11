@@ -300,6 +300,9 @@ namespace KCAccess.UI
         /// <summary>Hide parts of composite rows; the row is represented by one control.</summary>
         internal static bool Exclude(GameObject go)
         {
+            if (DragonBondCaption(go)) return true;
+            // Cargo amount rows (route stops, envoy gifts): the resource icon is a button that only focuses the field next to it.
+            if (go.name == "icon" && go.GetComponent<Button>() != null && go.transform.parent != null && go.transform.parent.GetComponent<HoverHide>() != null) return true;
             // The fire risk bar is a picture with "Low" and "High" at its ends; the title row speaks the risk instead.
             var fire = go.GetComponentInParent<FireRiskUI>();
             if (fire != null && go.transform != fire.transform && go.name != "SummaryTitle") return true;
@@ -458,9 +461,35 @@ namespace KCAccess.UI
 
         /// <summary>
         /// A dragon's health, happiness and bond (dragon nest panel, army panel): what affects them is only in a tooltip the
-        /// panel draws itself on hover (an EventTrigger, no TooltipHook). Returns that text for those items, else null.
+        /// panel draws itself on hover (an EventTrigger, no TooltipHook). Returns the details of that text (below its title
+        /// line, which <see cref="Describe"/> uses as the label) for those items, else null.
         /// </summary>
-        internal static string ExtraTooltip(UIItem item)
+        internal static string ExtraTooltip(UIItem item) => DragonStat(item, out _, out string details) ? details : null;
+
+        /// <summary>
+        /// The tooltip of a dragon stat split into its title ("Health 86, Very Good", "Happiness 13 - Trending towards 40")
+        /// and the details below the separator line. False for other items.
+        /// </summary>
+        private static bool DragonStat(UIItem item, out string title, out string details)
+        {
+            title = details = null;
+            string text = DragonStatTooltip(item);
+            if (text == null) return false;
+            var lines = new List<string>();
+            foreach (var raw in text.Replace("\r", "").Split('\n'))
+            {
+                string l = TextUtil.Clean(raw).Trim();
+                if (l.Length == 0 || l.Trim('-').Length == 0) continue; // the "-----" separator
+                lines.Add(l);
+            }
+            if (lines.Count == 0) return false;
+            title = lines[0].Replace("- ", ", ").Replace(" ,", ",").TrimEnd(':', ' ');
+            lines.RemoveAt(0);
+            details = lines.Count > 0 ? TextUtil.Sentences(lines.ToArray()) : null;
+            return true;
+        }
+
+        private static string DragonStatTooltip(UIItem item)
         {
             if (item == null || item.Go == null) return null;
             try
@@ -505,9 +534,13 @@ namespace KCAccess.UI
                 if (which == 0) DragonNestUI.UpdateHealthTooltip(slot, rect, desc, warning, rect.position);
                 else if (which == 1) DragonNestUI.UpdateHappinessTooltip(slot, rect, desc, warning, rect.position);
                 else DragonNestUI.UpdateBondTooltip(slot, rect, desc, warning, rect.position);
-                string text = TextUtil.Sentences(desc.text, warning.enabled ? warning.text : null);
+                string text = desc.text;
+                if (warning.enabled && TextUtil.HasContent(warning.text)) text += "\n" + warning.text;
+                // A bonded dragon's tooltip ends with the mouse instructions; say the keys instead.
+                if (which == 2 && slot.isBonded)
+                    text += "\n" + KeyHelp.Resolve(Loc.T("Select the dragon with Shift Enter on its tile, move the cursor and press {MoveSoldiers} to send it there."));
                 hide();
-                return text.Length > 0 ? text : null;
+                return TextUtil.HasContent(text) ? text : null;
             }
             catch (System.Exception e)
             {
@@ -520,6 +553,21 @@ namespace KCAccess.UI
         {
             if (item == null || item.Go == null) return null;
             if (Game.Diplomacy.Describe(item) is string diplomacy) return diplomacy;
+            if (DragonRoostItem(item) is string roost) return roost;
+            // The army panel's instructions are for the mouse ("Right click to move/attack").
+            if (!item.IsControl && item.Go.name == "InstructionsText" && UnitUI.inst != null && item.Go.transform.IsChildOf(UnitUI.inst.transform))
+                return TextUtil.Sentences(UIText.JoinTexts(item.Texts), KeyHelp.Resolve(Loc.T("With the keyboard: move the cursor and press {MoveSoldiers}.")));
+            if (DragonStat(item, out string statTitle, out _)) return statTitle;
+            // Chamber of War: the hazard pay toggle only shows "4x".
+            var war = item.IsControl && GameUI.inst != null ? GameUI.inst.chamberOfWarUI : null;
+            if (war != null && war.hazardPayToggle != null && item.Control == war.hazardPayToggle)
+            {
+                var hp = war.hazardPayToggle;
+                return TextUtil.Join(", ", Loc.T("Hazard pay: soldiers are paid 4 times their wages"), Loc.T("check box"), hp.isOn ? Loc.T("checked") : Loc.T("not checked"),
+                    hp.interactable ? null : Loc.T("unavailable: it needs a fully staffed Chamber of War and 50 gold to start"));
+            }
+            if (war != null && war.progressBar != null && item.Control == war.progressBar)
+                return Loc.F("Hazard pay starting, {0}", TextUtil.Percent(war.progressBar.value));
             if (item.IsControl && ResourceAmountField(item.Control) is string amountField) return amountField;
             if (item.IsControl && ResourceToggle(item.Control, out var toggleName) is ResourceToggleButton rtb)
                 return toggleName + ", " + Loc.T("check box") + ", " + (rtb.State ? Loc.T("checked") : Loc.T("not checked"));
@@ -785,6 +833,48 @@ namespace KCAccess.UI
             if (town != null && s == town.cityNameInput) return Loc.T("Kingdom name");
             var region = s.GetComponentInParent<RegionNameUI>();
             if (region != null && s == region.regionNameInput) return Loc.T("Island name");
+            if (s.GetComponentInParent<DragonSlotUI>() is DragonSlotUI dragon && s == dragon.nameInput) return Loc.T("Dragon name");
+            return null;
+        }
+
+        /// <summary>A dragon's bond is a slider with two captions saying the same number: keep the slider.</summary>
+        private static bool DragonBondCaption(GameObject go)
+        {
+            var unit = UnitUI.inst;
+            if (unit != null && unit.dragonBondSlider != null && unit.dragonBondSlider.gameObject.activeInHierarchy
+                && (unit.dragonBondProgressTMP != null && go == unit.dragonBondProgressTMP.gameObject || unit.dragonBondTMP != null && go == unit.dragonBondTMP.gameObject))
+                return true;
+            var slotUI = go.GetComponentInParent<DragonSlotUI>();
+            return slotUI != null && slotUI.bondSlider != null && slotUI.bondSlider.gameObject.activeInHierarchy
+                   && (slotUI.bondProgressTMP != null && go == slotUI.bondProgressTMP.gameObject || slotUI.bondSliderTMP != null && go == slotUI.bondSliderTMP.gameObject);
+        }
+
+        /// <summary>
+        /// The dragon roost panel: per slot the gold pile buttons, the dragon's name field, its rename and release buttons
+        /// and the camera button carry only icons or the text next to them. Null for other items.
+        /// </summary>
+        private static string DragonRoostItem(UIItem item)
+        {
+            var ui = item.IsControl && GameUI.inst != null && GameUI.inst.workerUI != null ? GameUI.inst.workerUI.dragonNestUI : null;
+            if (ui == null || ui.slots == null || ui.dragonNest == null || !item.Go.transform.IsChildOf(ui.transform)) return null;
+            for (int i = 0; i < ui.slots.Length && i < ui.dragonNest.slots.Length; i++)
+            {
+                var s = ui.slots[i];
+                var slot = ui.dragonNest.slots[i];
+                if (s == null || slot == null) continue;
+                string shown = s.nameInput != null ? TextUtil.Clean(s.nameInput.text) : string.Empty;
+                if (s.dFocusUI != null && item.Control == s.dFocusUI.focusBtn)
+                    return slot.hasDragon ? Loc.F("{0}, button, the camera follows this dragon", slot.name) : Loc.F("Dragon slot {0}: {1}", i + 1, shown);
+                if (!item.Go.transform.IsChildOf(s.transform)) continue;
+                if (item.Control == s.unlockBtn)
+                    return TextUtil.Join(", ", Loc.F("Dragon slot {0}: add a gold pile, {1} gold, button", i + 1, DragonNest.DragonSlot.GoldPileCost),
+                        s.unlockBtn.interactable ? null : Loc.T("unavailable, not enough gold"));
+                if (item.Control == s.lockBtn) return Loc.F("Dragon slot {0}: remove the gold pile, the gold comes back, button", i + 1);
+                if (item.Control == s.selectNameBtn) return Loc.F("Rename {0}, button", slot.name);
+                if (item.Control == s.removeBtn) return Loc.F("Release {0}, button: the dragon leaves the roost", slot.name);
+                if (item.Control == s.nameInput)
+                    return slot.hasDragon && s.nameInput.interactable ? Loc.F("Dragon name, edit, {0}", shown) : Loc.F("Dragon slot {0}: {1}", i + 1, shown);
+            }
             return null;
         }
 

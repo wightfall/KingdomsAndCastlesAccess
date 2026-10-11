@@ -943,6 +943,9 @@ namespace KCAccess.Game
                 var d = dragons.data[i];
                 if (d != null && Near(d.transform.position, cell) && ui.IsUnitSelectable(d)) here.Add(d);
             }
+            // Your dragons resting on their roost or at a dragon building: the game selects their model.
+            foreach (var puppet in CellInfo.RestingDragons(cell))
+                if (ui.IsUnitSelectable(puppet)) here.Add(puppet);
             if (here.Count > 0)
             {
                 // Cycle through the units here on repeated presses; Control Shift Enter adds to the selection.
@@ -969,8 +972,12 @@ namespace KCAccess.Game
                 int selected = 0;
                 foreach (var s in ui.selectedObjs) if (s is IMoveableUnit) selected++;
                 string what = CellInfo.WithoutSelected(CellInfo.UnitName(unit));
-                A.Say((add ? Loc.P(selected, "Added {1}, {0} unit selected", "Added {1}, {0} units selected", what) : Loc.F("Selected {0}", what))
-                    + ". " + KeyHelp.Resolve(Loc.T("Move the cursor and press {MoveSoldiers} to send them there. F6 opens the army panel.")));
+                // A dragon follows orders only once it has bonded with the kingdom (DragonPuppet.MoveTo / Dragon).
+                var dragonSlot = unit is DragonPuppet dp ? dp.dSlot : unit is Dragon dr ? dr.currSlot : null;
+                string how = dragonSlot != null && !dragonSlot.isBonded
+                    ? Loc.T("It does not follow orders until it has bonded with your kingdom (its bond in the army panel). F6 opens the army panel.")
+                    : KeyHelp.Resolve(Loc.T("Move the cursor and press {MoveSoldiers} to send them there. F6 opens the army panel."));
+                A.Say((add ? Loc.P(selected, "Added {1}, {0} unit selected", "Added {1}, {0} units selected", what) : Loc.F("Selected {0}", what)) + ". " + how);
                 return;
             }
             if (add)

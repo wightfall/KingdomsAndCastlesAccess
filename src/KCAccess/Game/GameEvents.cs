@@ -18,6 +18,9 @@ namespace KCAccess.Game
         /// <summary>Set when a save is loaded or a map generated (Patch_WorldChanged); cleared on entering play.</summary>
         internal static bool WorldChanged;
 
+        /// <summary>The frame of the last load or generation: some systems (ships) finish setting up a few frames later.</summary>
+        internal static int WorldChangedFrame;
+
         internal static void OnEnterPlayMode()
         {
             lastSeason = null;
