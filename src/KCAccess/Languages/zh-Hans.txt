@@ -577,6 +577,7 @@ A slider or value changed; the pitch follows the value = 滑块或数值已改�
 Target beacon: left or right ear for west or east, higher pitch north, lower south, faster when closer = 目标信标：左耳或右耳表示西或东，音高越高越靠北，越低越靠南，越近越快
 One step of an auto walk = 自动行走的一步
 Mod settings. Up and Down move, Page Up and Page Down jump between groups, Enter or Space toggles, Left and Right change values, Enter on a key changes it, Escape closes = 模组设置。上下方向键移动，Page Up 和 Page Down 在分组之间跳转，Enter 或空格键切换，左右方向键更改数值，在按键上按 Enter 更改按键，Esc 关闭
+Game texts in the mod language too, where its game text file translates them = 游戏文本也使用模组语言（该语言的游戏文本文件中已翻译的部分）
 Speech = 语音
 Announce notifications = 播报通知
 Announce seasons and new years = 播报季节和新年

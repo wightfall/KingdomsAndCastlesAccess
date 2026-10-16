@@ -15,7 +15,7 @@ namespace KCAccess
     {
         public const string Guid = "kcaccess.screenreader";
         public const string Name = "KCAccess";
-        public const string Version = "1.15.0";
+        public const string Version = "1.16.0";
 
         internal static Plugin Instance;
 
@@ -49,6 +49,7 @@ namespace KCAccess
         internal static ConfigEntry<bool> CfgCaptions;
         internal static ConfigEntry<bool> CfgStreamFile;
         internal static ConfigEntry<string> CfgLanguage;
+        internal static ConfigEntry<bool> CfgGameTexts;
 
         /// <summary>The mod's key bindings (rebindable in the mod settings, Ctrl+Shift+O).</summary>
         internal static readonly KCAccess.Core.Bindings Keys = new KCAccess.Core.Bindings();
@@ -85,8 +86,12 @@ namespace KCAccess
             CfgLogSpeech = Config.Bind("Speech", "LogSpeech", true, "Write everything spoken to the BepInEx log (useful for bug reports).");
             CfgLanguage = Config.Bind("Language", "Language", "auto", "Language the mod speaks: auto follows the game's language (English when there is no file for it), en is English, any other value is the name of a file in BepInEx/plugins/KCAccess/Languages without .txt, for example th. Easier to change in the game: Ctrl+Shift+O.");
 
+            CfgGameTexts = Config.Bind("Language", "GameTexts", true, "Show and read the game's own texts (menus, tooltips, buildings, events) in the mod's language when Languages/game/<code>.txt translates them; texts without a translation stay in the game's language.");
+
             string pluginDir = Path.GetDirectoryName(Info.Location);
             Loc.Use(null);
+            GameTextTranslation.Init(pluginDir);
+            CfgGameTexts.SettingChanged += (s, e) => GameTextTranslation.Use(ModLanguage.ActiveCode);
             ModLanguage.Init(pluginDir);
             prism = new PrismSpeech();
             Prism = prism;

@@ -577,6 +577,7 @@ A slider or value changed; the pitch follows the value = Zmienił się suwak lub
 Target beacon: left or right ear for west or east, higher pitch north, lower south, faster when closer = Sygnał celu: lewe lub prawe ucho to zachód lub wschód, wyższy ton północ, niższy południe, szybciej im bliżej
 One step of an auto walk = Jeden krok automatycznego marszu
 Mod settings. Up and Down move, Page Up and Page Down jump between groups, Enter or Space toggles, Left and Right change values, Enter on a key changes it, Escape closes = Ustawienia moda. Strzałki w górę i w dół przechodzą, Page Up i Page Down skaczą między grupami, Enter lub Spacja przełącza, strzałki w lewo i w prawo zmieniają wartości, Enter na klawiszu go zmienia, Escape zamyka
+Game texts in the mod language too, where its game text file translates them = Teksty gry także w języku moda, tam gdzie jego plik tekstów gry je tłumaczy
 Speech = Mowa
 Announce notifications = Ogłaszaj powiadomienia
 Announce seasons and new years = Ogłaszaj pory roku i nowe lata

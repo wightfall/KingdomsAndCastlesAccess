@@ -42,5 +42,10 @@
       <LanguageFile Include="$(MSBuildThisFileDirectory)Languages\retired.keys" />
     </ItemGroup>
     <Copy SourceFiles="@(LanguageFile)" DestinationFolder="$(BepInExDir)\plugins\KCAccess\Languages\default" />
+    <!-- Translations of the game's own texts go to Languages\game\default the same way. -->
+    <ItemGroup>
+      <GameTextFile Include="$(MSBuildThisFileDirectory)Languages\game\*.txt" />
+    </ItemGroup>
+    <Copy SourceFiles="@(GameTextFile)" DestinationFolder="$(BepInExDir)\plugins\KCAccess\Languages\game\default" />
   </Target>
 </Project>

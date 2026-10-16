@@ -577,6 +577,7 @@ A slider or value changed; the pitch follows the value = Cambió un control desl
 Target beacon: left or right ear for west or east, higher pitch north, lower south, faster when closer = Baliza del objetivo: oído izquierdo o derecho para oeste o este, tono más agudo al norte, más grave al sur, más rápido cuanto más cerca
 One step of an auto walk = Un paso de una caminata automática
 Mod settings. Up and Down move, Page Up and Page Down jump between groups, Enter or Space toggles, Left and Right change values, Enter on a key changes it, Escape closes = Ajustes del mod. Arriba y abajo se mueven, Re Pág y Av Pág saltan entre grupos, Intro o Espacio activa o desactiva, izquierda y derecha cambian valores, Intro sobre una tecla la cambia, Escape cierra
+Game texts in the mod language too, where its game text file translates them = Textos del juego también en el idioma del mod, donde su archivo de textos del juego los traduzca
 Speech = Voz
 Announce notifications = Anunciar notificaciones
 Announce seasons and new years = Anunciar estaciones y años nuevos

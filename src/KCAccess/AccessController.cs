@@ -84,6 +84,7 @@ namespace KCAccess
             try
             {
                 ModLanguage.Tick();
+                GameTextTranslation.Tick();
                 Tick();
             }
             catch (Exception e)

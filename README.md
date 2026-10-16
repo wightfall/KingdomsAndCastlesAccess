@@ -19,6 +19,9 @@ SAPI and other screen readers automatically.
   a route villagers can walk (N), walk in a straight line, jump, or follow a stereo **audio beacon**.
 * **O** surveys the area around the cursor (fertile soil, forest, stone, iron, water) to choose where to build.
 * **F1** on every screen tells you what you can do there.
+* The mod speaks 19 languages, and the game's own texts (menus, windows, tooltips, buildings, events, places,
+  diplomacy dialogue) can be translated for languages the game lacks: **Thai** is shipped complete, see
+  [Translating the game's own texts](#translating-the-games-own-texts).
 * Procedurally generated sound cues (no audio files needed).
 
 ## Installation
@@ -411,7 +414,9 @@ Everything about the mod can be changed in the game, from any screen. Up and Dow
 Page Down jump between the groups (you hear when you reach the first or last group):
 
 * **Language:** the language the mod speaks (Left / Right: Automatic, English and every language file, see
-  [Languages](#languages)). It changes right away and is said in the new language.
+  [Languages](#languages)). It changes right away and is said in the new language. Below it, **game texts in
+  the mod language too** (on by default): the game's own texts also appear in the mod's language where that
+  language has a game text file (see [Translating the game's own texts](#translating-the-games-own-texts)).
 * **Speech:** announce notifications, announce seasons and new years, detailed tile descriptions while
   moving, speak coordinates after each tile, hints for new players, and **say the position in menus
   and lists** ("Load, 4 of 19"; off by default, F5 always says it).
@@ -433,8 +438,9 @@ Settings are saved in `BepInEx\config\kcaccess.screenreader.cfg` right away.
 ## Languages
 
 Everything the mod itself says (help, key list, tile descriptions, menus, settings, notifications it builds and
-the setup program) can be translated. Names and texts that come from the game, such as building names, stay in
-the game's own language. Shipped, all complete: every language the game has (German, French, Simplified and
+the setup program) can be translated. Texts that come from the game itself (menus, windows, building names,
+events, dialogue) are in the game's language, unless the mod's language also has a game text file (see
+[Translating the game's own texts](#translating-the-games-own-texts)). Shipped, all complete: every language the game has (German, French, Simplified and
 Traditional Chinese, Dutch, Japanese, Romanian, Portuguese (Brazil), Spanish, Korean, Italian, Polish, Russian,
 Norwegian, Ukrainian, Swedish, Turkish) and **Thai**. The files are sorted into sections by topic ("Map, tiles and
 cursor", "Building and castle walls", "Setup program" ...), so a text is easy to find.
@@ -493,6 +499,32 @@ goes through `Loc.T("English")`, `Loc.F("{0} tiles", n)`, `Loc.P(n, "{0} tree", 
 same order, and a unit test fails when a text is missing from the template or a language file has unknown keys
 or wrong placeholders.
 
+### Translating the game's own texts
+
+The game translates its own texts (menus, windows, tooltips, building names and descriptions, events and
+notifications, place names, the diplomacy dialogue) into its 17 languages. For any other language the mod can
+show and read them as well, from a **game text file**: `Languages\game\<code>.txt`, with the same code as the
+mod's language file (`th.txt` for Thai). **Thai is shipped complete**: 2890 of the game's 2937 texts, the rest
+being names, credits and font names that stay as they are.
+
+* A game text file is **optional**, and so is every line in it: a text without a translation stays in the
+  game's own language. A new language can start with the mod's file alone and add game texts later, a few at a
+  time.
+* The mod uses the game text file of the language it speaks. Mod settings (Ctrl+Shift+O), **Game texts in the
+  mod language too**, switches this off and on (config `Language / GameTexts`).
+* Each line is `term = translation`, with the game's English text above it as a `# English:` comment. Keep
+  `{0}`, `{[NAME]}`, `<sprite ...>` and `[var=Var1]` exactly as they are: the game fills them in. A translation
+  that changes them is ignored and noted in the BepInEx log. `\n` is a line break.
+* To start one, copy `Languages\game\template.txt` (every game text with its English, written from your installed
+  game each time the mod starts) to `<code>.txt`, write the language's name after `# Language:` and translate
+  what you like. While the mod speaks that language it checks the file every 2 seconds: save it and the game's
+  texts change right away.
+* Updates keep your changes as with the mod's own files: the shipped files are in `Languages\game\default`; texts
+  you changed stay yours, the others get the new shipped translation, and texts a game update adds appear in your
+  file with their English.
+* The game's font has no Thai letters, so Thai game texts are drawn as boxes on screen; the screen reader reads
+  them correctly. Names stored in a saved game (your kingdom, a building you renamed) stay as they were saved.
+
 ## Sound cues
 
 Every sound can be previewed: Shift+F1, End, then Up through the sounds and press Enter.
@@ -531,6 +563,7 @@ Every sound can be previewed: Shift+F1, End, then Up through the sounds and pres
 | Speech / AnnounceSeasons | true | Speak the start of every summer, winter and new year (and heavy rain / thunderstorms) |
 | Speech / Hints | true | Short hints for new players |
 | Language / Language | auto | Language the mod speaks: `auto` follows the game, `en` English, or a file name in `Languages` such as `th` |
+| Language / GameTexts | true | Show and read the game's own texts in the mod's language where `Languages\game\<code>.txt` translates them |
 | Speech / SayPositions | false | Say the position after each item in menus and lists ("3 of 19") |
 | Keyboard / Bindings | (empty) | Changed mod keys, easier to change in the game with Ctrl+Shift+O |
 | Keyboard / ControllerSupport | true | Gamepad support through the mod (off: the game's own controller mode) |

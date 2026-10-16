@@ -47,6 +47,7 @@ namespace KCAccess.Game
             ModLanguage.Refresh();
             Header(Loc.N("Language"));
             Number(LanguageLabel, ChangeLanguage, enter: true);
+            Toggle(Loc.N("Game texts in the mod language too, where its game text file translates them"), Plugin.CfgGameTexts);
             Header(Loc.N("Speech"));
             Toggle(Loc.N("Announce notifications"), Plugin.CfgAnnounceLog);
             Toggle(Loc.N("Announce seasons and new years"), Plugin.CfgAnnounceSeasons);

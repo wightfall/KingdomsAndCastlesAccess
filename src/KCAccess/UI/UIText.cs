@@ -19,10 +19,10 @@ namespace KCAccess.UI
         {
             if (c is TMP_Text tmp)
             {
-                // SetText(format, number) – used for most counters in this game – does not update .text,
-                // so prefer what is actually rendered unless the text contains inline sprites (lost when parsed).
-                string raw = tmp.text;
-                if (raw == null || raw.IndexOf("<sprite", System.StringComparison.OrdinalIgnoreCase) < 0)
+                // Prefer what is actually rendered, unless the text contains inline sprites (lost when parsed) or
+                // changed since it was last drawn (a window's first frame still has the text it was drawn with before).
+                string raw = SourceText(tmp);
+                if ((raw == null || raw.IndexOf("<sprite", System.StringComparison.OrdinalIgnoreCase) < 0) && !tmp.havePropertiesChanged)
                 {
                     string parsed = null;
                     try
@@ -40,6 +40,42 @@ namespace KCAccess.UI
             }
             if (c is Text t) return t.text;
             return null;
+        }
+
+        private static readonly System.Reflection.FieldInfo InputSource = typeof(TMP_Text).GetField("m_inputSource", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        private static readonly System.Reflection.FieldInfo Backing = typeof(TMP_Text).GetField("m_TextBackingArray", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        private static readonly System.Reflection.FieldInfo BackingArray = Backing != null ? Backing.FieldType.GetField("m_Array", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance) : null;
+
+        /// <summary>
+        /// The text a TextMeshPro component was last given. SetText(format, number) – used for most counters in this
+        /// game – writes into an internal array; .text returns that only on its first read and the old text after,
+        /// and the rendered text has boxes for letters its font lacks (translated game texts in Thai). Read the array.
+        /// </summary>
+        private static string SourceText(TMP_Text tmp)
+        {
+            try
+            {
+                if (InputSource != null && BackingArray != null && System.Convert.ToInt32(InputSource.GetValue(tmp)) is int source && (source == 1 || source == 2))
+                {
+                    var array = (uint[])BackingArray.GetValue(Backing.GetValue(tmp));
+                    if (array != null)
+                    {
+                        var sb = new System.Text.StringBuilder(array.Length);
+                        foreach (uint u in array)
+                        {
+                            if (u == 0) break;
+                            if (u < 0x10000) sb.Append((char)u);
+                            else sb.Append(char.ConvertFromUtf32((int)u));
+                        }
+                        return sb.ToString();
+                    }
+                }
+            }
+            catch
+            {
+                // another TextMeshPro version: its .text
+            }
+            return tmp.text;
         }
 
         internal static bool IsTextComponent(Component c) => c is TMP_Text || c is Text;

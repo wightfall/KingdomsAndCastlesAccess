@@ -577,6 +577,7 @@ A slider or value changed; the pitch follows the value = Un glisor sau o valoare
 Target beacon: left or right ear for west or east, higher pitch north, lower south, faster when closer = Semnalul țintei: urechea stângă sau dreaptă pentru vest sau est, ton mai înalt nord, mai jos sud, mai rapid când e mai aproape
 One step of an auto walk = Un pas al deplasării automate
 Mod settings. Up and Down move, Page Up and Page Down jump between groups, Enter or Space toggles, Left and Right change values, Enter on a key changes it, Escape closes = Setările modului. Sus și jos mută, Page Up și Page Down sar între grupuri, Enter sau Spațiu comută, stânga și dreapta schimbă valorile, Enter pe o tastă o schimbă, Escape închide
+Game texts in the mod language too, where its game text file translates them = Textele jocului și în limba modului, acolo unde fișierul său cu textele jocului le traduce
 Speech = Vorbire
 Announce notifications = Anunță notificările
 Announce seasons and new years = Anunță anotimpurile și anii noi

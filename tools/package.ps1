@@ -33,6 +33,10 @@ $langDefault = Join-Path $plugin "Languages\default"
 New-Item -ItemType Directory -Force $langDefault | Out-Null
 Copy-Item (Join-Path $root "src\KCAccess\Languages\*.txt"), (Join-Path $root "src\KCAccess\Languages\retired.keys") $langDefault
 if (-not (Test-Path (Join-Path $langDefault "template.txt"))) { throw "Language files missing" }
+# Translations of the game's own texts (the mod writes their template from the installed game).
+$gameDefault = Join-Path $plugin "Languages\game\default"
+New-Item -ItemType Directory -Force $gameDefault | Out-Null
+Copy-Item (Join-Path $root "src\KCAccess\Languages\game\*.txt") $gameDefault
 $lic = Join-Path $plugin "licenses\prism"
 New-Item -ItemType Directory -Force $lic | Out-Null
 Copy-Item -Recurse (Join-Path $root "lib\prism\licenses\*") $lic

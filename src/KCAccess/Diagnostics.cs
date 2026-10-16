@@ -86,6 +86,7 @@ namespace KCAccess
                 if (c is Text txt) sb.Append(" \"").Append(Short(txt.text)).Append('"');
                 else if (c is TMP_Text tmp) sb.Append(" \"").Append(Short(tmp.text)).Append('"');
                 else if (c is Selectable sel) sb.Append(sel.interactable ? "" : " disabled");
+                else if (c is I2.Loc.Localize loc) sb.Append(" term=\"").Append(loc.mTerm).Append('"').Append(loc.enabled ? "" : " off");
                 else if (c is Behaviour b && !b.enabled) sb.Append(" off");
                 sb.Append('>');
             }
@@ -461,6 +462,20 @@ namespace KCAccess
                         case "convo":
                             // Developer only: start a diplomacy conversation by name (TradeMenuAI, AIGift, GoldDemand ...).
                             if (GameUI.inst.diplomacyUI.Visible() && parts.Length > 1) GameUI.inst.diplomacyUI.StartConvo(parts[1]);
+                            break;
+                        case "dialogue":
+                            // Developer only: the current dialogue line and responses with their conversation and entry ids and fields.
+                            var dlgState = PixelCrushers.DialogueSystem.DialogueManager.currentConversationState;
+                            if (dlgState == null) { Plugin.Log.LogInfo("[dbg] no conversation"); break; }
+                            var dlgEntries = new System.Collections.Generic.List<PixelCrushers.DialogueSystem.DialogueEntry>();
+                            if (dlgState.subtitle != null && dlgState.subtitle.dialogueEntry != null) dlgEntries.Add(dlgState.subtitle.dialogueEntry);
+                            if (dlgState.pcResponses != null) foreach (var r in dlgState.pcResponses) if (r.destinationEntry != null) dlgEntries.Add(r.destinationEntry);
+                            foreach (var de in dlgEntries)
+                            {
+                                var fsb = new StringBuilder("[dbg] entry " + de.conversationID + "/" + de.id + ":");
+                                foreach (var f in de.fields) if (f != null && !string.IsNullOrEmpty(f.value)) fsb.Append(" [").Append(f.title).Append("=").Append(Short(f.value)).Append(']');
+                                Plugin.Log.LogInfo(fsb.ToString());
+                            }
                             break;
                         case "standing":
                             // Developer only: raise (or lower) the visited kingdom's opinion of the player.

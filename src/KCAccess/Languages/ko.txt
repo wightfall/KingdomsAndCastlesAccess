@@ -577,6 +577,7 @@ A slider or value changed; the pitch follows the value = 슬라이더나 값이 
 Target beacon: left or right ear for west or east, higher pitch north, lower south, faster when closer = 목표 비콘: 서쪽은 왼쪽 귀, 동쪽은 오른쪽 귀, 북쪽은 높은 음, 남쪽은 낮은 음, 가까울수록 빨라짐
 One step of an auto walk = 자동 걷기의 한 걸음
 Mod settings. Up and Down move, Page Up and Page Down jump between groups, Enter or Space toggles, Left and Right change values, Enter on a key changes it, Escape closes = 모드 설정. 위/아래로 이동, Page Up과 Page Down으로 그룹 사이 이동, Enter 또는 스페이스로 전환, 왼쪽/오른쪽으로 값 변경, 키에서 Enter로 키 변경, Escape로 닫기
+Game texts in the mod language too, where its game text file translates them = 게임 텍스트도 모드 언어로 (해당 언어의 게임 텍스트 파일에 번역이 있는 경우)
 Speech = 음성
 Announce notifications = 알림 안내
 Announce seasons and new years = 계절과 새해 안내

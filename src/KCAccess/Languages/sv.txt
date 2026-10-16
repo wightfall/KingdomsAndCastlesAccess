@@ -577,6 +577,7 @@ A slider or value changed; the pitch follows the value = Ett reglage eller värd
 Target beacon: left or right ear for west or east, higher pitch north, lower south, faster when closer = Målfyr: vänster eller höger öra för väst eller öst, högre ton norr, lägre söder, snabbare när det är närmare
 One step of an auto walk = Ett steg av automatisk gång
 Mod settings. Up and Down move, Page Up and Page Down jump between groups, Enter or Space toggles, Left and Right change values, Enter on a key changes it, Escape closes = Modinställningar. Upp och ner flyttar, Page Up och Page Down hoppar mellan grupper, Enter eller Mellanslag växlar, vänster och höger ändrar värden, Enter på en tangent ändrar den, Escape stänger
+Game texts in the mod language too, where its game text file translates them = Speltexter också på modens språk, där språkets speltextfil översätter dem
 Speech = Tal
 Announce notifications = Läs upp aviseringar
 Announce seasons and new years = Meddela årstider och nya år

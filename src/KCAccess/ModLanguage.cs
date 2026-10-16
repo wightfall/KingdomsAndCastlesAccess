@@ -124,6 +124,7 @@ namespace KCAccess
         private static void Load(string code)
         {
             activeCode = code;
+            GameTextTranslation.Use(code);
             if (code == null || files == null)
             {
                 Loc.Use(null);

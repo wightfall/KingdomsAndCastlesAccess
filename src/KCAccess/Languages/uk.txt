@@ -577,6 +577,7 @@ A slider or value changed; the pitch follows the value = Змінився пов
 Target beacon: left or right ear for west or east, higher pitch north, lower south, faster when closer = Маяк цілі: ліве або праве вухо для заходу чи сходу, вищий звук на північ, нижчий на південь, частіше при наближенні
 One step of an auto walk = Один крок автоматичної ходьби
 Mod settings. Up and Down move, Page Up and Page Down jump between groups, Enter or Space toggles, Left and Right change values, Enter on a key changes it, Escape closes = Налаштування мода. Вгору і вниз — переміщення, Page Up і Page Down — перехід між групами, Enter або Пробіл перемикає, вліво і вправо змінюють значення, Enter на клавіші змінює її, Escape закриває
+Game texts in the mod language too, where its game text file translates them = Тексти гри теж мовою мода, де їх перекладає її файл текстів гри
 Speech = Мовлення
 Announce notifications = Оголошувати сповіщення
 Announce seasons and new years = Оголошувати сезони й новий рік

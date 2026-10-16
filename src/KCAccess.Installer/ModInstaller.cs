@@ -60,7 +60,8 @@ namespace KCAccess.Installer
 
         /// <summary>
         /// Files of the player in Languages: their own copies (Languages/xx.txt) and the record of what they were merged
-        /// with (Languages/default/.base). The shipped Languages/default/*.txt are replaced by every install.
+        /// with (Languages/default/.base), the same for the game's texts (Languages/game/xx.txt and
+        /// Languages/game/default/.base). The shipped default files are replaced by every install.
         /// </summary>
         public bool IsPlayerLanguageFile(string path)
         {
@@ -68,6 +69,8 @@ namespace KCAccess.Installer
             string full = Path.GetFullPath(path);
             if (!full.StartsWith(languages, StringComparison.OrdinalIgnoreCase)) return false;
             string rel = full.Substring(languages.Length);
+            string game = "game" + Path.DirectorySeparatorChar;
+            if (rel.StartsWith(game, StringComparison.OrdinalIgnoreCase)) rel = rel.Substring(game.Length);
             if (rel.IndexOf(Path.DirectorySeparatorChar) < 0) return !string.Equals(rel, "template.txt", StringComparison.OrdinalIgnoreCase);
             return rel.StartsWith("default" + Path.DirectorySeparatorChar + ".base" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
         }

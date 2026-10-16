@@ -577,6 +577,7 @@ A slider or value changed; the pitch follows the value = Een schuifregelaar of w
 Target beacon: left or right ear for west or east, higher pitch north, lower south, faster when closer = Doelbaken: linker- of rechteroor voor west of oost, hogere toon noord, lagere zuid, sneller als het dichterbij is
 One step of an auto walk = Eén stap van automatisch lopen
 Mod settings. Up and Down move, Page Up and Page Down jump between groups, Enter or Space toggles, Left and Right change values, Enter on a key changes it, Escape closes = Mod-instellingen. Omhoog en omlaag bewegen, Page Up en Page Down springen tussen groepen, Enter of Spatiebalk zet aan of uit, pijl links en rechts wijzigen waarden, Enter op een toets wijzigt die, Escape sluit
+Game texts in the mod language too, where its game text file translates them = Speltekst ook in de taal van de mod, waar het speltekstbestand van die taal ze vertaalt
 Speech = Spraak
 Announce notifications = Meldingen voorlezen
 Announce seasons and new years = Seizoenen en nieuwe jaren melden
