@@ -648,7 +648,8 @@ and Ctrl+Shift+F12 writes the live UI hierarchy to `BepInEx\kcaccess_ui_dump.txt
 situations for testing at the cursor: `devbuild <name> [any] [clear]` (place a finished building), `army
 knight|archer|settler|envoy`, `dragon [mama]`, `nest egg|hatch|mature|happy|bond`, `fire`, `ogre`, `viking
 [elite]`, `plague [cure]`, `weather none|rain|heavy|storm|snow`, `twitch show|connect|vote <name> <n>|chat <name>
-<text>|end|hide` (Twitch voting without Twitch), `log <text>`, `threatyears`, `buildnow`, `tracespeech <words>`.
+<text>|end|hide` (Twitch voting without Twitch), `log <text>`, `threatyears`, `buildnow`, `tracespeech <words>`, and for diplomacy `visit`, `convo <name>`
+(GoldDemand, AIGift ...), `dialogue` (the current line's conversation and entry ids).
 
 ## License
 
