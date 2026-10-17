@@ -367,7 +367,6 @@ namespace KCAccess.UI
             return go.transform != toggle && !toggle.IsChildOf(go.transform);
         }
 
-        /// <summary>Custom spoken description, or null to use the default.</summary>
         /// <summary>The language list's entry for a game language (labels are native names: "Deutsch, ( German )").</summary>
         private static Button LanguageButton(ChangeLanguage cl, string i2Name)
         {
@@ -393,6 +392,30 @@ namespace KCAccess.UI
                 case "Turkish": return cl.turkishButton;
                 default: return null;
             }
+        }
+
+        /// <summary>The selected mason, when the control is its panel's custom button (the primary repair target).</summary>
+        private static Mason MasonOf(Selectable s)
+        {
+            var ui = GameUI.inst;
+            if (ui == null || ui.workerUI == null || s == null || s != ui.workerUI.customButton) return null;
+            var b = ui.GetBuildingSelected();
+            return b != null ? b.GetComponent<Mason>() : null;
+        }
+
+        /// <summary>The language picker whose open list holds the object, or null.</summary>
+        private static ChangeLanguage LanguageListOf(GameObject go)
+        {
+            var picker = UnityEngine.Object.FindObjectOfType<ChangeLanguage>();
+            return picker != null && picker.dropdownList != null && picker.dropdownList.activeInHierarchy && go.transform.IsChildOf(picker.dropdownList.transform) ? picker : null;
+        }
+
+        /// <summary>The name of the language list's entry for the language in use: the mod's, when only the mod speaks it.</summary>
+        internal static string CurrentLanguageButtonName(ChangeLanguage cl)
+        {
+            if (ModLanguage.ActiveModOnly) return ModLanguage.ButtonName(ModLanguage.ActiveCode);
+            var b = LanguageButton(cl, I2.Loc.LocalizationManager.CurrentLanguage);
+            return b != null ? b.gameObject.name : null;
         }
 
         /// <summary>The toolbar's speed buttons are pictures only (their handler, OnControlChanged, named all four the same).</summary>
@@ -625,6 +648,7 @@ namespace KCAccess.UI
             }
         }
 
+        /// <summary>Custom spoken description, or null to use the default.</summary>
         internal static string Describe(UIItem item)
         {
             if (item == null || item.Go == null) return null;
@@ -826,6 +850,18 @@ namespace KCAccess.UI
                     return res + ": " + Loc.F("keep for transport only, check box, {0}", tg.isOn ? Loc.T("checked") : Loc.T("not checked")) + (UIText.TooltipOf(item.Go) is string tip ? ". " + tip : string.Empty);
             }
             if (ResearchRow(item.Go, out var researchRow, out var upgrade)) return ResearchDescription(researchRow, upgrade);
+            if (item.IsControl && MasonOf(item.Control) is Mason mason && mason.damagedBuilding != null)
+            {
+                // The mason's "primary repair target" button only turns the camera to the building it shows as a picture.
+                var target = mason.damagedBuilding;
+                var tc = target.GetCell();
+                string where = tc != null ? Directions.Relative(Game.MapController.Inst.CursorPos, new GridPos(tc.x, tc.z)) : null;
+                float health = Game.Overlays.Integrity(target);
+                return Loc.F("{0}: {1}, button, Enter moves the cursor there", UIText.LabelOf(item.Control),
+                    TextUtil.Join(", ", target.FriendlyName, health < 0.999f ? Loc.F("damaged, {0} health", TextUtil.Percent(health)) : null, where));
+            }
+            if (!item.IsControl && item.Go.GetComponentInParent<RivalItemUI>() is RivalItemUI rivalRow && rivalRow.Enabled && rivalRow.rivalName != null && item.Go == rivalRow.rivalName.gameObject)
+                return Game.RivalStart.Text(rivalRow) + ". " + Loc.T("I chooses the island it starts on");
             if (item.IsControl && item.Go.GetComponentInParent<RivalItemUI>() is RivalItemUI rival)
             {
                 int slot = 1;
@@ -1060,37 +1096,46 @@ namespace KCAccess.UI
                     return true;
                 }
             }
-            if (KInput.Plain(KeyCode.Escape))
+            if ((KInput.Plain(KeyCode.Return) || KInput.Plain(KeyCode.KeypadEnter) || KInput.Plain(KeyCode.Space)) && item.IsControl
+                && MasonOf(item.Control) is Mason repairMason && repairMason.damagedBuilding != null && repairMason.damagedBuilding.GetCell() is Cell repairCell)
             {
-                // Escape closes the language list (the game only closes it with a click outside it).
-                var picker = UnityEngine.Object.FindObjectOfType<ChangeLanguage>();
-                if (picker != null && picker.dropdownList != null && picker.dropdownList.activeInHierarchy && item.Go.transform.IsChildOf(picker.dropdownList.transform))
-                {
-                    KInput.Consume(KeyCode.Escape);
-                    picker.dropdownList.SetActive(false);
-                    A.Cue(Cue.Close);
-                    var btn = picker.gameObject;
-                    nav.RequestFocus(g => g == btn);
-                    return true;
-                }
+                // The game only turns the camera there: take the cursor to the building instead (the camera follows).
+                KInput.Consume(KeyCode.Return);
+                KInput.Consume(KeyCode.Space);
+                AccessController.Inst.LeavePanel(announce: false);
+                A.Cue(Cue.Close);
+                Game.MapController.Inst.JumpTo(new GridPos(repairCell.x, repairCell.z));
+                return true;
+            }
+            if (KInput.Down(KeyCode.I) && !KInput.Ctrl && !KInput.Alt && item.Go.GetComponentInParent<RivalItemUI>() is RivalItemUI startRival && startRival.Enabled)
+            {
+                // The game sets an AI kingdom's start by dragging its banner onto an island.
+                KInput.Consume(KeyCode.I);
+                Game.RivalStart.Cycle(startRival, KInput.Shift ? -1 : 1);
+                return true;
+            }
+            bool choose = KInput.Plain(KeyCode.Return) || KInput.Plain(KeyCode.KeypadEnter) || KInput.Plain(KeyCode.Space);
+            if ((choose || KInput.Plain(KeyCode.Escape)) && LanguageListOf(item.Go) is ChangeLanguage picker)
+            {
+                // The open language list is a window of its own (ScreenDetector). The game closes it on a choice and
+                // on a click outside it; Escape does the latter. Either way focus returns to the language button.
+                var btn = picker.gameObject;
+                nav.RequestFocus(g => g == btn);
+                if (choose) return false; // the click follows
+                KInput.Consume(KeyCode.Escape);
+                picker.dropdownList.SetActive(false);
+                A.Cue(Cue.Close);
+                return true;
             }
             var lang = item.IsControl ? item.Go.GetComponent<ChangeLanguage>() : null;
             if (lang != null && lang.dropdownList != null && (KInput.Plain(KeyCode.Return) || KInput.Plain(KeyCode.Space)))
             {
-                // The language picker opens a list elsewhere on the screen: open it and put focus on the current language.
+                // The language picker opens its list, which becomes a window of its own (ScreenDetector): it starts on
+                // the language in use and says how it works.
                 KInput.Consume(KeyCode.Return);
                 KInput.Consume(KeyCode.Space);
                 UINavigator.Click(item.Go);
                 ModLanguage.AddModOnlyButtons(lang);
-                string current = I2.Loc.LocalizationManager.CurrentLanguage;
-                string modButton = ModLanguage.ActiveModOnly ? ModLanguage.ButtonName(ModLanguage.ActiveCode) : null;
-                var list = lang.dropdownList.transform;
-                A.Cue(Cue.Open);
-                A.Say(Loc.T("Language list. Up and Down choose, Enter switches the game to that language. Languages marked screen reader only change only what the mod says."), force: true);
-                var currentButton = LanguageButton(lang, current);
-                nav.RequestFocus(g => g.transform.IsChildOf(list) && g.GetComponent<Button>() != null
-                    && (modButton != null ? g.name == modButton
-                        : currentButton != null ? g == currentButton.gameObject : UIText.LabelOf(g.GetComponent<Button>()).StartsWith(current)));
                 return true;
             }
             if (item.IsControl && SpeedToggleName(item.Control) is string speedName && (KInput.Plain(KeyCode.Return) || KInput.Plain(KeyCode.Space) || KInput.Plain(KeyCode.KeypadEnter)))

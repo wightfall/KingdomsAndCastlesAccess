@@ -347,7 +347,7 @@ namespace KCAccess
             {
                 var st = GameState.inst.mainMenuMode.GetState();
                 if (modal.Id != "Confirm" && (st == MainMenuMode.State.PauseMenu || st == MainMenuMode.State.SettingsMenu)) return false; // game handles Escape
-                if (modal.Id == "Menu") return false;
+                if (modal.Id == "Menu" || modal.Id == "LanguageList") return false; // the language list's Escape: Special
             }
             Button best = null;
             int bestScore = 0;

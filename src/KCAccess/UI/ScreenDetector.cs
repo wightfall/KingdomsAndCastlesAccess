@@ -74,8 +74,28 @@ namespace KCAccess.UI
             {
                 info = new ScreenInfo { Id = "Confirm", Title = ConfirmTitle(confirm), Root = confirm.transform, TypeAhead = true };
             }
+            else if (OpenLanguageList(info.Root) is ChangeLanguage picker)
+            {
+                // The language list opens over the main menu without a state of its own: it is navigated alone, like a
+                // window, and choosing a language or Escape returns to the menu.
+                info = new ScreenInfo
+                {
+                    Id = "LanguageList", Title = Loc.T("Language list"), Root = picker.dropdownList.transform, TypeAhead = true,
+                    Intro = Loc.T("Up and Down choose, Enter switches the game to that language. Languages marked screen reader only change only what the mod says."),
+                    InitialFocus = Special.CurrentLanguageButtonName(picker),
+                };
+            }
             if (info.Root == null) return null;
             return info;
+        }
+
+        /// <summary>The language picker under the screen whose list is open, or null.</summary>
+        private static ChangeLanguage OpenLanguageList(Transform root)
+        {
+            if (root == null) return null;
+            foreach (var cl in root.GetComponentsInChildren<ChangeLanguage>(false))
+                if (cl.dropdownList != null && cl.dropdownList.activeInHierarchy) return cl;
+            return null;
         }
 
         private static GameObject RootFor(MainMenuMode mm, MainMenuMode.State state)

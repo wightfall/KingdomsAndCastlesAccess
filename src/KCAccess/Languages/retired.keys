@@ -1,6 +1,8 @@
 ﻿# Texts earlier versions of KCAccess used. Mod updates remove them from the language files.
+Choose rival AI kingdoms and their difficulty.
 Gold {0}
 Happiness {0}, button, shows what affects happiness
+Language list. Up and Down choose, Enter switches the game to that language. Languages marked screen reader only change only what the mod says.
 Mod settings. Up and Down move through the settings, Enter or Space toggles a check box, Left and Right change a value such as the sound volume or walking speed. On a mod key, Enter waits for the new key: press it with Control, Shift or Alt if you like, Escape cancels. A key already used by the mod or the game is refused and you are told what uses it. Delete restores that key's default. The last line resets everything. Escape closes.
 Opinion of you: {0}, the best there is
 Opinion of you: {0}, {1} percent of the way to {2}
@@ -13,3 +15,5 @@ too far from your seed ship
 unfavorable
 very favorable
 very unfavorable
+{0} starts on the island in the middle of the map, {1} tiles, middle at {2}
+{0} starts on the island in the {1} of the map, {2} tiles, middle at {3}

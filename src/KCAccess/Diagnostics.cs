@@ -361,6 +361,18 @@ namespace KCAccess
                                 Plugin.Log.LogInfo("[dbg] fire at " + tp + (f != null ? " started" : " did not start"));
                                 break;
                             }
+                            if (parts[0] == "viking" && parts.Length > 1 && parts[1] == "thief")
+                            {
+                                // "viking thief": a viking thief at the cursor heading for your nearest Treasure Room.
+                                var thief = RaiderSystem.inst.SpawnArmy(World.GetCellHeightPos(tc), UnitSystem.ArmyType.Thief, untracked: true);
+                                Building vault = null;
+                                var vaults = Player.inst.GetBuildingListForLandMass(tc.landMassIdx, World.throneRoomHash);
+                                for (int i = 0; vaults != null && i < vaults.Count; i++)
+                                    if (vault == null || Vector3.Distance(vaults.data[i].Center(), tc.Center) < Vector3.Distance(vault.Center(), tc.Center)) vault = vaults.data[i];
+                                if (thief != null && vault != null) OrdersManager.inst.MoveTo(thief, vault);
+                                Plugin.Log.LogInfo("[dbg] thief " + (thief != null ? "spawned at " + tp + (vault != null ? ", heading for " + vault.FriendlyName + " at " + vault.GetCell().x + "," + vault.GetCell().z : ", no treasure room") : "not spawned"));
+                                break;
+                            }
                             IMoveableUnit raider = parts[0] == "ogre"
                                 ? RaiderSystem.inst.SpawnOgre(tc.Center, untracked: true)
                                 : RaiderSystem.inst.SpawnArmy(World.GetCellHeightPos(tc), parts.Length > 1 && parts[1] == "elite" ? UnitSystem.ArmyType.Elite : UnitSystem.ArmyType.Default, untracked: true);
@@ -369,6 +381,18 @@ namespace KCAccess
                             Plugin.Log.LogInfo("[dbg] " + parts[0] + (raider != null ? " spawned at " + tp + (goal != null ? ", heading for " + goal.FriendlyName : string.Empty) : " not spawned"));
                             break;
                         }
+                        case "thieves":
+                            // Developer only: "thieves kill" fells every thief as a soldier's blow would, "thieves escape"
+                            // removes them as their departing ship does.
+                            for (int i = UnitSystem.inst.armies.Count - 1; i >= 0; i--)
+                            {
+                                var army = UnitSystem.inst.armies.data[i];
+                                if (army == null || army.armyType != UnitSystem.ArmyType.Thief) continue;
+                                Plugin.Log.LogInfo("[dbg] thief carrying " + army.stolenResourceAmount + " " + army.stolenResourceType);
+                                if (parts.Length > 1 && parts[1] == "kill") UnitSystem.inst.SetStatus(army, UnitSystem.Army.GeneralStatus.Dying);
+                                else if (parts.Length > 1 && parts[1] == "escape") UnitSystem.inst.ReleaseArmy(army);
+                            }
+                            break;
                         case "plague":
                             // Developer only: "plague" starts one as a Twitch vote would, "plague cure" ends it.
                             if (parts.Length > 1 && parts[1] == "cure") Player.inst.CurePlague();
@@ -502,8 +526,37 @@ namespace KCAccess
                             if (GameUI.inst.diplomacyUI.Visible()) GameUI.inst.diplomacyUI.DisplayNegotiationUI();
                             break;
                         case "gold":
-                            Player.inst.PlayerLandmassOwner.Gold += 5000;
+                            // "gold" adds 5000, "gold 0" sets it (to test what costs gold).
+                            if (parts.Length > 1) Player.inst.PlayerLandmassOwner.Gold = int.Parse(parts[1]);
+                            else Player.inst.PlayerLandmassOwner.Gold += 5000;
                             break;
+                        case "mission":
+                        {
+                            // Developer only: "mission start" gives the first AI kingdom a resource request in progress,
+                            // "mission done" / "mission fail" end it as the game does.
+                            var k = AIBrainsContainer.inst != null && AIBrainsContainer.inst.kingdoms.Count > 0 ? AIBrainsContainer.inst.kingdoms[0] : null;
+                            if (k == null) break;
+                            if (parts.Length > 1 && parts[1] == "start")
+                            {
+                                var req = new BuildingResourceRequest(k) { yearsRemain = 2, friendlyName = "Tavern" };
+                                req.request.Set(FreeResourceType.Tree, 20);
+                                req.status = Mission.Status.InProgress;
+                                k.currMission = req;
+                            }
+                            else if (k.currMission != null && parts.Length > 1) k.currMission.status = parts[1] == "done" ? Mission.Status.Complete : Mission.Status.Failed;
+                            Plugin.Log.LogInfo("[dbg] mission of " + k.GetLocalizedName() + ": " + (k.currMission != null ? k.currMission.status.ToString() : "none"));
+                            break;
+                        }
+                        case "masontarget":
+                        {
+                            // Developer only: the selected mason's repair target becomes the building at the cursor.
+                            var mason = GameUI.inst.GetBuildingSelected() != null ? GameUI.inst.GetBuildingSelected().GetComponent<Mason>() : null;
+                            var at = Game.MapController.Inst.CursorPos;
+                            var cell = World.inst.GetCellData(at.X, at.Z);
+                            if (mason != null && cell != null && cell.OccupyingStructure.Count > 0) mason.damagedBuilding = cell.OccupyingStructure[0];
+                            Plugin.Log.LogInfo("[dbg] mason target " + (mason != null && mason.damagedBuilding != null ? mason.damagedBuilding.FriendlyName : "none"));
+                            break;
+                        }
                         case "fail":
                             GameState.inst.SetNewMode(GameState.inst.mainMenuMode);
                             GameState.inst.mainMenuMode.TransitionTo(parts.Length > 1 && parts[1] == "keep" ? MainMenuMode.State.KeepDestroyed : MainMenuMode.State.Failure);

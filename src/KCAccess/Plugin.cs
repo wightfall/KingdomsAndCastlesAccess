@@ -108,14 +108,22 @@ namespace KCAccess
             };
 
             harmony = new Harmony(Guid);
-            try
+            // Class by class (PatchAll stops at the first failure): a patch that no longer fits the game, after a game
+            // update for one, must not take every patch after it down too.
+            int failed = 0;
+            foreach (var type in AccessTools.GetTypesFromAssembly(typeof(Plugin).Assembly))
             {
-                harmony.PatchAll(typeof(Plugin).Assembly);
+                try
+                {
+                    harmony.CreateClassProcessor(type).Patch();
+                }
+                catch (Exception e)
+                {
+                    failed++;
+                    Log.LogError("Harmony patch " + type.FullName + " failed: " + e.Message);
+                }
             }
-            catch (Exception e)
-            {
-                Log.LogError("Harmony patching failed: " + e);
-            }
+            if (failed > 0) Log.LogWarning(failed + " Harmony patch classes failed, the others are active.");
 
             var root = new GameObject("KCAccess");
             DontDestroyOnLoad(root);

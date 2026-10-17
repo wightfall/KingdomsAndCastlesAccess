@@ -247,6 +247,7 @@ namespace KCAccess.Game
                     parts.Add(Loc.F("wages {0} gold per year", perYear));
                 }
                 parts.Add(CellInfo.RangeText(building, placed: false));
+                parts.Add(Reach.Radius(building));
             }
             return TextUtil.Join(", ", parts);
         }

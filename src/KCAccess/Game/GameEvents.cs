@@ -45,6 +45,8 @@ namespace KCAccess.Game
                 EnvoyWatch.Reset();
                 ShipWatch.Reset();
                 FireWatch.Reset();
+                ThiefWatch.Reset();
+                MissionWatch.Reset();
                 Twitch.Reset();
                 MapController.Inst.OnEnterPlayMode();
             }
@@ -61,6 +63,7 @@ namespace KCAccess.Game
             FlushBuilt();
             ShipWatch.Tick();
             FireWatch.Tick();
+            MissionWatch.Tick();
             if (Weather.inst != null)
             {
                 var s = Weather.inst.season;

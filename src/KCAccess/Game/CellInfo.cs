@@ -347,7 +347,9 @@ namespace KCAccess.Game
             switch (a.armyType)
             {
                 case UnitSystem.ArmyType.Archer: type = Loc.T("archers"); break;
-                case UnitSystem.ArmyType.Thief: type = Loc.T("thieves"); break;
+                case UnitSystem.ArmyType.Thief:
+                    type = a.stolenResourceAmount > 0 && a.stolenResourceType == FreeResourceType.Gold ? Loc.F("thieves carrying {0} gold", a.stolenResourceAmount) : Loc.T("thieves");
+                    break;
                 case UnitSystem.ArmyType.Envoy: type = Loc.T("envoy"); break;
                 case UnitSystem.ArmyType.Settler: type = Loc.T("settlers"); break;
                 case UnitSystem.ArmyType.Elite: type = Loc.T("elite soldiers"); break;

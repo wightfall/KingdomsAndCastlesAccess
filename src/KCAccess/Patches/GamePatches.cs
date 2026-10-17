@@ -805,3 +805,42 @@ namespace KCAccess
         }
     }
 }
+
+namespace KCAccess
+{
+    /// <summary>
+    /// Building buttons that cost resources (church tithe, Great Hall feast, town square festival) only flash the
+    /// resource counters red when the kingdom cannot pay: say what it costs and what is missing.
+    /// </summary>
+    [HarmonyPatch(typeof(ResourceUI), nameof(ResourceUI.FlashResourcesUIRed))]
+    internal static class Patch_CannotAfford
+    {
+        private static void Postfix(Assets.Code.ResourceAmount R)
+        {
+            try
+            {
+                var p = Player.inst;
+                if (p == null) return;
+                var names = new List<string>();
+                var need = new List<int>();
+                var have = new List<int>();
+                for (int i = 0; i < (int)FreeResourceType.NumTypes; i++)
+                {
+                    var t = (FreeResourceType)i;
+                    int n = R.Get(t);
+                    if (n <= 0) continue;
+                    names.Add(t.ToString());
+                    need.Add(n);
+                    have.Add(t == FreeResourceType.Gold ? p.PlayerLandmassOwner.Gold : p.FocusedResources.Get(t));
+                }
+                if (names.Count == 0) return;
+                A.Cue(KCAccess.Core.Cue.Error);
+                A.Say(KCAccess.Core.Loc.F("Not enough resources: {0}", KCAccess.Core.ResourceNames.Cost(names.ToArray(), need.ToArray(), have.ToArray())), force: true);
+            }
+            catch (Exception e)
+            {
+                Plugin.Log.LogWarning("Cost announcement failed: " + e.Message);
+            }
+        }
+    }
+}

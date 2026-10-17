@@ -1135,6 +1135,7 @@ namespace KCAccess.Game
             if (b != null)
             {
                 text = CellInfo.BuildingSummary(b, brief: false);
+                if (b.TeamID() == 0) text = TextUtil.Join(", ", text, Reach.Text(b));
                 if (detailed) text = TextUtil.Sentences(text, b.Description);
                 text = TextUtil.Sentences(text, Loc.T("F6 for the building panel"));
             }
@@ -1322,7 +1323,9 @@ namespace KCAccess.Game
                 A.Cue(Cue.PlaceValid);
                 // Towers: the range rings (which grow on castle walls) are drawn only; V tells them.
                 string range = always ? CellInfo.RangeText(held, placed: true) : null;
-                if (always) A.Say(Loc.T("Can build here") + (level != null ? ", " + level : string.Empty) + (range != null ? ", " + range : string.Empty), force: true);
+                // Wells, foresters, fishing huts, reservoirs, windmills and happiness buildings: their area is coloured only.
+                string reach = always ? Reach.Text(held) : null;
+                if (always) A.Say(TextUtil.Join(", ", Loc.T("Can build here"), level, range, reach), force: true);
                 else if (changed) A.SayQueued(Loc.T("can build") + (level != null ? ", " + level : string.Empty));
                 else if (level != null) A.SayQueued(level);
             }

@@ -67,13 +67,13 @@ namespace KCAccess.Tests
         /// <summary>Section names of the language files (what a translator looks for) and the source files in them.</summary>
         public static readonly string[][] Categories =
         {
-            new[] { "Speech, screens and menus", "AccessController", "UINavigator", "UIText", "Special", "ScreenDetector", "GameScreens", "ListMenu", "NavList", "TextUtil", "SteamOverlay", "Diagnostics", "DialoguePatches", "Plugin", "KeyboardGuard", "OsKeyboard", "WebLinks" },
+            new[] { "Speech, screens and menus", "AccessController", "UINavigator", "UIText", "Special", "ScreenDetector", "GameScreens", "ListMenu", "NavList", "TextUtil", "SteamOverlay", "Diagnostics", "DialoguePatches", "Plugin", "KeyboardGuard", "OsKeyboard", "WebLinks", "RivalStart" },
             new[] { "Help and key lists", "HelpText", "KeyHelp", "KeysMenu", "Bindings" },
             new[] { "Mod settings, languages and sound cues", "ModSettingsMenu", "ModLanguage", "Cues", "AudioCues" },
             new[] { "Map, tiles and cursor", "MapController", "CellInfo", "Overlays", "AreaSurvey", "GridMath", "ResourceNames", "VirtualPointer" },
             new[] { "Scanner, navigation and problems", "Scanner", "Navigator", "Navigation", "Problems", "Alerts", "Thoughts" },
-            new[] { "Building and castle walls", "BuildMenu", "PlacementText", "CastleStacker", "CastleStack" },
-            new[] { "Kingdom status, notifications and events", "StatusMenu", "GameEvents", "FireWatch", "NotificationLog", "LogBrowser", "GamePatches" },
+            new[] { "Building and castle walls", "BuildMenu", "PlacementText", "CastleStacker", "CastleStack", "Reach" },
+            new[] { "Kingdom status, notifications and events", "StatusMenu", "GameEvents", "FireWatch", "ThiefWatch", "MissionWatch", "NotificationLog", "LogBrowser", "GamePatches" },
             new[] { "Army, ships, carts, routes and diplomacy", "UnitText", "Routes", "ShipWatch", "Diplomacy" },
             new[] { "Controller", "ControllerMap", "ControllerInput" },
             new[] { "Streaming and Twitch", "Streaming" },
