@@ -129,7 +129,7 @@ replaces the mouse drag), Left / Right change the limit, from 0 up to the job po
 | Shift+Arrows | Move 5 tiles |
 | Ctrl+Arrows | Jump to the next tile that is different (edge of a forest, a building, water …) |
 | Enter | Select the building or tile under the cursor; while placing: build; in chop / demolish mode: apply |
-| Shift+Enter | While placing roads, walls or fields: set the start point, then Enter at the end point builds the whole line or area. In chop / demolish mode: mark one corner of an area. Otherwise: select soldiers, a siege catapult, your dragon, a ship (merchant ships open the trade window; troop and exploration ships open their panel), a transport cart or a villager on the tile (press again to cycle) |
+| Shift+Enter | While placing roads, walls or fields: set the start point, then Enter at the end point builds the whole line or area. In chop / demolish mode: mark one corner of an area. Otherwise: select soldiers, a siege catapult, your dragon, a ship (a foreign merchant ship opens the trade window; your own merchant and cargo ships their route panel; troop and exploration ships their panel), a transport cart or a villager on the tile (press again to cycle) |
 | Ctrl+Shift+Enter | Add the soldiers (siege catapults, dragons) on the tile to the selection, so several armies move together with M |
 | I | Everything about the tile (terrain, fertility, road coverage, workers …) |
 | Shift+I | Details of the selected building |
@@ -188,6 +188,10 @@ announced when you fulfil them or they fail. Buttons that cost resources (church
 square festival) say what is missing when you cannot pay, and when the game greys such a button the mod says why
 (a festival or feast under way, not enough gold, no repair target yet); the mason's repair target button names the
 building; Enter moves the cursor there.
+
+**Rubble** says what stood there ("Rubble of Well") on the tile, when selected and in its panel; the Rebuild
+button gives the cost ("Rebuild Well, cost wood 10 (have 4)") and rebuilding is announced. The toolbar's rebuild
+mode says when an area has no rubble or when rubble could not be rebuilt for lack of resources.
 
 **Fires** are announced when they break out in your kingdom ("Fire at Hovel", with the direction; the fire
 spreading to the next tiles is not repeated) and when the last one is out; the game itself only reports a
@@ -263,8 +267,13 @@ focus on the current language; Enter switches language, Escape closes the list.
   picked up the gift: gold 10". The envoy's panel then shows the gift ("Gold, 10") and Drop Gift; take the
   envoy to a foreign keep to hand it over.
 * **Research (Great Library):** select the library, F6, Research. Each technology reads its effect and
-  gold cost, or "already researched"; Enter starts it, or tells you how much gold is missing. While research
-  runs the window reads progress and years remaining.
+  gold cost, or "already researched"; Enter starts it ("Research started: Improved Bread Ovens, 845 gold
+  paid"), or tells you how much gold is missing. While research runs the window reads progress and years
+  remaining; Accept only closes the window, **Cancel research** stops it and refunds the gold.
+* **Witch hut:** Enter on its tile. While she sleeps only the door is read (Knock, Leave); then the window
+  starts on what she asks for. Send says what is missing when you cannot pay ("You do not have everything she
+  asked for: food 19"), a spell says when gold is short, and the viking and dragon spells say they work only
+  during an attack.
 
 ### Ship and cart routes
 
@@ -678,7 +687,10 @@ knight|archer|settler|envoy`, `dragon [mama]`, `nest egg|hatch|mature|happy|bond
 (GoldDemand, AIGift ...), `dialogue` (the current line's conversation and entry ids), `viking thief` (a thief heading for your Treasure
 Room), `thieves kill|escape`, `mission start|done|fail` (a request of the first AI kingdom), `masontarget` (the
 selected mason's target becomes the building at the cursor), `gold <n>`, `probe <name>` (size and state of
-controls), `thieves sink`, `findmethod <name>` (buttons calling a game method), `liveries`, `canvases`.
+controls), `thieves sink`, `findmethod <name>` (buttons calling a game method), `liveries`, `canvases`,
+`merchant` (a merchant ship sails to your docks), `dockgoods`, `ships`, `merchantspecial [upgrade]`, `findspot`
+(where the game accepts the held building), `lqspot`, `wreck` (the building at the cursor falls into rubble),
+`witch [greedy|spells]`, `levelup [outpost]`, `survival intro|success`, `demowarn`, `spritelabels <sprite>`.
 
 ## License
 

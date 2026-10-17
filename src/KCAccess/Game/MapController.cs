@@ -793,9 +793,14 @@ namespace KCAccess.Game
                     FinishArea();
                     return;
                 }
-                bool handled = ui.currCursorMode.DoPrimaryClick(cell != null ? cell.TopMostStructure : null, cell);
+                var clicked = cell != null ? cell.TopMostStructure : null;
+                bool rubble = ui.currCursorMode is RebuildCursorMode && CellInfo.RubbleOf(clicked) != null;
+                bool handled = ui.currCursorMode.DoPrimaryClick(clicked, cell);
                 A.Cue(handled ? Cue.Activate : Cue.Error);
                 A.SayQueued(CellInfo.Brief(cell, false));
+                // Rebuild mode leaves rubble it cannot pay for without a word.
+                if (rubble && cell.TopMostStructure == clicked && clicked != null && clicked.GetComponent<Rubble>() is Rubble left)
+                    A.SayQueued(left.CanRebuild ? Loc.F("Not enough resources to rebuild it: {0}", CellInfo.RebuildCost(clicked)) : Loc.T("It cannot be rebuilt"));
                 return;
             }
             SelectAt(cell);
@@ -856,9 +861,18 @@ namespace KCAccess.Game
             minZ = Mathf.Clamp(minZ, 0, World.inst.GridHeight - 1);
             maxZ = Mathf.Clamp(maxZ, 0, World.inst.GridHeight);
             var mode = ui.currCursorMode;
+            int rubbleBefore = mode is RebuildCursorMode ? CellInfo.RebuildableRubble(minX, minZ, maxX, maxZ) : 0;
             mode.HandleDragPrimaryUp(minX, minZ, maxX, maxZ, returnedToOriginal: false);
             A.Cue(Cue.Activate);
             string size = Loc.F("{0} by {1} tiles", maxX - minX, maxZ - minZ);
+            if (mode is RebuildCursorMode)
+            {
+                // What was rebuilt is said by Patch_RubbleRebuild; say what was not.
+                int left = CellInfo.RebuildableRubble(minX, minZ, maxX, maxZ);
+                if (rubbleBefore == 0) A.Say(Loc.F("No rubble to rebuild in this {0} area", size));
+                else if (left > 0) A.Say(Loc.P(left, "{0} rubble tile not rebuilt: not enough resources", "{0} rubble tiles not rebuilt: not enough resources"));
+                return;
+            }
             if (mode is ChopCursorMode || mode is ChopCancelCursorMode)
             {
                 int trees = 0;
@@ -1005,7 +1019,8 @@ namespace KCAccess.Game
                 // Troop and exploration ships have the unit panel (who is on board, Settle): the game opens it on a click.
                 if (ui.AddToSelection((ISelectable)ship) && ship is IMoveableUnit movable && ui.DisplayIMovableUI(movable)) ui.ClearCellSelected();
                 A.Cue(Cue.Activate);
-                bool merchant = ship.type == ShipBase.ShipType.Merchant || ship.type == ShipBase.ShipType.PlayerMerchant;
+                // A foreign merchant opens the trade window; your own merchant ship sails a route like a cargo ship.
+                bool merchant = (ship.type == ShipBase.ShipType.Merchant || ship.type == ShipBase.ShipType.PlayerMerchant) && ship.teamID != 0;
                 string how;
                 if (merchant) how = Loc.T("F6 opens the trade window.");
                 else if (ship.teamID != 0) how = null;
@@ -1537,7 +1552,9 @@ namespace KCAccess.Game
             waitingAgainLastFrame = ui.WaitingToPlaceAgain();
 
             // Escape (game key) clears the selection: say so, since nothing visible tells a blind player.
-            bool hasSelection = ui.GetBuildingSelected() != null || ui.GetCellSelected() != null || ui.IsUnitSelected() || (ui.personUI != null && ui.personUI.Visible);
+            // A selected ship shows its route panel or trade window instead of a cell selection.
+            bool hasSelection = ui.GetBuildingSelected() != null || ui.GetCellSelected() != null || ui.IsUnitSelected() || (ui.personUI != null && ui.personUI.Visible)
+                || (ui.shipLogisticsUI != null && ui.shipLogisticsUI.Visible) || (ui.merchantUI != null && ui.merchantUI.Visible);
             if (hadSelection && !hasSelection && !placing && Time.unscaledTime - placedSayTime > 0.5f && Time.unscaledTime - Patch_Demolish.LastDemolishTime > 1f) A.Say(Loc.T("Selection cleared"));
             hadSelection = hasSelection;
 

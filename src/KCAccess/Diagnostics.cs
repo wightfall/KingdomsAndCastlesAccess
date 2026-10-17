@@ -743,6 +743,55 @@ namespace KCAccess
                             var dpos = Game.MapController.Inst.CursorPos;
                             GameUI.inst.demolishWarningUI.ShowUI(dpos.X - 1, dpos.X + 1, dpos.Z - 1, dpos.Z + 1);
                             break;
+                        case "levelup":
+                            // Developer only: the popup a kingdom gets when it grows a size (not shown in creative games),
+                            // "levelup outpost" the one for a new outpost.
+                            if (parts.Length > 1 && parts[1] == "outpost") GameUI.inst.levelUpUI.OutpostShow();
+                            else
+                            {
+                                var townUi = TownNameUI.inst;
+                                string sizeKey = townUi.townSizes[3].name;
+                                GameUI.inst.levelUpUI.Show("<color=#00FFFF>" + townUi.townName + "</color>", townUi.GetTownUIName(sizeKey), townUi.GetDescription(sizeKey));
+                            }
+                            break;
+                        case "survival":
+                            // Developer only: "survival intro" / "survival success" show the survival mode popups.
+                            if (parts.Length > 1 && parts[1] == "success") GameUI.inst.survivalSuccess.Show();
+                            else GameUI.inst.survivalIntro.gameObject.SetActive(true);
+                            break;
+                        case "wreck":
+                            // Developer only: the building at the cursor falls into rubble, as when destroyed (rebuild test).
+                            var wcell = World.inst.GetCellData(Game.MapController.Inst.CursorPos.X, Game.MapController.Inst.CursorPos.Z);
+                            var wb = wcell != null ? wcell.TopMostStructure : null;
+                            if (wb != null) World.inst.WreckBuilding(wb);
+                            Plugin.Log.LogInfo("[dbg] wreck " + (wb != null ? wb.UniqueName : "nothing"));
+                            break;
+                        case "witch":
+                            // Developer only: a witch hut at the cursor (as the map editor's witch brush makes one).
+                            // "witch spells": the witch at the cursor loves you and offers every spell.
+                            var wpos = Game.MapController.Inst.CursorPos;
+                            if (parts.Length > 1 && parts[1] == "greedy")
+                            {
+                                // Her current mission asks for more food than any kingdom has (this session only).
+                                var greedyHut = World.inst.GetWitchHutAt(World.inst.GetCellData(wpos.X, wpos.Z));
+                                if (greedyHut != null) greedyHut.CurrMission().resources = Assets.Code.ResourceAmount.Make(FreeResourceType.Wheat, 99999);
+                                Plugin.Log.LogInfo("[dbg] witch greedy " + (greedyHut != null));
+                                break;
+                            }
+                            if (parts.Length > 1 && parts[1] == "spells")
+                            {
+                                var hut = World.inst.GetWitchHutAt(World.inst.GetCellData(wpos.X, wpos.Z));
+                                if (hut != null)
+                                {
+                                    hut.relationship = WitchHut.Relationship.LovesYou;
+                                    hut.latestSpell = WitchHut.Spells.DriveAwayDragons;
+                                }
+                                Plugin.Log.LogInfo("[dbg] witch spells " + (hut != null));
+                                break;
+                            }
+                            World.inst.AddWitchHut(wpos.X, wpos.Z);
+                            Plugin.Log.LogInfo("[dbg] witch hut at " + wpos);
+                            break;
                         case "ships":
                             // Developer only: every ship, where it is and, for merchants, how far its trip got.
                             for (int si = 0; si < ShipSystem.inst.ships.Count; si++)

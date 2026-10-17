@@ -543,9 +543,19 @@ namespace KCAccess.UI
         public void ReadAll()
         {
             Refresh(force: true);
+            string Plain(string t) => TextUtil.Clean(t).TrimEnd('.', '!', '?', ':');
             var parts = new List<string>();
-            if (!string.IsNullOrEmpty(Title)) parts.Add(Title);
-            foreach (var item in list.Items) parts.Add(Describe(item));
+            foreach (var item in list.Items)
+            {
+                // A text shown twice in a row (an effect banner's ribbon and its heading) is said once.
+                string d = Describe(item);
+                if (parts.Count > 0 && string.Equals(Plain(parts[parts.Count - 1]), Plain(d), System.StringComparison.OrdinalIgnoreCase)) continue;
+                parts.Add(d);
+            }
+            // A window titled by one of its own texts ("A Burgeoning Town" in "Longvale is now / A Burgeoning Town",
+            // "Survival Success!") says it in its place, not twice.
+            if (!string.IsNullOrEmpty(Title) && !parts.Exists(p => string.Equals(Plain(p), Plain(Title), System.StringComparison.OrdinalIgnoreCase)))
+                parts.Insert(0, Title);
             A.Say(TextUtil.Sentences(parts.ToArray()), force: true);
         }
 

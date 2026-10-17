@@ -96,10 +96,64 @@ namespace KCAccess.Game
             return result;
         }
 
+        /// <summary>
+        /// What rubble was before it fell ("Well"; each kind once for stacked castle blocks), or null for anything else.
+        /// The game shows it only as the building's outline while the rubble is selected.
+        /// </summary>
+        internal static string RubbleOf(Building b)
+        {
+            var rubble = b != null && b.uniqueNameHash == World.rubbleHash ? b.GetComponent<Rubble>() : null;
+            if (rubble == null || !rubble.HasReplacementData() || GameState.inst == null) return null;
+            var names = new List<string>();
+            foreach (var state in rubble.GetBuildingStates())
+            {
+                var prefab = GameState.inst.GetPlaceableByUniqueName(state.uniqueName);
+                string n = prefab != null ? prefab.FriendlyName : TextUtil.Humanize(state.uniqueName);
+                if (!names.Contains(n)) names.Add(n);
+            }
+            return names.Count > 0 ? string.Join(", ", names.ToArray()) : null;
+        }
+
+        /// <summary>What rebuilding the rubble costs, with what you have of anything short ("cost wood 10 (have 4)").</summary>
+        internal static string RebuildCost(Building rubbleBuilding)
+        {
+            var rubble = rubbleBuilding.GetComponent<Rubble>();
+            ResourceAmount cost = rubble.ReplacementCost();
+            int lm = rubbleBuilding.LandMass();
+            var all = Player.inst.resourcesPerLandmass;
+            ResourceAmount have = all != null && lm >= 0 && lm < all.Length ? all[lm] : default(ResourceAmount);
+            const int n = 12;
+            var names = new string[n];
+            var need = new int[n];
+            var got = new int[n];
+            for (int i = 0; i < n; i++)
+            {
+                names[i] = ((FreeResourceType)i).ToString();
+                need[i] = cost.Get((FreeResourceType)i);
+                got[i] = have.Get((FreeResourceType)i);
+            }
+            return Loc.F("cost {0}", ResourceNames.Cost(names, need, got));
+        }
+
+        /// <summary>Rubble in the area that rebuild mode could put up again (not the keep's).</summary>
+        internal static int RebuildableRubble(int minX, int minZ, int maxX, int maxZ)
+        {
+            int count = 0;
+            for (int z = minZ; z < maxZ; z++)
+                for (int x = minX; x < maxX; x++)
+                {
+                    var c = World.inst.GetCellData(x, z);
+                    var b = c != null ? c.StructureFind(World.rubbleHash) : null;
+                    var r = b != null ? b.GetComponent<Rubble>() : null;
+                    if (r != null && r.HasReplacementData() && r.CanRebuild) count++;
+                }
+            return count;
+        }
+
         /// <summary>"Small House, under construction 40 percent, yours".</summary>
         internal static string BuildingSummary(Building b, bool brief)
         {
-            var parts = new List<string> { b.FriendlyName };
+            var parts = new List<string> { RubbleOf(b) is string was ? Loc.F("Rubble of {0}", was) : b.FriendlyName };
             if (!b.IsBuilt()) parts.Add(Loc.F("under construction {0}", TextUtil.Percent(Mathf.Clamp01(b.constructionProgress))));
             else
             {

@@ -32,7 +32,17 @@ namespace KCAccess.Game
             {
                 return new ScreenInfo { Id = "Advisor", Title = Loc.T("Advisors"), Root = AdvisorUI.inst.containerRect, Modal = true };
             }
-            if (Is(ui.witchUI, out s, "Witch", Loc.T("Witch hut"))) return s;
+            // The witch's dialogs (asleep at the door, a confrontation) cover her window: only they can be used, and the
+            // mission behind them (with its Refuse button) must not be reached.
+            var witch = ui.witchUI;
+            if (witch != null && UIText.IsVisible(witch.gameObject) && witch.dialogContainer != null && witch.dialogContainer.activeInHierarchy && HasContent(witch.dialogContainer.transform))
+                return new ScreenInfo { Id = "WitchDialog", Title = Loc.T("Witch hut"), Root = witch.dialogContainer.transform, Modal = true, ReadAllOnOpen = true };
+            if (Is(witch, out s, "Witch", Loc.T("Witch hut")))
+            {
+                // Start on what she asks for, not on Refuse.
+                s.InitialFocus = witch.sendContainer != null && witch.sendContainer.activeInHierarchy ? "missiondesc" : "";
+                return s;
+            }
             if (ui.decreeUI != null && ui.decreeUI.Visible && Is(ui.decreeUI, out s, "Decrees", Loc.T("Decrees"))) return s;
             if (ui.diplomacyUI != null && ui.diplomacyUI.Visible() && Is(ui.diplomacyUI, out s, "Diplomacy", Loc.T("Diplomacy"))) return s;
             if (Is(ui.researchUI, out s, "Research", Loc.T("Research"))) return s;
@@ -148,7 +158,11 @@ namespace KCAccess.Game
         {
             var ui = GameUI.inst;
             var b = ui.GetBuildingSelected();
-            if (b != null) return b.FriendlyName;
+            if (b != null) return CellInfo.RubbleOf(b) is string was ? Loc.F("Rubble of {0}", was) : b.FriendlyName;
+            // A ship's or cart's route panel is named after the ship; a merchant's window starts with its own title.
+            var route = ui.shipLogisticsUI;
+            if (route != null && route.Visible && route.shipName != null && TextUtil.HasContent(route.shipName.text)) return TextUtil.Clean(route.shipName.text);
+            if (ui.merchantUI != null && ui.merchantUI.Visible) return Loc.T("Trade window");
             if (ui.personUI != null && ui.personUI.Visible) return Loc.T("Villager");
             if (ui.unitUI != null && ui.unitUI.Visible) return Loc.T("Army");
             if (ui.GetCellSelected() != null) return Loc.T("Tile");

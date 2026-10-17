@@ -309,6 +309,46 @@ namespace KCAccess
             demolished.Clear();
         }
     }
+
+    /// <summary>
+    /// Rebuilding rubble (its panel button, R while it is selected, rebuild mode) silently swaps it for a construction
+    /// site. One announcement for everything rebuilt together.
+    /// </summary>
+    [HarmonyPatch(typeof(Rubble), nameof(Rubble.Rebuild))]
+    internal static class Patch_RubbleRebuild
+    {
+        private static readonly List<string> rebuilt = new List<string>();
+        private static int frame = -1;
+
+        private static void Prefix(Rubble __instance, out string __state)
+        {
+            __state = null;
+            try
+            {
+                __state = CellInfo.RubbleOf(__instance.GetComponent<Building>());
+            }
+            catch
+            {
+                // announcement only
+            }
+        }
+
+        private static void Postfix(string __state)
+        {
+            if (__state == null) return;
+            if (!rebuilt.Contains(__state)) rebuilt.Add(__state);
+            frame = Time.frameCount;
+        }
+
+        /// <summary>Called every frame.</summary>
+        internal static void Flush()
+        {
+            if (rebuilt.Count == 0 || Time.frameCount == frame) return;
+            A.Cue(KCAccess.Core.Cue.Activate);
+            A.Say(KCAccess.Core.Loc.F("Rebuilding {0}: construction sites replace the rubble", string.Join("; ", rebuilt.ToArray())), force: true);
+            rebuilt.Clear();
+        }
+    }
 }
 
 namespace KCAccess

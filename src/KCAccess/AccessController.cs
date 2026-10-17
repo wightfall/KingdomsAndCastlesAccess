@@ -97,6 +97,7 @@ namespace KCAccess
         {
             if (SteamOverlay.Active) return; // the Steam overlay has the keyboard; keys are not meant for the game
             Patch_Demolish.Flush();
+            Patch_RubbleRebuild.Flush();
             if (ActiveMenu is Game.ModSettingsMenu ms && ms.Capturing)
             {
                 InputGate.BlockGameKeys = true;

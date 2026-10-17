@@ -89,6 +89,19 @@ namespace KCAccess.UI
             return TextUtil.HasContent(t) ? TextUtil.Clean(t) : TextUtil.Humanize(id);
         }
 
+        /// <summary>An upgrade's name: the game's text is "name - what it does" (" \u2014 " or ": " in some languages).</summary>
+        internal static string UpgradeShortName(Player.UpgradeType upgrade)
+        {
+            string full = UpgradeName(upgrade);
+            int cut = -1;
+            foreach (var sep in new[] { " - ", " \u2014 ", " \u2013 ", ": " })
+            {
+                int i = full.IndexOf(sep, System.StringComparison.Ordinal);
+                if (i > 0 && (cut < 0 || i < cut)) cut = i;
+            }
+            return cut > 0 ? full.Substring(0, cut) : full;
+        }
+
         private static string ResearchDescription(Transform row, Player.UpgradeType upgrade)
         {
             string name = TextUtil.Clean(UIText.TextOf(row.GetChild(0).GetComponent<TMPro.TMP_Text>()));
@@ -768,6 +781,13 @@ namespace KCAccess.UI
                     name = stance == UnitUI.inst.unitAttackBehaviorHold ? Loc.T("Hold stance") : stance == UnitUI.inst.unitAttackBehaviorAttack ? Loc.T("Attack stance") : Loc.T("Pursue stance");
                 return name + ", " + Loc.T("radio button") + ", " + (stance.isOn ? Loc.T("selected") : Loc.T("not selected")); // the navigator adds the tooltip
             }
+            // Rubble: the panel shows only "Rebuild" and a cost line (red where you lack something); what stood there is
+            // only drawn as an outline.
+            var rubbleUi = item.IsControl && GameUI.inst != null ? GameUI.inst.rubbleUI : null;
+            if (rubbleUi != null && item.Control == rubbleUi.rebuildButton && GameUI.inst.GetBuildingSelected() is Building rubbleBuilding
+                && Game.CellInfo.RubbleOf(rubbleBuilding) is string was)
+                return TextUtil.Join(", ", Loc.F("Rebuild {0}", was), UIText.ButtonRole, Game.CellInfo.RebuildCost(rubbleBuilding),
+                    item.Control.interactable ? null : Loc.T("unavailable"));
             // Building panel: the demolish, rename and close buttons are pictures, and the name field is greyed out
             // until the rename button is pressed.
             var worker = GameUI.inst != null ? GameUI.inst.workerUI : null;
@@ -776,6 +796,8 @@ namespace KCAccess.UI
                 if (item.Control == worker.trashButton) return Loc.T("Demolish, button");
                 if (item.Control == worker.editTitleButton) return Loc.T("Rename building, button");
                 if (worker.close != null && item.Go == worker.close) return Loc.T("Close, button");
+                if (item.Control == worker.titleText && Game.CellInfo.RubbleOf(GameUI.inst.GetBuildingSelected()) is string rubbleWas)
+                    return Loc.F("Rubble of {0}", rubbleWas);
                 if (item.Control == worker.titleText)
                 {
                     string name = TextUtil.Clean(worker.titleText.text);
@@ -881,6 +903,24 @@ namespace KCAccess.UI
                     return res + ": " + Loc.F("keep for transport only, check box, {0}", tg.isOn ? Loc.T("checked") : Loc.T("not checked")) + (UIText.TooltipOf(item.Go) is string tip ? ". " + tip : string.Empty);
             }
             if (ResearchRow(item.Go, out var researchRow, out var upgrade)) return ResearchDescription(researchRow, upgrade);
+            // The witch's raid and dragon spells are greyed out except during an attack; the button does not say so.
+            var witchUi = item.IsControl && GameUI.inst != null ? GameUI.inst.witchUI : null;
+            if (witchUi != null && witchUi.witch != null && witchUi.spellList != null && item.Go.transform.parent == witchUi.spellList.transform && !item.Control.interactable)
+            {
+                int spell = item.Go.transform.GetSiblingIndex();
+                string why = !witchUi.witch.IsSpellReady((WitchHut.Spells)spell) ? null // the button shows the years until it is ready
+                    : spell == (int)WitchHut.Spells.VikingSmite ? Loc.T("only during a viking raid")
+                    : spell == (int)WitchHut.Spells.DriveAwayDragons ? Loc.T("only during a dragon attack") : null;
+                return TextUtil.Join(", ", UIText.LabelOf(item.Control), UIText.ButtonRole, Loc.T("unavailable"), why);
+            }
+            // The current research: Accept only closes the window, Cancel stops the research.
+            var researchUi = item.IsControl && GameUI.inst != null ? GameUI.inst.researchUI : null;
+            if (researchUi != null && item.Control == researchUi.acceptCurrentResearchButton)
+                return TextUtil.Join(", ", UIText.LabelOf(item.Control), UIText.ButtonRole, Loc.T("closes the window, the research goes on"));
+            if (researchUi != null && item.Control == researchUi.cancelCurrentResearchButton)
+                return TextUtil.Join(", ", Loc.T("Cancel research"), UIText.ButtonRole, Loc.T("stops it and refunds the gold"));
+            if (researchUi != null && item.Control == researchUi.researchProgress)
+                return Loc.F("Research progress, {0}", TextUtil.Percent(researchUi.researchProgress.normalizedValue));
             if (item.IsControl && !item.Control.interactable && GameUI.inst != null && GameUI.inst.workerUI != null && item.Control == GameUI.inst.workerUI.customButton)
             {
                 // The game greys a building's custom button only when the panel opens: refresh a stale state first.
@@ -1258,7 +1298,31 @@ namespace KCAccess.UI
                     A.Say(Loc.F("Not enough gold: costs {0}, you have {1}", lib.GetCost(up), gold), force: true);
                     return true;
                 }
-                return false; // normal click starts the research; the new state is read automatically
+                if (lib == null) return false;
+                // The click pays and starts it at once; the window then shows only Accept and Cancel.
+                KInput.Consume(KeyCode.Space);
+                KInput.Consume(KeyCode.Return);
+                int cost = lib.GetCost(up);
+                UINavigator.Click(item.Go);
+                if (lib.research == up)
+                {
+                    A.Cue(Cue.Activate);
+                    A.Say(Loc.F("Research started: {0}, {1} gold paid", UpgradeShortName(up), cost), force: true);
+                    var accept = GameUI.inst.researchUI.acceptCurrentResearchButton;
+                    if (accept != null) nav.RequestFocus(g => g == accept.gameObject);
+                }
+                return true;
+            }
+            if (WitchKey(item)) return true;
+            var research = item.IsControl && GameUI.inst != null ? GameUI.inst.researchUI : null;
+            if (research != null && item.Control == research.cancelCurrentResearchButton && (KInput.Plain(KeyCode.Return) || KInput.Plain(KeyCode.Space)))
+            {
+                KInput.Consume(KeyCode.Space);
+                KInput.Consume(KeyCode.Return);
+                UINavigator.Click(item.Go);
+                A.Cue(Cue.Close);
+                A.Say(Loc.T("Research cancelled, the gold is refunded"), force: true);
+                return true;
             }
             var mrow = item.Go.GetComponentInParent<ResourceLineItemUI>();
             if (mrow != null && item.Control == mrow.orderAmt && KInput.NoMods)
@@ -1350,6 +1414,40 @@ namespace KCAccess.UI
                 A.Cue(row.DisableToggle.isOn ? Cue.ToggleOn : Cue.ToggleOff);
                 A.Say(PriorityRow(row));
                 return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// The witch answers a mission she cannot be paid for, or a spell there is not gold enough for, with a sound only.
+        /// </summary>
+        private static bool WitchKey(UIItem item)
+        {
+            var ui = GameUI.inst != null ? GameUI.inst.witchUI : null;
+            var hut = ui != null ? ui.witch : null;
+            if (hut == null || !item.IsControl || !item.Control.interactable || !(KInput.Plain(KeyCode.Return) || KInput.Plain(KeyCode.Space))) return false;
+            if (ui.sendContainer != null && item.Go.name == "SendButton" && item.Go.transform.IsChildOf(ui.sendContainer.transform) && !hut.HasEnoughToCompleteMission())
+            {
+                KInput.Consume(KeyCode.Return);
+                KInput.Consume(KeyCode.Space);
+                A.Cue(Cue.Error);
+                A.Say(Loc.F("You do not have everything she asked for: {0}", ui.sendResourceDesc != null ? TextUtil.Clean(UIText.TextOf(ui.sendResourceDesc)) : string.Empty), force: true);
+                return true;
+            }
+            if (ui.spellList != null && item.Go.transform.parent == ui.spellList.transform)
+            {
+                int spell = item.Go.transform.GetSiblingIndex();
+                var cell = World.inst.GetCellData(hut.transform.position);
+                var owner = cell != null ? World.GetLandmassOwner(cell.landMassIdx) : null;
+                int cost = hut.GetSpellCost(spell);
+                if (owner != null && owner.Gold < cost)
+                {
+                    KInput.Consume(KeyCode.Return);
+                    KInput.Consume(KeyCode.Space);
+                    A.Cue(Cue.Error);
+                    A.Say(Loc.F("Not enough gold: costs {0}, you have {1}", cost, owner.Gold), force: true);
+                    return true;
+                }
             }
             return false;
         }

@@ -50,19 +50,6 @@ namespace KCAccess.Game
             return TextUtil.Clean(kingdom != null ? string.Format(ScriptLocalization.ShipFromKingOrQueen, kingdom.GetLocalizedName()) : ScriptLocalization.ShipFromBeyondTheSea);
         }
 
-        /// <summary>An upgrade's name: the game's text is "name - what it does" (" — " or ": " in some languages).</summary>
-        private static string UpgradeShortName(Player.UpgradeType upgrade)
-        {
-            string full = Special.UpgradeName(upgrade);
-            int cut = -1;
-            foreach (var sep in new[] { " - ", " — ", " – ", ": " })
-            {
-                int i = full.IndexOf(sep, System.StringComparison.Ordinal);
-                if (i > 0 && (cut < 0 || i < cut)) cut = i;
-            }
-            return cut > 0 ? full.Substring(0, cut) : full;
-        }
-
         private static int UpgradeCost(MerchantUI w) =>
             w.upgradeDescs != null && w.upgradeIdx >= 0 && w.upgradeIdx < w.upgradeDescs.Count ? w.upgradeDescs[w.upgradeIdx].cost : 0;
 
@@ -103,7 +90,7 @@ namespace KCAccess.Game
                     A.Say(Loc.F("Not enough gold: costs {0}, you have {1}", price, gold), force: true);
                     return true;
                 }
-                string upgrade = UpgradeShortName(w.ship.GetSpecialUpgrade());
+                string upgrade = Special.UpgradeShortName(w.ship.GetSpecialUpgrade());
                 UINavigator.Click(item.Go);
                 A.Cue(Cue.Activate);
                 A.Say(Loc.F("Bought {0} for {1} gold, {2} gold left", upgrade, price, Gold()), force: true);

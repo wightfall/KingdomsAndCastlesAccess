@@ -480,7 +480,10 @@ namespace KCAccess.UI
         /// <summary>A slider without a visible handle (opinion, health, busy timers) is just a progress bar.</summary>
         internal static bool IsReadOnlySlider(Slider sl) =>
             !sl.interactable || sl.handleRect == null || !sl.handleRect.gameObject.activeInHierarchy
-            || sl.GetComponentInParent<HealthBarUI>() != null; // building health is shown with a slider but is display only
+            || sl.GetComponentInParent<HealthBarUI>() != null // building health is shown with a slider but is display only
+            // Shown with a draggable knob, but the game sets them every frame: the torch recharge and the research progress.
+            || (UnitUI.inst != null && sl == UnitUI.inst.unitAttackProgressSlider)
+            || (GameUI.inst != null && GameUI.inst.researchUI != null && sl == GameUI.inst.researchUI.researchProgress);
 
         internal static string RoleOf(Selectable s)
         {
