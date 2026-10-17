@@ -13,6 +13,18 @@
 # Lines starting with # are comments.
 
 # ===== Speech, screens and menus =====
+black = noir
+white = blanc
+grey = gris
+brown = marron
+red = rouge
+orange = orange
+yellow = jaune
+green = vert
+teal = turquoise
+blue = bleu
+purple = violet
+pink = rose
 {0} of {1} = {0} sur {1}
 {0} percent = {0} pour cent
 the map = la carte
@@ -95,6 +107,10 @@ they are {0} = humeur : {0}
 tab = onglet
 button, Enter shows this unit's details = bouton, Entrée affiche les détails de cette unité
 Press the new key for {0}. You can hold Control, Shift or Alt with it. = Appuyez sur la nouvelle touche pour {0}. Vous pouvez maintenir Ctrl, Maj ou Alt avec.
+a festival is under way = un festival est en cours
+unavailable, not enough gold = indisponible, pas assez d'or
+a feast is under way = un banquet est en cours
+no damaged building found yet; a staffed mason looks for one = aucun bâtiment endommagé trouvé pour l'instant ; un maçon avec du personnel en cherche un
 Pause = Pause
 Normal speed = Vitesse normale
 Fast speed = Vitesse rapide
@@ -182,6 +198,7 @@ Custom banner {0} of {1} = Bannière personnalisée {0} sur {1}
 Workshop banner {0} of {1} = Bannière du Workshop {0} sur {1}
 Banner {0} of {1} = Bannière {0} sur {1}
 Enter selects it, then choose Accept = Entrée la sélectionne, puis choisissez Accepter
+Kingdom colour {0} of {1} = Couleur du royaume {0} sur {1}
 Open custom banner folder, button = Ouvrir le dossier des bannières personnalisées, bouton
 button, press Enter to hear their advice = bouton, appuyez sur Entrée pour entendre son conseil
 press Enter for the yearly report = appuyez sur Entrée pour le rapport annuel
@@ -198,7 +215,6 @@ desired amount of {0} = quantité souhaitée de {0}
 {0}, button, the camera follows this dragon = {0}, bouton, la caméra suit ce dragon
 Dragon slot {0}: {1} = Place de dragon {0} : {1}
 Dragon slot {0}: add a gold pile, {1} gold, button = Place de dragon {0} : déposer un tas d'or, {1} pièces d'or, bouton
-unavailable, not enough gold = indisponible, pas assez d'or
 Dragon slot {0}: remove the gold pile, the gold comes back, button = Place de dragon {0} : retirer le tas d'or, l'or est rendu, bouton
 Rename {0}, button = Renommer {0}, bouton
 Release {0}, button: the dragon leaves the roost = Libérer {0}, bouton : le dragon quitte le nid

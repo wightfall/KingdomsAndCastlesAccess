@@ -185,7 +185,8 @@ announced, as are newly unlocked achievements. Stacked castle blocks are read as
 their ship: the theft is announced, the tile says "thieves carrying 100 gold", killing them on land says the gold
 was recovered, and you hear when they got away with it. Requests of AI kingdoms (resources, wolves, vikings) are
 announced when you fulfil them or they fail. Buttons that cost resources (church tithe, Great Hall feast, town
-square festival) say what is missing when you cannot pay, and the mason's repair target button names the
+square festival) say what is missing when you cannot pay, and when the game greys such a button the mod says why
+(a festival or feast under way, not enough gold, no repair target yet); the mason's repair target button names the
 building; Enter moves the cursor there.
 
 **Fires** are announced when they break out in your kingdom ("Fire at Hovel", with the direction; the fire
@@ -353,7 +354,10 @@ build roads out from your keep first (I tells you whether a tile is covered).
 ### Starting a new game
 
 1. New → Standard Mode Accept → choose a region (difficulty) with Previous / Next → Accept.
-2. Kingdom name (Enter to edit) → Accept.
+2. Kingdom name (Enter to edit) → Choose banner opens the banner list as its own window: the six banners are read with
+   their colour ("Banner 2 of 6, yellow"), PNG files in the custom banner folder follow ("Open custom banner folder"),
+   and a custom banner gets a kingdom colour ("Kingdom colour 4 of 6, green"); Enter says what is selected, Accept
+   returns (Upload to Workshop opens its own window; Escape cancels it) → Accept.
 3. Map setup: size, type and rivers; New Map generates another map. **Ctrl+M** lets you explore the
    generated map with the arrow keys and the scanner before you start; Ctrl+M again returns. AI kingdoms
    (optional, maps with several islands): Add AI kingdom, then on its name **I** / **Shift+I** choose the island it
@@ -663,7 +667,7 @@ knight|archer|settler|envoy`, `dragon [mama]`, `nest egg|hatch|mature|happy|bond
 (GoldDemand, AIGift ...), `dialogue` (the current line's conversation and entry ids), `viking thief` (a thief heading for your Treasure
 Room), `thieves kill|escape`, `mission start|done|fail` (a request of the first AI kingdom), `masontarget` (the
 selected mason's target becomes the building at the cursor), `gold <n>`, `probe <name>` (size and state of
-controls).
+controls), `thieves sink`, `findmethod <name>` (buttons calling a game method), `liveries`, `canvases`.
 
 ## License
 

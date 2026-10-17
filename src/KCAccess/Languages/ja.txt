@@ -13,6 +13,18 @@
 # Lines starting with # are comments.
 
 # ===== Speech, screens and menus =====
+black = 黒
+white = 白
+grey = 灰色
+brown = 茶色
+red = 赤
+orange = オレンジ
+yellow = 黄
+green = 緑
+teal = 青緑
+blue = 青
+purple = 紫
+pink = ピンク
 {0} of {1} = {1} 中 {0}
 {0} percent = {0} パーセント
 the map = マップ
@@ -95,6 +107,10 @@ they are {0} = 相手の様子: {0}
 tab = タブ
 button, Enter shows this unit's details = ボタン、Enter でこのユニットの詳細を表示
 Press the new key for {0}. You can hold Control, Shift or Alt with it. = {0} の新しいキーを押してください。Control、Shift、Alt と組み合わせることもできます。
+a festival is under way = 祭りの最中です
+unavailable, not enough gold = 使用不可、ゴールドが足りません
+a feast is under way = 宴の最中です
+no damaged building found yet; a staffed mason looks for one = 損傷した建物はまだ見つかっていません。働き手のいる石工が探します
 Pause = 一時停止
 Normal speed = 通常速度
 Fast speed = 高速
@@ -182,6 +198,7 @@ Custom banner {0} of {1} = カスタム旗 {0} / {1}
 Workshop banner {0} of {1} = ワークショップの旗 {0} / {1}
 Banner {0} of {1} = 旗 {0} / {1}
 Enter selects it, then choose Accept = Enter で選び、「決定」を選んでください
+Kingdom colour {0} of {1} = 王国の色 {1} 中 {0}
 Open custom banner folder, button = カスタム旗のフォルダーを開く、ボタン
 button, press Enter to hear their advice = ボタン、Enter で助言を聞く
 press Enter for the yearly report = Enter で年次レポート
@@ -198,7 +215,6 @@ desired amount of {0} = {0} の希望量
 {0}, button, the camera follows this dragon = {0}、ボタン、カメラがこのドラゴンを追います
 Dragon slot {0}: {1} = ドラゴンの枠 {0}: {1}
 Dragon slot {0}: add a gold pile, {1} gold, button = ドラゴンの枠 {0}: 金貨の山を置く、{1} ゴールド、ボタン
-unavailable, not enough gold = 使用不可、ゴールドが足りません
 Dragon slot {0}: remove the gold pile, the gold comes back, button = ドラゴンの枠 {0}: 金貨の山を取り除く、ゴールドは戻ります、ボタン
 Rename {0}, button = {0} の名前を変更、ボタン
 Release {0}, button: the dragon leaves the roost = {0} を放す、ボタン: ドラゴンはねぐらを去ります

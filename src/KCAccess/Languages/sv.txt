@@ -13,6 +13,18 @@
 # Lines starting with # are comments.
 
 # ===== Speech, screens and menus =====
+black = svart
+white = vit
+grey = grå
+brown = brun
+red = röd
+orange = orange
+yellow = gul
+green = grön
+teal = turkos
+blue = blå
+purple = lila
+pink = rosa
 {0} of {1} = {0} av {1}
 {0} percent = {0} procent
 the map = kartan
@@ -95,6 +107,10 @@ they are {0} = de är {0}
 tab = flik
 button, Enter shows this unit's details = knapp, Enter visar enhetens detaljer
 Press the new key for {0}. You can hold Control, Shift or Alt with it. = Tryck på den nya tangenten för {0}. Du kan hålla ner Ctrl, Skift eller Alt samtidigt.
+a festival is under way = en festival pågår
+unavailable, not enough gold = inte tillgänglig, inte tillräckligt med guld
+a feast is under way = en festmåltid pågår
+no damaged building found yet; a staffed mason looks for one = ingen skadad byggnad hittad ännu; en bemannad stenhuggare letar efter en
 Pause = Paus
 Normal speed = Normal hastighet
 Fast speed = Snabb hastighet
@@ -182,6 +198,7 @@ Custom banner {0} of {1} = Eget baner {0} av {1}
 Workshop banner {0} of {1} = Workshop-baner {0} av {1}
 Banner {0} of {1} = Baner {0} av {1}
 Enter selects it, then choose Accept = Enter väljer det, välj sedan Acceptera
+Kingdom colour {0} of {1} = Kungarikets färg {0} av {1}
 Open custom banner folder, button = Öppna mappen för egna baner, knapp
 button, press Enter to hear their advice = knapp, tryck på Enter för att höra rådet
 press Enter for the yearly report = tryck på Enter för årsrapporten
@@ -198,7 +215,6 @@ desired amount of {0} = önskad mängd {0}
 {0}, button, the camera follows this dragon = {0}, knapp, kameran följer den här draken
 Dragon slot {0}: {1} = Drakplats {0}: {1}
 Dragon slot {0}: add a gold pile, {1} gold, button = Drakplats {0}: lägg en guldhög, {1} guld, knapp
-unavailable, not enough gold = inte tillgänglig, inte tillräckligt med guld
 Dragon slot {0}: remove the gold pile, the gold comes back, button = Drakplats {0}: ta bort guldhögen, guldet kommer tillbaka, knapp
 Rename {0}, button = Byt namn på {0}, knapp
 Release {0}, button: the dragon leaves the roost = Släpp {0}, knapp: draken lämnar boet

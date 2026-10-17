@@ -391,6 +391,28 @@ namespace KCAccess
                                 Plugin.Log.LogInfo("[dbg] thief carrying " + army.stolenResourceAmount + " " + army.stolenResourceType);
                                 if (parts.Length > 1 && parts[1] == "kill") UnitSystem.inst.SetStatus(army, UnitSystem.Army.GeneralStatus.Dying);
                                 else if (parts.Length > 1 && parts[1] == "escape") UnitSystem.inst.ReleaseArmy(army);
+                                else if (parts.Length > 1 && parts[1] == "sink")
+                                {
+                                    // "thieves sink": a viking ship at the nearest water takes the thief aboard, then sinks.
+                                    Cell water = null;
+                                    float best = float.MaxValue;
+                                    var ap = army.generalPos;
+                                    for (int dz = -30; dz <= 30; dz++)
+                                        for (int dx = -30; dx <= 30; dx++)
+                                        {
+                                            var wc = World.inst.GetCellData((int)ap.x + dx, (int)ap.z + dz);
+                                            if (wc == null || wc.Type != ResourceType.Water || dx * dx + dz * dz >= best) continue;
+                                            best = dx * dx + dz * dz;
+                                            water = wc;
+                                        }
+                                    if (water == null) { Plugin.Log.LogInfo("[dbg] no water near the thief"); break; }
+                                    var boat = RaiderSystem.inst.SpawnBoatRaw(water.Center, RaiderSystem.inst.raiderTransportShipPrefab);
+                                    var tts = boat != null ? ((MonoBehaviour)boat).GetComponent<TroopTransportShip>() : null;
+                                    if (tts == null) { Plugin.Log.LogInfo("[dbg] no ship"); break; }
+                                    tts.TryForceLoad(army);
+                                    Plugin.Log.LogInfo("[dbg] thief aboard: " + ((IMoveableUnit)army).IsBeingCarried());
+                                    tts.life = 0f;
+                                }
                             }
                             break;
                         case "plague":
@@ -541,6 +563,28 @@ namespace KCAccess
                                 if (n == 0) continue;
                                 bool holdsRoot = navRoot != null && navRoot.IsChildOf(cv.transform);
                                 Plugin.Log.LogInfo("[canvas] " + PathOf(cv.transform) + " controls=" + n + (holdsRoot ? " (current screen)" : ""));
+                            }
+                            break;
+                        case "findmethod":
+                            // Developer only: "findmethod <name>": every button (also hidden ones) whose click calls a method with that name.
+                            foreach (var mb in Resources.FindObjectsOfTypeAll<Button>())
+                            {
+                                if (parts.Length < 2 || !mb.gameObject.scene.IsValid()) continue;
+                                for (int i = 0; i < mb.onClick.GetPersistentEventCount(); i++)
+                                {
+                                    string mname = mb.onClick.GetPersistentMethodName(i) ?? string.Empty;
+                                    if (mname.IndexOf(parts[1], StringComparison.OrdinalIgnoreCase) < 0) continue;
+                                    Plugin.Log.LogInfo("[method] " + PathOf(mb.transform) + " -> " + mb.onClick.GetPersistentTarget(i)?.GetType().Name + "." + mname + " active=" + mb.gameObject.activeInHierarchy);
+                                }
+                            }
+                            break;
+                        case "liveries":
+                            // Developer only: each kingdom livery's banner and map colour, and the colour word the mod says.
+                            for (int li = 0; li < World.inst.liverySets.Count; li++)
+                            {
+                                var lc = World.inst.liverySets[li].bannerColor;
+                                var lmap = World.inst.liverySets[li].mapColor;
+                                Plugin.Log.LogInfo("[livery] " + li + " banner=" + lc + " map=" + lmap + " => " + Core.ColourNames.Name(lc.r, lc.g, lc.b));
                             }
                             break;
                         case "probe":

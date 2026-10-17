@@ -13,6 +13,18 @@
 # Lines starting with # are comments.
 
 # ===== Speech, screens and menus =====
+black = schwarz
+white = weiß
+grey = grau
+brown = braun
+red = rot
+orange = orange
+yellow = gelb
+green = grün
+teal = türkis
+blue = blau
+purple = lila
+pink = rosa
 {0} of {1} = {0} von {1}
 {0} percent = {0} Prozent
 the map = die Karte
@@ -95,6 +107,10 @@ they are {0} = sie sind {0}
 tab = Reiter
 button, Enter shows this unit's details = Schaltfläche, Eingabe zeigt die Details dieser Einheit
 Press the new key for {0}. You can hold Control, Shift or Alt with it. = Drücke die neue Taste für {0}. Du kannst dabei Strg, Umschalt oder Alt halten.
+a festival is under way = ein Fest ist im Gange
+unavailable, not enough gold = nicht verfügbar, nicht genug Gold
+a feast is under way = ein Festmahl ist im Gange
+no damaged building found yet; a staffed mason looks for one = noch kein beschädigtes Gebäude gefunden; ein besetzter Steinmetz sucht danach
 Pause = Pause
 Normal speed = Normale Geschwindigkeit
 Fast speed = Schnelle Geschwindigkeit
@@ -182,6 +198,7 @@ Custom banner {0} of {1} = Eigenes Banner {0} von {1}
 Workshop banner {0} of {1} = Workshop-Banner {0} von {1}
 Banner {0} of {1} = Banner {0} von {1}
 Enter selects it, then choose Accept = Eingabe wählt es aus, dann wähle Akzeptieren
+Kingdom colour {0} of {1} = Königreichsfarbe {0} von {1}
 Open custom banner folder, button = Ordner für eigene Banner öffnen, Schaltfläche
 button, press Enter to hear their advice = Schaltfläche, drücke Eingabe, um ihren Rat zu hören
 press Enter for the yearly report = drücke Eingabe für den Jahresbericht
@@ -198,7 +215,6 @@ desired amount of {0} = gewünschte Menge {0}
 {0}, button, the camera follows this dragon = {0}, Schaltfläche, die Kamera folgt diesem Drachen
 Dragon slot {0}: {1} = Drachenplatz {0}: {1}
 Dragon slot {0}: add a gold pile, {1} gold, button = Drachenplatz {0}: einen Goldhaufen hinlegen, {1} Gold, Schaltfläche
-unavailable, not enough gold = nicht verfügbar, nicht genug Gold
 Dragon slot {0}: remove the gold pile, the gold comes back, button = Drachenplatz {0}: den Goldhaufen entfernen, das Gold kommt zurück, Schaltfläche
 Rename {0}, button = {0} umbenennen, Schaltfläche
 Release {0}, button: the dragon leaves the roost = {0} freilassen, Schaltfläche: Der Drache verlässt den Horst

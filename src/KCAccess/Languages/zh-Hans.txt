@@ -13,6 +13,18 @@
 # Lines starting with # are comments.
 
 # ===== Speech, screens and menus =====
+black = 黑色
+white = 白色
+grey = 灰色
+brown = 棕色
+red = 红色
+orange = 橙色
+yellow = 黄色
+green = 绿色
+teal = 青色
+blue = 蓝色
+purple = 紫色
+pink = 粉色
 {0} of {1} = 第 {0} 项，共 {1} 项
 {0} percent = {0}%
 the map = 地图
@@ -95,6 +107,10 @@ they are {0} = 对方{0}
 tab = 标签页
 button, Enter shows this unit's details = 按钮，Enter 显示此单位的详情
 Press the new key for {0}. You can hold Control, Shift or Alt with it. = 请为{0}按下新按键。可同时按住 Ctrl、Shift 或 Alt。
+a festival is under way = 节庆正在进行中
+unavailable, not enough gold = 不可用，金币不足
+a feast is under way = 宴会正在进行中
+no damaged building found yet; a staffed mason looks for one = 尚未发现受损建筑；有工人的石匠会去寻找
 Pause = 暂停
 Normal speed = 正常速度
 Fast speed = 快速
@@ -182,6 +198,7 @@ Custom banner {0} of {1} = 自定义旗帜 {0}/{1}
 Workshop banner {0} of {1} = 创意工坊旗帜 {0}/{1}
 Banner {0} of {1} = 旗帜 {0}/{1}
 Enter selects it, then choose Accept = Enter 选择，然后选择“接受”
+Kingdom colour {0} of {1} = 王国颜色 {0}/{1}
 Open custom banner folder, button = 打开自定义旗帜文件夹，按钮
 button, press Enter to hear their advice = 按钮，按 Enter 听取建议
 press Enter for the yearly report = 按 Enter 查看年度报告
@@ -198,7 +215,6 @@ desired amount of {0} = {0}的期望数量
 {0}, button, the camera follows this dragon = {0}，按钮，镜头跟随这条巨龙
 Dragon slot {0}: {1} = 巨龙栏位 {0}：{1}
 Dragon slot {0}: add a gold pile, {1} gold, button = 巨龙栏位 {0}：放置金币堆，{1} 金币，按钮
-unavailable, not enough gold = 不可用，金币不足
 Dragon slot {0}: remove the gold pile, the gold comes back, button = 巨龙栏位 {0}：移走金币堆，退还金币，按钮
 Rename {0}, button = 重命名 {0}，按钮
 Release {0}, button: the dragon leaves the roost = 放走 {0}，按钮：巨龙会离开巢穴

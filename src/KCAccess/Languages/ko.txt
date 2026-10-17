@@ -13,6 +13,18 @@
 # Lines starting with # are comments.
 
 # ===== Speech, screens and menus =====
+black = 검은색
+white = 흰색
+grey = 회색
+brown = 갈색
+red = 빨간색
+orange = 주황색
+yellow = 노란색
+green = 초록색
+teal = 청록색
+blue = 파란색
+purple = 보라색
+pink = 분홍색
 {0} of {1} = {1}개 중 {0}
 {0} percent = {0}퍼센트
 the map = 맵
@@ -95,6 +107,10 @@ they are {0} = 상대의 기분: {0}
 tab = 탭
 button, Enter shows this unit's details = 버튼, Enter로 이 부대의 정보 보기
 Press the new key for {0}. You can hold Control, Shift or Alt with it. = {0}에 쓸 새 키를 누르세요. Control, Shift, Alt를 함께 누를 수도 있습니다.
+a festival is under way = 축제가 진행 중입니다
+unavailable, not enough gold = 사용할 수 없음, 금화가 부족합니다
+a feast is under way = 연회가 진행 중입니다
+no damaged building found yet; a staffed mason looks for one = 아직 손상된 건물을 찾지 못했습니다. 일꾼이 있는 석공이 찾습니다
 Pause = 일시 정지
 Normal speed = 보통 속도
 Fast speed = 빠른 속도
@@ -182,6 +198,7 @@ Custom banner {0} of {1} = 사용자 깃발 {0}/{1}
 Workshop banner {0} of {1} = 창작마당 깃발 {0}/{1}
 Banner {0} of {1} = 깃발 {0}/{1}
 Enter selects it, then choose Accept = Enter로 고른 뒤 수락을 선택하세요
+Kingdom colour {0} of {1} = 왕국 색 {1}개 중 {0}
 Open custom banner folder, button = 사용자 깃발 폴더 열기, 버튼
 button, press Enter to hear their advice = 버튼, Enter를 눌러 조언 듣기
 press Enter for the yearly report = Enter로 연간 보고서
@@ -198,7 +215,6 @@ desired amount of {0} = {0} 목표량
 {0}, button, the camera follows this dragon = {0}, 버튼, 카메라가 이 드래곤을 따라갑니다
 Dragon slot {0}: {1} = 드래곤 자리 {0}: {1}
 Dragon slot {0}: add a gold pile, {1} gold, button = 드래곤 자리 {0}: 금화 더미 놓기, 금화 {1}, 버튼
-unavailable, not enough gold = 사용할 수 없음, 금화가 부족합니다
 Dragon slot {0}: remove the gold pile, the gold comes back, button = 드래곤 자리 {0}: 금화 더미 치우기, 금화를 돌려받습니다, 버튼
 Rename {0}, button = {0} 이름 바꾸기, 버튼
 Release {0}, button: the dragon leaves the roost = {0} 놓아주기, 버튼: 드래곤이 둥지를 떠납니다

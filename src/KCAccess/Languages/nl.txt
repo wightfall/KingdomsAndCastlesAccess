@@ -13,6 +13,18 @@
 # Lines starting with # are comments.
 
 # ===== Speech, screens and menus =====
+black = zwart
+white = wit
+grey = grijs
+brown = bruin
+red = rood
+orange = oranje
+yellow = geel
+green = groen
+teal = turquoise
+blue = blauw
+purple = paars
+pink = roze
 {0} of {1} = {0} van {1}
 {0} percent = {0} procent
 the map = de kaart
@@ -95,6 +107,10 @@ they are {0} = ze zijn {0}
 tab = tabblad
 button, Enter shows this unit's details = knop, Enter toont de details van deze eenheid
 Press the new key for {0}. You can hold Control, Shift or Alt with it. = Druk op de nieuwe toets voor {0}. Je kunt er Ctrl, Shift of Alt bij ingedrukt houden.
+a festival is under way = er is een festival bezig
+unavailable, not enough gold = niet beschikbaar, niet genoeg goud
+a feast is under way = er is een feestmaal bezig
+no damaged building found yet; a staffed mason looks for one = nog geen beschadigd gebouw gevonden; een bemande steenhouwer zoekt er een
 Pause = Pauze
 Normal speed = Normale snelheid
 Fast speed = Hoge snelheid
@@ -182,6 +198,7 @@ Custom banner {0} of {1} = Eigen banier {0} van {1}
 Workshop banner {0} of {1} = Workshop-banier {0} van {1}
 Banner {0} of {1} = Banier {0} van {1}
 Enter selects it, then choose Accept = Enter selecteert hem, kies dan Accepteren
+Kingdom colour {0} of {1} = Koninkrijkskleur {0} van {1}
 Open custom banner folder, button = Map met eigen banieren openen, knop
 button, press Enter to hear their advice = knop, druk op Enter om het advies te horen
 press Enter for the yearly report = druk op Enter voor het jaarverslag
@@ -198,7 +215,6 @@ desired amount of {0} = gewenste hoeveelheid {0}
 {0}, button, the camera follows this dragon = {0}, knop, de camera volgt deze draak
 Dragon slot {0}: {1} = Drakenplaats {0}: {1}
 Dragon slot {0}: add a gold pile, {1} gold, button = Drakenplaats {0}: een stapel goud neerleggen, {1} goud, knop
-unavailable, not enough gold = niet beschikbaar, niet genoeg goud
 Dragon slot {0}: remove the gold pile, the gold comes back, button = Drakenplaats {0}: de stapel goud weghalen, het goud komt terug, knop
 Rename {0}, button = {0} hernoemen, knop
 Release {0}, button: the dragon leaves the roost = {0} vrijlaten, knop: de draak verlaat het nest

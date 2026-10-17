@@ -19,6 +19,18 @@
 # Lines starting with # are comments.
 
 # ===== Speech, screens and menus =====
+black =
+white =
+grey =
+brown =
+red =
+orange =
+yellow =
+green =
+teal =
+blue =
+purple =
+pink =
 {0} of {1} =
 {0} percent =
 the map =
@@ -101,6 +113,10 @@ they are {0} =
 tab =
 button, Enter shows this unit's details =
 Press the new key for {0}. You can hold Control, Shift or Alt with it. =
+a festival is under way =
+unavailable, not enough gold =
+a feast is under way =
+no damaged building found yet; a staffed mason looks for one =
 Pause =
 Normal speed =
 Fast speed =
@@ -188,6 +204,7 @@ Custom banner {0} of {1} =
 Workshop banner {0} of {1} =
 Banner {0} of {1} =
 Enter selects it, then choose Accept =
+Kingdom colour {0} of {1} =
 Open custom banner folder, button =
 button, press Enter to hear their advice =
 press Enter for the yearly report =
@@ -204,7 +221,6 @@ desired amount of {0} =
 {0}, button, the camera follows this dragon =
 Dragon slot {0}: {1} =
 Dragon slot {0}: add a gold pile, {1} gold, button =
-unavailable, not enough gold =
 Dragon slot {0}: remove the gold pile, the gold comes back, button =
 Rename {0}, button =
 Release {0}, button: the dragon leaves the roost =

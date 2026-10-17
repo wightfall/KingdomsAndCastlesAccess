@@ -67,7 +67,7 @@ namespace KCAccess.Tests
         /// <summary>Section names of the language files (what a translator looks for) and the source files in them.</summary>
         public static readonly string[][] Categories =
         {
-            new[] { "Speech, screens and menus", "AccessController", "UINavigator", "UIText", "Special", "ScreenDetector", "GameScreens", "ListMenu", "NavList", "TextUtil", "SteamOverlay", "Diagnostics", "DialoguePatches", "Plugin", "KeyboardGuard", "OsKeyboard", "WebLinks", "RivalStart" },
+            new[] { "Speech, screens and menus", "AccessController", "UINavigator", "UIText", "Special", "ScreenDetector", "GameScreens", "ListMenu", "NavList", "TextUtil", "SteamOverlay", "Diagnostics", "DialoguePatches", "Plugin", "KeyboardGuard", "OsKeyboard", "WebLinks", "RivalStart", "ColourNames" },
             new[] { "Help and key lists", "HelpText", "KeyHelp", "KeysMenu", "Bindings" },
             new[] { "Mod settings, languages and sound cues", "ModSettingsMenu", "ModLanguage", "Cues", "AudioCues" },
             new[] { "Map, tiles and cursor", "MapController", "CellInfo", "Overlays", "AreaSurvey", "GridMath", "ResourceNames", "VirtualPointer" },

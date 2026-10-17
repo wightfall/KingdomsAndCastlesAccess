@@ -13,6 +13,18 @@
 # Lines starting with # are comments.
 
 # ===== Speech, screens and menus =====
+black = svart
+white = hvit
+grey = grå
+brown = brun
+red = rød
+orange = oransje
+yellow = gul
+green = grønn
+teal = turkis
+blue = blå
+purple = lilla
+pink = rosa
 {0} of {1} = {0} av {1}
 {0} percent = {0} prosent
 the map = kartet
@@ -95,6 +107,10 @@ they are {0} = de er {0}
 tab = fane
 button, Enter shows this unit's details = knapp, Enter viser detaljer om denne enheten
 Press the new key for {0}. You can hold Control, Shift or Alt with it. = Trykk den nye tasten for {0}. Du kan holde Control, Shift eller Alt samtidig.
+a festival is under way = en festival pågår
+unavailable, not enough gold = utilgjengelig, ikke nok gull
+a feast is under way = et festmåltid pågår
+no damaged building found yet; a staffed mason looks for one = ingen skadet bygning funnet ennå; en bemannet steinhugger leter etter en
 Pause = Pause
 Normal speed = Normal fart
 Fast speed = Rask fart
@@ -182,6 +198,7 @@ Custom banner {0} of {1} = Egendefinert banner {0} av {1}
 Workshop banner {0} of {1} = Workshop-banner {0} av {1}
 Banner {0} of {1} = Banner {0} av {1}
 Enter selects it, then choose Accept = Enter velger det, velg deretter Godta
+Kingdom colour {0} of {1} = Kongerikets farge {0} av {1}
 Open custom banner folder, button = Åpne mappen for egendefinerte bannere, knapp
 button, press Enter to hear their advice = knapp, trykk Enter for å høre rådene deres
 press Enter for the yearly report = trykk Enter for årsrapporten
@@ -198,7 +215,6 @@ desired amount of {0} = ønsket mengde {0}
 {0}, button, the camera follows this dragon = {0}, knapp, kameraet følger denne dragen
 Dragon slot {0}: {1} = Drageplass {0}: {1}
 Dragon slot {0}: add a gold pile, {1} gold, button = Drageplass {0}: legg en gullhaug, {1} gull, knapp
-unavailable, not enough gold = utilgjengelig, ikke nok gull
 Dragon slot {0}: remove the gold pile, the gold comes back, button = Drageplass {0}: fjern gullhaugen, gullet kommer tilbake, knapp
 Rename {0}, button = Gi {0} nytt navn, knapp
 Release {0}, button: the dragon leaves the roost = Slipp fri {0}, knapp: dragen forlater reiret

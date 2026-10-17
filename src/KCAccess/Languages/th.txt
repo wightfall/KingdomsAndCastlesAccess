@@ -13,6 +13,18 @@
 # Lines starting with # are comments.
 
 # ===== Speech, screens and menus =====
+black = ดำ
+white = ขาว
+grey = เทา
+brown = น้ำตาล
+red = แดง
+orange = ส้ม
+yellow = เหลือง
+green = เขียว
+teal = เขียวอมฟ้า
+blue = น้ำเงิน
+purple = ม่วง
+pink = ชมพู
 {0} of {1} = {0} จาก {1}
 {0} percent = {0} เปอร์เซ็นต์
 the map = แผนที่
@@ -95,6 +107,10 @@ they are {0} = พวกเขา{0}
 tab = แท็บ
 button, Enter shows this unit's details = ปุ่ม Enter แสดงรายละเอียดของหน่วยนี้
 Press the new key for {0}. You can hold Control, Shift or Alt with it. = กดปุ่มใหม่สำหรับ{0} กดพร้อม Control, Shift หรือ Alt ได้
+a festival is under way = กำลังจัดเทศกาลอยู่
+unavailable, not enough gold = ใช้ไม่ได้ ทองไม่พอ
+a feast is under way = กำลังจัดงานเลี้ยงอยู่
+no damaged building found yet; a staffed mason looks for one = ยังไม่พบสิ่งก่อสร้างที่เสียหาย ช่างก่อหินที่มีคนงานจะคอยหา
 Pause = หยุดเกมชั่วคราว
 Normal speed = ความเร็วปกติ
 Fast speed = ความเร็วเร็ว
@@ -182,6 +198,7 @@ Custom banner {0} of {1} = ธงที่สร้างเอง {0} จาก
 Workshop banner {0} of {1} = ธงจากเวิร์กช็อป {0} จาก {1}
 Banner {0} of {1} = ธง {0} จาก {1}
 Enter selects it, then choose Accept = Enter เพื่อเลือก แล้วเลือก Accept
+Kingdom colour {0} of {1} = สีของอาณาจักร {0} จาก {1}
 Open custom banner folder, button = เปิดโฟลเดอร์ธงที่สร้างเอง ปุ่ม
 button, press Enter to hear their advice = ปุ่ม กด Enter เพื่อฟังคำแนะนำ
 press Enter for the yearly report = กด Enter เพื่อฟังรายงานประจำปี
@@ -198,7 +215,6 @@ desired amount of {0} = จำนวนที่ต้องการของ{0
 {0}, button, the camera follows this dragon = {0} ปุ่ม กล้องจะติดตามมังกรตัวนี้
 Dragon slot {0}: {1} = ช่องมังกร {0}: {1}
 Dragon slot {0}: add a gold pile, {1} gold, button = ช่องมังกร {0}: วางกองทอง {1} ทอง ปุ่ม
-unavailable, not enough gold = ใช้ไม่ได้ ทองไม่พอ
 Dragon slot {0}: remove the gold pile, the gold comes back, button = ช่องมังกร {0}: เอากองทองออก ได้ทองคืน ปุ่ม
 Rename {0}, button = เปลี่ยนชื่อ {0} ปุ่ม
 Release {0}, button: the dragon leaves the roost = ปล่อย {0} ปุ่ม: มังกรจะออกจากรัง

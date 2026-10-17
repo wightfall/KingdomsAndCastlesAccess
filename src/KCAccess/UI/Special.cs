@@ -394,6 +394,36 @@ namespace KCAccess.UI
             }
         }
 
+        /// <summary>The colour of kingdom livery <paramref name="index"/> (banners, kingdom colours) as a word, or null.</summary>
+        private static string LiveryColour(int index)
+        {
+            var sets = World.inst != null ? World.inst.liverySets : null;
+            if (sets == null || index < 0 || index >= sets.Count) return null;
+            var c = sets[index].bannerColor;
+            return ColourNames.Name(c.r, c.g, c.b);
+        }
+
+        /// <summary>
+        /// Why a building panel's custom button is greyed out (the game only greys it): a festival or feast under way,
+        /// not enough gold for a festival, no repair target for a mason yet. Null for other controls.
+        /// </summary>
+        private static string CustomButtonReason(Selectable s)
+        {
+            var ui = GameUI.inst;
+            if (ui == null || ui.workerUI == null || s == null || s != ui.workerUI.customButton) return null;
+            var b = ui.GetBuildingSelected();
+            if (b == null) return null;
+            if (b.GetComponent<TownSquare>() is TownSquare square)
+            {
+                if (!square.IsFestivalDone()) return Loc.F("unavailable, {0}", Loc.T("a festival is under way"));
+                var owner = World.GetLandmassOwner(b.LandMass());
+                return owner != null && owner.Gold < square.GetFestivalCost() ? Loc.T("unavailable, not enough gold") + " " + Loc.F("(have {0})", owner.Gold) : null;
+            }
+            if (b.GetComponent<GreatHall>() != null) return Loc.F("unavailable, {0}", Loc.T("a feast is under way"));
+            if (b.GetComponent<Mason>() != null) return Loc.F("unavailable, {0}", Loc.T("no damaged building found yet; a staffed mason looks for one"));
+            return null;
+        }
+
         /// <summary>The selected mason, when the control is its panel's custom button (the primary repair target).</summary>
         private static Mason MasonOf(Selectable s)
         {
@@ -850,6 +880,13 @@ namespace KCAccess.UI
                     return res + ": " + Loc.F("keep for transport only, check box, {0}", tg.isOn ? Loc.T("checked") : Loc.T("not checked")) + (UIText.TooltipOf(item.Go) is string tip ? ". " + tip : string.Empty);
             }
             if (ResearchRow(item.Go, out var researchRow, out var upgrade)) return ResearchDescription(researchRow, upgrade);
+            if (item.IsControl && !item.Control.interactable && GameUI.inst != null && GameUI.inst.workerUI != null && item.Control == GameUI.inst.workerUI.customButton)
+            {
+                // The game greys a building's custom button only when the panel opens: refresh a stale state first.
+                GameUI.inst.workerUI.UpdateLayout();
+                if (!item.Control.interactable && CustomButtonReason(item.Control) is string why)
+                    return TextUtil.Join(", ", UIText.LabelOf(item.Control), UIText.ButtonRole, why);
+            }
             if (item.IsControl && MasonOf(item.Control) is Mason mason && mason.damagedBuilding != null)
             {
                 // The mason's "primary repair target" button only turns the camera to the building it shows as a picture.
@@ -910,8 +947,19 @@ namespace KCAccess.UI
                 }
                 bool selected = ui != null && ui.highlightedTile == tile;
                 string banner = ui != null && parent == ui.customBannerContainer ? Loc.F("Custom banner {0} of {1}", idx, count)
-                    : ui != null && parent == ui.workshopBannerContainer ? Loc.F("Workshop banner {0} of {1}", idx, count) : Loc.F("Banner {0} of {1}", idx, count);
+                    : ui != null && parent == ui.workshopBannerContainer ? Loc.F("Workshop banner {0} of {1}", idx, count)
+                    : TextUtil.Join(", ", Loc.F("Banner {0} of {1}", idx, count), LiveryColour(tile.transform.GetSiblingIndex()));
                 return banner + (selected ? ", " + Loc.T("selected") : string.Empty) + ". " + Loc.T("Enter selects it, then choose Accept");
+            }
+            // A custom banner's kingdom colours: plain coloured squares (the colour index chooses the kingdom's livery).
+            var swatch = item.Go.GetComponent<BannerSwatch>();
+            if (swatch != null && swatch.transform.parent != null)
+            {
+                var ui = item.Go.GetComponentInParent<ChooseBannerUI>();
+                int si = swatch.transform.GetSiblingIndex();
+                bool chosen = ui != null && ui.highlightedSwatch == swatch;
+                return TextUtil.Join(", ", Loc.F("Kingdom colour {0} of {1}", si + 1, swatch.transform.parent.childCount), LiveryColour(si))
+                    + (chosen ? ", " + Loc.T("selected") : string.Empty) + ". " + Loc.T("Enter selects it, then choose Accept");
             }
             if (item.IsControl && item.Go.name == "FolderButton" && item.Go.GetComponentInParent<ChooseBannerUI>() != null)
                 return Loc.T("Open custom banner folder, button");
@@ -1115,9 +1163,9 @@ namespace KCAccess.UI
                 return true;
             }
             bool choose = KInput.Plain(KeyCode.Return) || KInput.Plain(KeyCode.KeypadEnter) || KInput.Plain(KeyCode.Space);
-            if (choose && item.Go.GetComponent<BannerTile>() != null)
+            if (choose && (item.Go.GetComponent<BannerTile>() != null || item.Go.GetComponent<BannerSwatch>() != null))
             {
-                // Choosing a banner only moves the highlight: say that it is now the selected one.
+                // Choosing a banner or a colour only moves the highlight: say that it is now the selected one.
                 KInput.Consume(KeyCode.Return);
                 KInput.Consume(KeyCode.Space);
                 UINavigator.Click(item.Go);

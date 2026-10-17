@@ -13,6 +13,18 @@
 # Lines starting with # are comments.
 
 # ===== Speech, screens and menus =====
+black = czarny
+white = biały
+grey = szary
+brown = brązowy
+red = czerwony
+orange = pomarańczowy
+yellow = żółty
+green = zielony
+teal = turkusowy
+blue = niebieski
+purple = fioletowy
+pink = różowy
 {0} of {1} = {0} z {1}
 {0} percent = {0} procent
 the map = mapa
@@ -95,6 +107,10 @@ they are {0} = są {0}
 tab = karta
 button, Enter shows this unit's details = przycisk, Enter pokazuje szczegóły tej jednostki
 Press the new key for {0}. You can hold Control, Shift or Alt with it. = Naciśnij nowy klawisz dla: {0}. Możesz przy tym trzymać Ctrl, Shift lub Alt.
+a festival is under way = trwa festyn
+unavailable, not enough gold = niedostępne, za mało złota
+a feast is under way = trwa uczta
+no damaged building found yet; a staffed mason looks for one = nie znaleziono jeszcze uszkodzonego budynku; obsadzony kamieniarz go szuka
 Pause = Pauza
 Normal speed = Normalna prędkość
 Fast speed = Szybka prędkość
@@ -182,6 +198,7 @@ Custom banner {0} of {1} = Własny sztandar {0} z {1}
 Workshop banner {0} of {1} = Sztandar z Warsztatu {0} z {1}
 Banner {0} of {1} = Sztandar {0} z {1}
 Enter selects it, then choose Accept = Enter go wybiera, potem wybierz Akceptuj
+Kingdom colour {0} of {1} = Kolor królestwa {0} z {1}
 Open custom banner folder, button = Otwórz folder własnych sztandarów, przycisk
 button, press Enter to hear their advice = przycisk, naciśnij Enter, aby usłyszeć radę
 press Enter for the yearly report = naciśnij Enter, aby usłyszeć raport roczny
@@ -198,7 +215,6 @@ desired amount of {0} = pożądana ilość: {0}
 {0}, button, the camera follows this dragon = {0}, przycisk, kamera podąża za tym smokiem
 Dragon slot {0}: {1} = Miejsce dla smoka {0}: {1}
 Dragon slot {0}: add a gold pile, {1} gold, button = Miejsce dla smoka {0}: połóż stos złota, {1} złota, przycisk
-unavailable, not enough gold = niedostępne, za mało złota
 Dragon slot {0}: remove the gold pile, the gold comes back, button = Miejsce dla smoka {0}: zabierz stos złota, złoto wraca, przycisk
 Rename {0}, button = Zmień imię: {0}, przycisk
 Release {0}, button: the dragon leaves the roost = Uwolnij: {0}, przycisk: smok opuści gniazdo

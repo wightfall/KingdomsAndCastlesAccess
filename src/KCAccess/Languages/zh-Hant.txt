@@ -13,6 +13,18 @@
 # Lines starting with # are comments.
 
 # ===== Speech, screens and menus =====
+black = 黑色
+white = 白色
+grey = 灰色
+brown = 棕色
+red = 紅色
+orange = 橙色
+yellow = 黃色
+green = 綠色
+teal = 青色
+blue = 藍色
+purple = 紫色
+pink = 粉紅色
 {0} of {1} = 第 {0} 項，共 {1} 項
 {0} percent = {0}%
 the map = 地圖
@@ -95,6 +107,10 @@ they are {0} = 對方{0}
 tab = 分頁
 button, Enter shows this unit's details = 按鈕，Enter 顯示此單位的詳情
 Press the new key for {0}. You can hold Control, Shift or Alt with it. = 請為{0}按下新按鍵。可同時按住 Ctrl、Shift 或 Alt。
+a festival is under way = 節慶正在進行中
+unavailable, not enough gold = 無法使用，金幣不足
+a feast is under way = 宴會正在進行中
+no damaged building found yet; a staffed mason looks for one = 尚未發現受損建築；有工人的石匠會去尋找
 Pause = 暫停
 Normal speed = 正常速度
 Fast speed = 快速
@@ -182,6 +198,7 @@ Custom banner {0} of {1} = 自訂旗幟 {0}/{1}
 Workshop banner {0} of {1} = 工作坊旗幟 {0}/{1}
 Banner {0} of {1} = 旗幟 {0}/{1}
 Enter selects it, then choose Accept = Enter 選擇，然後選擇「接受」
+Kingdom colour {0} of {1} = 王國顏色 {0}/{1}
 Open custom banner folder, button = 開啟自訂旗幟資料夾，按鈕
 button, press Enter to hear their advice = 按鈕，按 Enter 聽取建議
 press Enter for the yearly report = 按 Enter 檢視年度報告
@@ -198,7 +215,6 @@ desired amount of {0} = {0}的期望數量
 {0}, button, the camera follows this dragon = {0}，按鈕，鏡頭跟隨這條巨龍
 Dragon slot {0}: {1} = 巨龍欄位 {0}：{1}
 Dragon slot {0}: add a gold pile, {1} gold, button = 巨龍欄位 {0}：放置金幣堆，{1} 金幣，按鈕
-unavailable, not enough gold = 無法使用，金幣不足
 Dragon slot {0}: remove the gold pile, the gold comes back, button = 巨龍欄位 {0}：移走金幣堆，退還金幣，按鈕
 Rename {0}, button = 重新命名 {0}，按鈕
 Release {0}, button: the dragon leaves the roost = 放走 {0}，按鈕：巨龍會離開巢穴

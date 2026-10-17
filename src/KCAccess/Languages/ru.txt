@@ -13,6 +13,18 @@
 # Lines starting with # are comments.
 
 # ===== Speech, screens and menus =====
+black = чёрный
+white = белый
+grey = серый
+brown = коричневый
+red = красный
+orange = оранжевый
+yellow = жёлтый
+green = зелёный
+teal = бирюзовый
+blue = синий
+purple = фиолетовый
+pink = розовый
 {0} of {1} = {0} из {1}
 {0} percent = {0} %
 the map = карта
@@ -95,6 +107,10 @@ they are {0} = они: {0}
 tab = вкладка
 button, Enter shows this unit's details = кнопка, Enter показывает сведения об отряде
 Press the new key for {0}. You can hold Control, Shift or Alt with it. = Нажмите новую клавишу для «{0}». Можно удерживать вместе с ней Control, Shift или Alt.
+a festival is under way = идёт праздник
+unavailable, not enough gold = недоступно, не хватает золота
+a feast is under way = идёт пир
+no damaged building found yet; a staffed mason looks for one = повреждённое здание ещё не найдено; каменщик с работниками ищет его
 Pause = Пауза
 Normal speed = Обычная скорость
 Fast speed = Быстрая скорость
@@ -182,6 +198,7 @@ Custom banner {0} of {1} = Собственное знамя {0} из {1}
 Workshop banner {0} of {1} = Знамя из мастерской {0} из {1}
 Banner {0} of {1} = Знамя {0} из {1}
 Enter selects it, then choose Accept = Enter выбирает его, затем выберите «Принять»
+Kingdom colour {0} of {1} = Цвет королевства {0} из {1}
 Open custom banner folder, button = Открыть папку собственных знамён, кнопка
 button, press Enter to hear their advice = кнопка, нажмите Enter, чтобы услышать совет
 press Enter for the yearly report = нажмите Enter для годового отчёта
@@ -198,7 +215,6 @@ desired amount of {0} = желаемое количество: {0}
 {0}, button, the camera follows this dragon = {0}, кнопка, камера следует за этим драконом
 Dragon slot {0}: {1} = Место для дракона {0}: {1}
 Dragon slot {0}: add a gold pile, {1} gold, button = Место для дракона {0}: положить кучу золота, {1} золота, кнопка
-unavailable, not enough gold = недоступно, не хватает золота
 Dragon slot {0}: remove the gold pile, the gold comes back, button = Место для дракона {0}: убрать кучу золота, золото вернётся, кнопка
 Rename {0}, button = Переименовать: {0}, кнопка
 Release {0}, button: the dragon leaves the roost = Отпустить: {0}, кнопка: дракон покинет гнездо

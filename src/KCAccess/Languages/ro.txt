@@ -13,6 +13,18 @@
 # Lines starting with # are comments.
 
 # ===== Speech, screens and menus =====
+black = negru
+white = alb
+grey = gri
+brown = maro
+red = roșu
+orange = portocaliu
+yellow = galben
+green = verde
+teal = turcoaz
+blue = albastru
+purple = mov
+pink = roz
 {0} of {1} = {0} din {1}
 {0} percent = {0} la sută
 the map = harta
@@ -95,6 +107,10 @@ they are {0} = sunt {0}
 tab = filă
 button, Enter shows this unit's details = buton, Enter arată detaliile acestei unități
 Press the new key for {0}. You can hold Control, Shift or Alt with it. = Apasă noua tastă pentru {0}. Poți ține apăsat Ctrl, Shift sau Alt împreună cu ea.
+a festival is under way = are loc un festival
+unavailable, not enough gold = indisponibil, nu ai destul aur
+a feast is under way = are loc un ospăț
+no damaged building found yet; a staffed mason looks for one = încă nu s-a găsit nicio clădire deteriorată; un zidar cu muncitori caută una
 Pause = Pauză
 Normal speed = Viteză normală
 Fast speed = Viteză rapidă
@@ -182,6 +198,7 @@ Custom banner {0} of {1} = Stindard personalizat {0} din {1}
 Workshop banner {0} of {1} = Stindard din Workshop {0} din {1}
 Banner {0} of {1} = Stindard {0} din {1}
 Enter selects it, then choose Accept = Enter îl selectează, apoi alege Acceptă
+Kingdom colour {0} of {1} = Culoarea regatului {0} din {1}
 Open custom banner folder, button = Deschide folderul stindardelor personalizate, buton
 button, press Enter to hear their advice = buton, apasă Enter pentru a auzi sfatul
 press Enter for the yearly report = apasă Enter pentru raportul anual
@@ -198,7 +215,6 @@ desired amount of {0} = cantitatea dorită de {0}
 {0}, button, the camera follows this dragon = {0}, buton, camera urmărește acest dragon
 Dragon slot {0}: {1} = Loc de dragon {0}: {1}
 Dragon slot {0}: add a gold pile, {1} gold, button = Loc de dragon {0}: pune o grămadă de aur, {1} aur, buton
-unavailable, not enough gold = indisponibil, nu ai destul aur
 Dragon slot {0}: remove the gold pile, the gold comes back, button = Loc de dragon {0}: ia grămada de aur, aurul se întoarce, buton
 Rename {0}, button = Redenumește {0}, buton
 Release {0}, button: the dragon leaves the roost = Eliberează {0}, buton: dragonul părăsește cuibul

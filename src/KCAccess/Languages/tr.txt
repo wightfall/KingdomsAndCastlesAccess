@@ -13,6 +13,18 @@
 # Lines starting with # are comments.
 
 # ===== Speech, screens and menus =====
+black = siyah
+white = beyaz
+grey = gri
+brown = kahverengi
+red = kırmızı
+orange = turuncu
+yellow = sarı
+green = yeşil
+teal = turkuaz
+blue = mavi
+purple = mor
+pink = pembe
 {0} of {1} = {0} / {1}
 {0} percent = yüzde {0}
 the map = harita
@@ -95,6 +107,10 @@ they are {0} = onlar {0}
 tab = sekme
 button, Enter shows this unit's details = düğme, Enter bu birimin ayrıntılarını gösterir
 Press the new key for {0}. You can hold Control, Shift or Alt with it. = {0} için yeni tuşa bas. Onunla birlikte Control, Shift veya Alt basılı tutabilirsin.
+a festival is under way = bir festival sürüyor
+unavailable, not enough gold = kullanılamaz, yeterli altın yok
+a feast is under way = bir ziyafet sürüyor
+no damaged building found yet; a staffed mason looks for one = henüz hasarlı bina bulunmadı; çalışanı olan bir taşçı arar
 Pause = Duraklat
 Normal speed = Normal hız
 Fast speed = Hızlı
@@ -182,6 +198,7 @@ Custom banner {0} of {1} = Özel sancak {0} / {1}
 Workshop banner {0} of {1} = Workshop sancağı {0} / {1}
 Banner {0} of {1} = Sancak {0} / {1}
 Enter selects it, then choose Accept = Enter onu seçer, sonra Kabul et'i seç
+Kingdom colour {0} of {1} = Krallık rengi {0} / {1}
 Open custom banner folder, button = Özel sancak klasörünü aç, düğme
 button, press Enter to hear their advice = düğme, tavsiyelerini duymak için Enter'a bas
 press Enter for the yearly report = yıllık rapor için Enter'a bas
@@ -198,7 +215,6 @@ desired amount of {0} = istenen {0} miktarı
 {0}, button, the camera follows this dragon = {0}, düğme, kamera bu ejderhayı izler
 Dragon slot {0}: {1} = Ejderha yeri {0}: {1}
 Dragon slot {0}: add a gold pile, {1} gold, button = Ejderha yeri {0}: bir altın yığını koy, {1} altın, düğme
-unavailable, not enough gold = kullanılamaz, yeterli altın yok
 Dragon slot {0}: remove the gold pile, the gold comes back, button = Ejderha yeri {0}: altın yığınını kaldır, altın geri gelir, düğme
 Rename {0}, button = {0} adını değiştir, düğme
 Release {0}, button: the dragon leaves the roost = {0} serbest bırak, düğme: ejderha yuvayı terk eder
