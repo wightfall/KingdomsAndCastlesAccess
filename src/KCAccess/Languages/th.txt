@@ -76,6 +76,7 @@ Choose banner = เลือกธง
 Mods = มอด
 Rival kingdoms = อาณาจักรคู่แข่ง
 Kingdom share = แชร์อาณาจักร
+Upload banner = อัปโหลดธง
 Language list = รายการภาษา
 Up and Down choose, Enter switches the game to that language. Languages marked screen reader only change only what the mod says. = ลูกศรขึ้นลงเพื่อเลือก Enter เปลี่ยนเกมเป็นภาษานั้น ภาษาที่ระบุว่าเฉพาะโปรแกรมอ่านหน้าจอจะเปลี่ยนเฉพาะสิ่งที่มอดพูด
 Confirm = ยืนยัน

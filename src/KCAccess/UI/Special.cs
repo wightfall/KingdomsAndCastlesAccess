@@ -1115,6 +1115,21 @@ namespace KCAccess.UI
                 return true;
             }
             bool choose = KInput.Plain(KeyCode.Return) || KInput.Plain(KeyCode.KeypadEnter) || KInput.Plain(KeyCode.Space);
+            if (choose && item.Go.GetComponent<BannerTile>() != null)
+            {
+                // Choosing a banner only moves the highlight: say that it is now the selected one.
+                KInput.Consume(KeyCode.Return);
+                KInput.Consume(KeyCode.Space);
+                UINavigator.Click(item.Go);
+                A.Cue(Cue.Activate);
+                string said = Describe(item) ?? string.Empty;
+                int sentenceEnd = said.IndexOf(". ", System.StringComparison.Ordinal);
+                A.Say(sentenceEnd > 0 ? said.Substring(0, sentenceEnd) : said, force: true);
+                return true;
+            }
+            // The game lists new custom banner files only when its list is clicked; the opening follows.
+            if (choose && item.IsControl && item.Control is TMPro.TMP_Dropdown && item.Go.GetComponentInParent<CustomBannerUI>() is CustomBannerUI banners && banners.dropDown == item.Control)
+                banners.UpdateOptions();
             if ((choose || KInput.Plain(KeyCode.Escape)) && LanguageListOf(item.Go) is ChangeLanguage picker)
             {
                 // The open language list is a window of its own (ScreenDetector). The game closes it on a choice and

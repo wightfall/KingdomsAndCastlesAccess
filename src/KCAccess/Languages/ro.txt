@@ -76,6 +76,7 @@ Choose banner = Alege stindardul
 Mods = Moduri
 Rival kingdoms = Regate rivale
 Kingdom share = Partajarea regatului
+Upload banner = Încarcă stindardul
 Language list = Lista limbilor
 Up and Down choose, Enter switches the game to that language. Languages marked screen reader only change only what the mod says. = Sus și jos aleg, Enter trece jocul la acea limbă. Limbile marcate doar cititorul de ecran schimbă doar ce spune modul.
 Confirm = Confirmă

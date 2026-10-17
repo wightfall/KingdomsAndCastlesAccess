@@ -156,7 +156,7 @@ replaces the mouse drag), Left / Right change the limit, from 0 up to the job po
 | Shift+N | Target beacon on / off: pings panned to the target's side, higher pitch north, lower south, faster when closer, a chime on arrival |
 | Alt+1 … 9 | Make a bookmark the navigation target |
 | Any arrow / Escape | Stop an auto-walk |
-| V | While placing: why the spot is (in)valid; for towers also their shooting range, which grows with every castle level they stand on |
+| V | While placing: why the spot is (in)valid; for towers also their shooting range, which grows with every castle level they stand on; for buildings with a working area what it reaches there (houses and happiness of churches, taverns, gardens and wells, buildings a well protects from fire, trees and open land of a forester, fish of a fishing hut, land a reservoir irrigates, farms next to a windmill). Selecting such a building says the same |
 | Shift+Page Up / Shift+Page Down | Castle blocks (stone and wooden walls): build more / fewer levels on top of each other with each Enter or Shift+Enter line (1 to 10). The mod repeats the placement at the same tiles until the levels are built or the game refuses (for example wooden walls reach their height limit), then says how many levels and pieces were built. Enter or Escape stops early |
 | M | Send the selected soldiers (also siege catapults, your dragons, troop and exploration ships) to the cursor. With soldiers, settlers or an envoy selected and the cursor on your troop ship: board it. With a loaded troop ship selected and the cursor on land: unload there. On a route stop in a ship or cart panel: move the stop to the cursor |
 | Ctrl+E | Respond to the nearest alert (the game's exclamation marks): advisor news at the keep, a foreign envoy waiting to speak, a stopped transport cart, a ship needing orders |
@@ -180,6 +180,13 @@ unburied bodies, rats) are announced when they appear. Water tiles say how many 
 **Fishing grounds** category finds them for fishing huts, and O counts them. Sick villagers are mentioned
 on their tile and in the villager description. Heavy rain (farms may flood) and thunderstorms (fires) are
 announced, as are newly unlocked achievements. Stacked castle blocks are read as "stacked 4 high".
+
+**Viking thieves** take up to 100 gold (200 in survival) from your Treasure Room or Dragon Roost and run to
+their ship: the theft is announced, the tile says "thieves carrying 100 gold", killing them on land says the gold
+was recovered, and you hear when they got away with it. Requests of AI kingdoms (resources, wolves, vikings) are
+announced when you fulfil them or they fail. Buttons that cost resources (church tithe, Great Hall feast, town
+square festival) say what is missing when you cannot pay, and the mason's repair target button names the
+building; Enter moves the cursor there.
 
 **Fires** are announced when they break out in your kingdom ("Fire at Hovel", with the direction; the fire
 spreading to the next tiles is not repeated) and when the last one is out; the game itself only reports a
@@ -348,7 +355,10 @@ build roads out from your keep first (I tells you whether a tile is covered).
 1. New → Standard Mode Accept → choose a region (difficulty) with Previous / Next → Accept.
 2. Kingdom name (Enter to edit) → Accept.
 3. Map setup: size, type and rivers; New Map generates another map. **Ctrl+M** lets you explore the
-   generated map with the arrow keys and the scanner before you start; Ctrl+M again returns.
+   generated map with the arrow keys and the scanner before you start; Ctrl+M again returns. AI kingdoms
+   (optional, maps with several islands): Add AI kingdom, then on its name **I** / **Shift+I** choose the island it
+   starts on ("Halsbeck starts on an island of 3265 tiles in the north of the map, around 52, 110"); by default
+   the game picks one.
 4. Accept starts the game. Press B, pick the Keep (first item in Castle), move to clear land near
    trees, stone and fertile soil (press O to survey the area), and press Enter.
 
@@ -452,7 +462,8 @@ cursor", "Building and castle walls", "Setup program" ...), so a text is easy to
   too, and the mod says the new language.
 * **Mod settings** (Ctrl+Shift+O), first line "Mod language": Left and Right choose Automatic, English or any
   language file, by the name in its `# Language:` line.
-* **The game's language list** (Settings): languages the game does not have, such as Thai or ones you add,
+* **The game's language list** (main menu, Language): it opens as a window of its own; Up and Down choose,
+  Enter switches, Escape returns to the menu. Languages the game does not have, such as Thai or ones you add,
   appear at the end as "ไทย (Thai, screen reader only)". Choosing one changes only what the mod says; the game
   keeps its language.
 * Config file: `Language / Language` = `auto`, `en` or a file name without `.txt`, for example `th`.
@@ -649,7 +660,10 @@ situations for testing at the cursor: `devbuild <name> [any] [clear]` (place a f
 knight|archer|settler|envoy`, `dragon [mama]`, `nest egg|hatch|mature|happy|bond`, `fire`, `ogre`, `viking
 [elite]`, `plague [cure]`, `weather none|rain|heavy|storm|snow`, `twitch show|connect|vote <name> <n>|chat <name>
 <text>|end|hide` (Twitch voting without Twitch), `log <text>`, `threatyears`, `buildnow`, `tracespeech <words>`, and for diplomacy `visit`, `convo <name>`
-(GoldDemand, AIGift ...), `dialogue` (the current line's conversation and entry ids).
+(GoldDemand, AIGift ...), `dialogue` (the current line's conversation and entry ids), `viking thief` (a thief heading for your Treasure
+Room), `thieves kill|escape`, `mission start|done|fail` (a request of the first AI kingdom), `masontarget` (the
+selected mason's target becomes the building at the cursor), `gold <n>`, `probe <name>` (size and state of
+controls).
 
 ## License
 

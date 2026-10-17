@@ -76,6 +76,7 @@ Choose banner = 깃발 선택
 Mods = 모드
 Rival kingdoms = 경쟁 왕국
 Kingdom share = 왕국 공유
+Upload banner = 깃발 업로드
 Language list = 언어 목록
 Up and Down choose, Enter switches the game to that language. Languages marked screen reader only change only what the mod says. = 위/아래로 고르고 Enter로 게임을 그 언어로 바꿉니다. 스크린 리더 전용으로 표시된 언어는 모드가 말하는 내용만 바꿉니다.
 Confirm = 확인

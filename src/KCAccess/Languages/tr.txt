@@ -76,6 +76,7 @@ Choose banner = Sancak seç
 Mods = Modlar
 Rival kingdoms = Rakip krallıklar
 Kingdom share = Krallık paylaşımı
+Upload banner = Sancağı yükle
 Language list = Dil listesi
 Up and Down choose, Enter switches the game to that language. Languages marked screen reader only change only what the mod says. = Yukarı ve Aşağı seçer, Enter oyunu o dile geçirir. Yalnızca ekran okuyucu olarak işaretli diller yalnızca modun söylediklerini değiştirir.
 Confirm = Onayla

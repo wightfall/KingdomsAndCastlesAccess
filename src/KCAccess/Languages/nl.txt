@@ -76,6 +76,7 @@ Choose banner = Banier kiezen
 Mods = Mods
 Rival kingdoms = Rivaliserende koninkrijken
 Kingdom share = Koninkrijk delen
+Upload banner = Banier uploaden
 Language list = Talenlijst
 Up and Down choose, Enter switches the game to that language. Languages marked screen reader only change only what the mod says. = Omhoog en omlaag kiezen, Enter zet het spel in die taal. Talen gemarkeerd met alleen schermlezer veranderen alleen wat de mod zegt.
 Confirm = Bevestigen

@@ -76,6 +76,7 @@ Choose banner = Выбор знамени
 Mods = Моды
 Rival kingdoms = Королевства-соперники
 Kingdom share = Kingdom share
+Upload banner = Загрузить знамя
 Language list = Список языков
 Up and Down choose, Enter switches the game to that language. Languages marked screen reader only change only what the mod says. = Вверх и вниз — выбор, Enter переключает игру на этот язык. Языки с пометкой «только программа экранного доступа» меняют лишь то, что говорит мод.
 Confirm = Подтверждение

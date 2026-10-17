@@ -76,6 +76,7 @@ Choose banner = 旗の選択
 Mods = Mod
 Rival kingdoms = ライバル王国
 Kingdom share = キングダムシェア
+Upload banner = 旗をアップロード
 Language list = 言語一覧
 Up and Down choose, Enter switches the game to that language. Languages marked screen reader only change only what the mod says. = 上下で選び、Enter でゲームをその言語に切り替えます。「スクリーンリーダーのみ」と書かれた言語は Mod の読み上げだけを変更します。
 Confirm = 確認

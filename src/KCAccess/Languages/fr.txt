@@ -76,6 +76,7 @@ Choose banner = Choisir la bannière
 Mods = Mods
 Rival kingdoms = Royaumes rivaux
 Kingdom share = Partage de royaume
+Upload banner = Publier la bannière
 Language list = Liste des langues
 Up and Down choose, Enter switches the game to that language. Languages marked screen reader only change only what the mod says. = Haut et bas pour choisir, Entrée passe le jeu dans cette langue. Les langues marquées lecteur d'écran uniquement ne changent que ce que dit le mod.
 Confirm = Confirmation

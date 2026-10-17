@@ -76,6 +76,7 @@ Choose banner = Elegir estandarte
 Mods = Mods
 Rival kingdoms = Reinos rivales
 Kingdom share = Compartir reino
+Upload banner = Subir estandarte
 Language list = Lista de idiomas
 Up and Down choose, Enter switches the game to that language. Languages marked screen reader only change only what the mod says. = Arriba y abajo eligen, Intro cambia el juego a ese idioma. Los idiomas marcados como solo lector de pantalla cambian solo lo que dice el mod.
 Confirm = Confirmar

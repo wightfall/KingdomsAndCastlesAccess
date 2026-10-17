@@ -76,6 +76,7 @@ Choose banner = Velg banner
 Mods = Moder
 Rival kingdoms = Rivaliserende kongeriker
 Kingdom share = Del kongerike
+Upload banner = Last opp banner
 Language list = Språkliste
 Up and Down choose, Enter switches the game to that language. Languages marked screen reader only change only what the mod says. = Pil opp og ned velger, Enter bytter spillet til det språket. Språk merket bare skjermleser endrer bare det moden sier.
 Confirm = Bekreft

@@ -530,6 +530,28 @@ namespace KCAccess
                             if (parts.Length > 1) Player.inst.PlayerLandmassOwner.Gold = int.Parse(parts[1]);
                             else Player.inst.PlayerLandmassOwner.Gold += 5000;
                             break;
+                        case "canvases":
+                            // Developer only: every active canvas with visible controls, and whether the current screen's root is inside it.
+                            var navRoot = AccessController.Inst.Nav.Root;
+                            foreach (var cv in UnityEngine.Object.FindObjectsOfType<Canvas>())
+                            {
+                                if (!cv.isRootCanvas || !cv.enabled) continue;
+                                int n = 0;
+                                foreach (var sel in cv.GetComponentsInChildren<Selectable>(false)) if (sel.enabled && sel.interactable && UI.UIText.IsVisible(sel.gameObject)) n++;
+                                if (n == 0) continue;
+                                bool holdsRoot = navRoot != null && navRoot.IsChildOf(cv.transform);
+                                Plugin.Log.LogInfo("[canvas] " + PathOf(cv.transform) + " controls=" + n + (holdsRoot ? " (current screen)" : ""));
+                            }
+                            break;
+                        case "probe":
+                            // Developer only: "probe <name>" logs every selectable whose object name contains the text: size, scale, state.
+                            foreach (var sel in UnityEngine.Object.FindObjectsOfType<Selectable>())
+                            {
+                                if (parts.Length < 2 || sel.name.IndexOf(parts[1], StringComparison.OrdinalIgnoreCase) < 0) continue;
+                                var prt = sel.transform as RectTransform;
+                                Plugin.Log.LogInfo("[probe] " + PathOf(sel.transform) + " rect=" + (prt != null ? prt.rect.ToString() : "-") + " scale=" + sel.transform.lossyScale + " enabled=" + sel.enabled + " interactable=" + sel.interactable + " visible=" + UI.UIText.IsVisible(sel.gameObject) + " listeners=" + ((sel as Button) != null ? ((Button)sel).onClick.GetPersistentEventCount() : -1));
+                            }
+                            break;
                         case "mission":
                         {
                             // Developer only: "mission start" gives the first AI kingdom a resource request in progress,

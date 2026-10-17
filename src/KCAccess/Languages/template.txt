@@ -82,6 +82,7 @@ Choose banner =
 Mods =
 Rival kingdoms =
 Kingdom share =
+Upload banner =
 Language list =
 Up and Down choose, Enter switches the game to that language. Languages marked screen reader only change only what the mod says. =
 Confirm =

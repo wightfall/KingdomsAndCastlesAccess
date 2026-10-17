@@ -74,6 +74,16 @@ namespace KCAccess.UI
             {
                 info = new ScreenInfo { Id = "Confirm", Title = ConfirmTitle(confirm), Root = confirm.transform, TypeAhead = true };
             }
+            else if (mm.chooseBannerUI != null && mm.chooseBannerUI.activeInHierarchy && mm.chooseBannerUI.GetComponent<ChooseBannerUI>() is ChooseBannerUI chooser
+                && (state != MainMenuMode.State.BannerSelect || (chooser.uploadBannerUI != null && chooser.uploadBannerUI.gameObject.activeInHierarchy)))
+            {
+                // "Choose banner" on the new kingdom's name screen opens the banner list over it without a state change,
+                // and the list's "upload to the workshop" window opens over the list.
+                if (chooser.uploadBannerUI != null && chooser.uploadBannerUI.gameObject.activeInHierarchy)
+                    info = new ScreenInfo { Id = "UploadBanner", Title = Loc.T("Upload banner"), Root = chooser.uploadBannerUI.transform };
+                else
+                    info = new ScreenInfo { Id = "BannerSelect", Title = Loc.T(Titles[MainMenuMode.State.BannerSelect]), Root = mm.chooseBannerUI.transform, TypeAhead = true };
+            }
             else if (OpenLanguageList(info.Root) is ChangeLanguage picker)
             {
                 // The language list opens over the main menu without a state of its own: it is navigated alone, like a

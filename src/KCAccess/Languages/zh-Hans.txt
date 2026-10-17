@@ -76,6 +76,7 @@ Choose banner = 选择旗帜
 Mods = 模组
 Rival kingdoms = 敌对王国
 Kingdom share = 王国分享
+Upload banner = 上传旗帜
 Language list = 语言列表
 Up and Down choose, Enter switches the game to that language. Languages marked screen reader only change only what the mod says. = 上下方向键选择，Enter 将游戏切换到该语言。标记为“仅读屏”的语言只改变模组朗读的内容。
 Confirm = 确认
