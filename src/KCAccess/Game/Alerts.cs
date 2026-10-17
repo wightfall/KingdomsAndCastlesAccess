@@ -31,6 +31,7 @@ namespace KCAccess.Game
             if (envoy != null) return Loc.F("an envoy from {0} waits to speak with you", EnvoyWatch.KingdomOf(envoy));
             if (e.GetComponentInParent<TransportCart>() != null) return Loc.T("a transport cart has stopped and needs orders");
             if (e.GetComponentInParent<WitchHut>() != null) return Loc.T("the witch hut");
+            if (e.GetComponentInParent<MerchantShip>() != null) return Loc.T("a merchant ship waits to trade");
             if (e.GetComponentInParent<ShipBase>() != null) return Loc.T("a ship needs attention");
             return Loc.T("something needs your attention");
         }
@@ -75,7 +76,9 @@ namespace KCAccess.Game
                 if (d < bestD) { bestD = d; best = e; }
             }
             A.Cue(Cue.Activate);
-            A.Say(Loc.F("Responding: {0}", Describe(best)), force: true);
+            // A merchant's alert opens its trade window, a panel like a selected building's.
+            bool trade = best.GetComponentInParent<MerchantShip>() != null;
+            A.Say(Loc.F("Responding: {0}", Describe(best)) + (trade ? ". " + Loc.T("F6 opens the trade window.") : string.Empty), force: true);
             best.Click();
         }
     }

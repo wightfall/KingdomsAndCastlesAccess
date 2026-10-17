@@ -766,7 +766,7 @@ namespace KCAccess.Game
                 if (result.HasValue && result.Value != PlacementValidationResult.Valid && ui.CurrPlacementMode.PlacementCount() <= 1)
                 {
                     A.Cue(Cue.PlaceInvalid);
-                    A.Say(Loc.F("Cannot build here: {0}", Explain(result.Value)));
+                    A.Say(Loc.F("Cannot build here: {0}", Explain(result.Value, nearest: true)));
                     return;
                 }
                 Stacker.Placing(cursor.Pos, line: false);
@@ -1236,8 +1236,14 @@ namespace KCAccess.Game
             return r.HasValue && r.Value != PlacementValidationResult.Valid ? Explain(r.Value) : null;
         }
 
-        private string Explain(PlacementValidationResult r)
+        /// <param name="nearest">Also say where a large quarry or large iron mine fits (V and Enter, not every pointer move).</param>
+        private string Explain(PlacementValidationResult r, bool nearest = false)
         {
+            var held = GameUI.inst.CurrPlacementMode.GetHoverBuilding();
+            var deposit = LargeMineDeposit(held);
+            if (deposit != ResourceType.None && (r == PlacementValidationResult.MustBeOnFlatLand || r == PlacementValidationResult.ExistingStructure
+                || r == PlacementValidationResult.QuarryMustBeOnTopOfStone || r == PlacementValidationResult.IronMineMustBeOnTopOfIron))
+                return LargeMineExplain(held, deposit, nearest);
             string text = PlacementText.Explain(r.ToString());
             if (r == PlacementValidationResult.OutsideOfTerritory || r == PlacementValidationResult.RoadCoverage)
             {
@@ -1255,6 +1261,122 @@ namespace KCAccess.Game
                 if (near.HasValue) text += ". " + Loc.F("Nearest unclaimed land in reach: {0}", Directions.Relative(cursor.Pos, near.Value));
             }
             return text;
+        }
+
+        /// <summary>
+        /// A large quarry or large iron mine sits with its middle tile on one tile of its deposit and clear land on the
+        /// other tiles (World.CanPlace). The deposit it needs, or None for any other building.
+        /// </summary>
+        private static ResourceType LargeMineDeposit(Building b)
+        {
+            if (b == null) return ResourceType.None;
+            if (b.uniqueNameHash == World.largeQuarryHash) return ResourceType.Stone;
+            if (b.uniqueNameHash == World.largeIronMineHash) return ResourceType.IronDeposit;
+            return ResourceType.None;
+        }
+
+        /// <summary>A tile a large quarry or large iron mine may cover: empty, a small one of its kind (replaced) or rubble only.</summary>
+        private static bool LargeMineMayCover(Cell c, ResourceType deposit)
+        {
+            if (c.OccupyingStructure.Count == 0) return true;
+            int small = deposit == ResourceType.Stone ? World.quarryHash : World.ironMineHash;
+            if (c.TopStructure != null && c.TopStructure.uniqueNameHash == small) return true;
+            return c.TopMostStructure != null && c.TopMostStructure.uniqueNameHash == World.rubbleHash
+                && c.BottomStructure != null && c.BottomStructure.uniqueNameHash == World.rubbleHash;
+        }
+
+        /// <summary>
+        /// The game's reason names only one of the two rules ("must be on flat land" while the middle tile is the problem),
+        /// so say the rule, what is under the middle tile and what blocks the others.
+        /// </summary>
+        private string LargeMineExplain(Building held, ResourceType deposit, bool nearest)
+        {
+            var mid = World.inst.GetCellData(held.GetPos());
+            var origin = cursor.Pos;
+            string text = deposit == ResourceType.Stone
+                ? Loc.T("needs a stone deposit tile under its middle and clear land on the other tiles")
+                : Loc.T("needs an iron deposit tile under its middle and clear land on the other tiles");
+            if (mid != null && mid.Type != deposit)
+                text += ", " + Loc.F("its middle tile, {0}, is {1}", Directions.Offset(mid.x - origin.X, mid.z - origin.Z), CellInfo.Terrain(mid));
+            var problems = new List<string>();
+            held.ForEachTileInBounds((x, z, c) =>
+            {
+                if (problems.Count >= 3 || c == null || c == mid) return;
+                string what = null;
+                if (c.Type != ResourceType.None) what = CellInfo.Terrain(c);
+                else if (c.TreeAmount > 0) what = Loc.T("trees");
+                else if (TreeSystem.inst != null && TreeSystem.inst.AnimCount(c) > 0) what = Loc.T("a tree growing or being felled");
+                else if (!LargeMineMayCover(c, deposit) && c.TopMostStructure != null) what = c.TopMostStructure.FriendlyName;
+                if (what != null) problems.Add(what + " " + Directions.Offset(x - origin.X, z - origin.Z));
+            });
+            if (problems.Count > 0) text += ", " + Loc.F("blocked by {0}", string.Join(", ", problems.ToArray()));
+            if (nearest) text += ". " + LargeMineNearest(held, deposit);
+            return text;
+        }
+
+        /// <summary>Said when a large quarry or large iron mine is picked up: the rule and where it fits.</summary>
+        private string LargeMineHint(Building held, ResourceType deposit)
+        {
+            int half = Mathf.Max(1, Mathf.RoundToInt(held.size.x)) / 2;
+            string middle = Directions.Offset(half, half);
+            return (deposit == ResourceType.Stone
+                ? Loc.F("Its middle tile, {0} of the cursor, goes on a stone deposit tile; the other tiles need clear land.", middle)
+                : Loc.F("Its middle tile, {0} of the cursor, goes on an iron deposit tile; the other tiles need clear land.", middle))
+                + " " + LargeMineNearest(held, deposit) + ".";
+        }
+
+        private string LargeMineNearest(Building held, ResourceType deposit)
+        {
+            var spot = NearestLargeMineSpot(held, deposit, out bool covered);
+            if (!spot.HasValue)
+            {
+                // Rock Removal (Industry) takes away rock, so a deposit can be given room.
+                string removal = TextUtil.Clean(I2.Loc.ScriptLocalization.RockRemoval);
+                if (removal.Length == 0) removal = Loc.T("Rock Removal");
+                return deposit == ResourceType.Stone ? Loc.F("No stone deposit on explored land has room for it; {0} clears rock next to one", removal)
+                    : Loc.F("No iron deposit on explored land has room for it; {0} clears rock next to one", removal);
+            }
+            string where = Directions.Relative(cursor.Pos, spot.Value);
+            return covered ? Loc.F("Nearest spot where it fits: {0}", where) : Loc.F("Nearest spot where it fits, outside your road coverage: {0}", where);
+        }
+
+        /// <summary>
+        /// The cursor spot nearest the cursor where a large quarry or large iron mine fits: the middle on an explored deposit
+        /// tile, the other tiles clear, no wolf territory, and every tile inside road coverage when the game asks for it
+        /// (World.CanPlace, IsTouchingTerritory). Without such a spot, the nearest one outside road coverage, with covered false.
+        /// </summary>
+        private GridPos? NearestLargeMineSpot(Building held, ResourceType deposit, out bool covered)
+        {
+            covered = true;
+            var w = World.inst;
+            int half = Mathf.Max(1, Mathf.RoundToInt(held.size.x)) / 2;
+            bool needCoverage = Player.inst != null && Player.inst.keep != null && !held.ignoreRoadCoverageForPlacement
+                && Player.inst.IsCreativeModeOptionOn(Player.CreativeOptions.MustBuildInTerritory);
+            GridPos? best = null, outside = null;
+            double bestD = double.MaxValue, outsideD = double.MaxValue;
+            for (int mz = 0; mz < w.GridHeight; mz++)
+                for (int mx = 0; mx < w.GridWidth; mx++)
+                {
+                    var mid = w.GetCellData(mx, mz);
+                    if (mid == null || mid.Type != deposit || !CellInfo.Explored(mid)) continue;
+                    bool fits = true, inCoverage = true;
+                    for (int dz = -half; dz <= half && fits; dz++)
+                        for (int dx = -half; dx <= half && fits; dx++)
+                        {
+                            var c = w.GetCellData(mx + dx, mz + dz);
+                            fits = c != null && (c == mid || c.Type == ResourceType.None) && c.TreeAmount <= 0 && !c.wolfTerritory
+                                && (TreeSystem.inst == null || TreeSystem.inst.AnimCount(c) == 0) && LargeMineMayCover(c, deposit);
+                            inCoverage &= c != null && c.RoadCoverage > 0;
+                        }
+                    if (!fits) continue;
+                    var p = new GridPos(mx - half, mz - half);
+                    double d = Directions.Euclid(cursor.Pos, p);
+                    if (!needCoverage || inCoverage) { if (d < bestD) { bestD = d; best = p; } }
+                    else if (d < outsideD) { outsideD = d; outside = p; }
+                }
+            if (best.HasValue) return best;
+            covered = false;
+            return outside;
         }
 
         /// <summary>
@@ -1332,7 +1454,7 @@ namespace KCAccess.Game
             else
             {
                 A.Cue(Cue.PlaceInvalid);
-                if (always || changed) A.SayQueued(Explain(r.Value));
+                if (always || changed) A.SayQueued(Explain(r.Value, nearest: always));
             }
             int count = GameUI.inst.CurrPlacementMode.PlacementCount();
             if (count > 1)
@@ -1369,13 +1491,15 @@ namespace KCAccess.Game
                 string name = hover != null ? hover.FriendlyName : null;
                 if (!wasPlacing || name != lastHeldName)
                 {
+                    // Another building picked from the build menu while one is held: it is a new placement too.
+                    bool switched = wasPlacing && lastHeldName != null && name != null;
                     lastHeldName = name;
                     lastValidity = (PlacementValidationResult)(-1);
                     lastLevel = -1;
                     validityCheckFrame = Time.frameCount + 2;
                     // "Place another" picks the same building up again: the player already knows, stay quiet.
                     bool again = name == lastPlacedName && waitingAgainLastFrame;
-                    if (!wasPlacing && !again && Time.unscaledTime - placedSayTime > 0.5f)
+                    if ((!wasPlacing || switched) && !again && Time.unscaledTime - placedSayTime > 0.5f)
                     {
                         UpdatePointer(follow: true);
                         string size = hover != null && (hover.size.x > 1 || hover.size.z > 1) ? " " + Loc.F("The cursor is the south west corner, the building covers {0} by {1} tiles.", (int)hover.size.x, (int)hover.size.z) : string.Empty;
@@ -1385,6 +1509,8 @@ namespace KCAccess.Game
                         if (reach > 0)
                             A.SayQueued(Loc.F("It goes on unclaimed flat land within {0} tiles of your exploration ship.", reach) + " "
                                 + (outpostNear.HasValue ? Loc.F("Nearest: {0}.", Directions.Relative(cursor.Pos, outpostNear.Value)) : Loc.T("There is no free unclaimed land in reach.")));
+                        var deposit = LargeMineDeposit(hover);
+                        if (deposit != ResourceType.None) A.SayQueued(LargeMineHint(hover, deposit));
                         if (CastleStacker.IsCastleBlock(hover) && Stacker.Setting.Levels > 1)
                             A.SayQueued(KeyHelp.Resolve(Loc.P(Stacker.Setting.Levels, "{0} level with each placement; {StackMore} and {StackLess} change it.", "{0} levels with each placement; {StackMore} and {StackLess} change it.")));
                     }

@@ -1,4 +1,5 @@
 ﻿# Texts earlier versions of KCAccess used. Mod updates remove them from the language files.
+A merchant ship has arrived.
 Choose rival AI kingdoms and their difficulty.
 Gold {0}
 Happiness {0}, button, shows what affects happiness
@@ -10,6 +11,7 @@ Placing a building. Move with the arrow keys, the building follows the cursor an
 Press Enter on gold, food, a material, happiness or health for the detailed report. F6 from the map reaches the kingdom overview panel with the tax buttons.
 allowed {0} of {1}
 favorable
+must be against rock
 seed ship
 too far from your seed ship
 unfavorable

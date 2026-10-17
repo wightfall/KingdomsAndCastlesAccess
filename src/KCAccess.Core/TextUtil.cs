@@ -97,6 +97,18 @@ namespace KCAccess.Core
             return sb.ToString();
         }
 
+        /// <summary>
+        /// A message followed by where it happened: "Fire, 3 tiles north", or after a space when the message already ends
+        /// a sentence ("Our city is full! 3 tiles north", not "full!, 3 tiles north").
+        /// </summary>
+        public static string WithPlace(string text, string place)
+        {
+            if (string.IsNullOrEmpty(place)) return text ?? string.Empty;
+            if (string.IsNullOrEmpty(text)) return place;
+            text = text.TrimEnd();
+            return text + (".!?\u3002\uFF01\uFF1F".IndexOf(text[text.Length - 1]) >= 0 ? " " : ", ") + place;
+        }
+
         /// <summary>First letter in upper case.</summary>
         public static string Capitalize(string s) => string.IsNullOrEmpty(s) ? s : char.ToUpperInvariant(s[0]) + s.Substring(1);
 

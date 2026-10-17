@@ -155,7 +155,7 @@ namespace KCAccess.Game
             // The new year banner ("Year 74", in the game's language) follows the seasons setting.
             if (!Plugin.CfgAnnounceSeasons.Value && id == "year") return;
             A.Cue(sev == Severity.Danger ? Cue.Alert : (sev == Severity.Warning ? Cue.Error : Cue.Notify));
-            A.SayQueued(n.Text + (where.HasValue ? ", " + Directions.Relative(MapController.Inst.CursorPos, where.Value) : string.Empty));
+            A.SayQueued(TextUtil.WithPlace(n.Text, where.HasValue ? Directions.Relative(MapController.Inst.CursorPos, where.Value) : null));
         }
 
         internal static void OnThreat(string text)
@@ -171,7 +171,7 @@ namespace KCAccess.Game
             Log.Add(text, Severity.Info, Player.inst != null ? Player.inst.CurrYear : 0, where);
             if (!Plugin.CfgAnnounceLog.Value) return;
             A.Cue(Cue.Notify);
-            A.SayQueued(text + (where.HasValue ? ", " + Directions.Relative(MapController.Inst.CursorPos, where.Value) : string.Empty));
+            A.SayQueued(TextUtil.WithPlace(text, where.HasValue ? Directions.Relative(MapController.Inst.CursorPos, where.Value) : null));
         }
 
         // Construction sites finishing: only a sound and the scaffolding disappearing. Collected and said together

@@ -105,6 +105,17 @@ namespace KCAccess.Tests
         }
 
         [Theory]
+        [InlineData("Fire", "3 tiles north", "Fire, 3 tiles north")]
+        [InlineData("A ship has arrived at our docks.", "1 tile west", "A ship has arrived at our docks. 1 tile west")]
+        [InlineData("We need more homes! ", "here", "We need more homes! here")]
+        [InlineData("商船已到达。", "here", "商船已到达。 here")]
+        [InlineData("Fire", null, "Fire")]
+        public void WithPlace_UsesACommaOnlyInsideASentence(string text, string place, string expected)
+        {
+            Assert.Equal(expected, TextUtil.WithPlace(text, place));
+        }
+
+        [Theory]
         [InlineData("---", false)]
         [InlineData("A", true)]
         [InlineData("7", true)]

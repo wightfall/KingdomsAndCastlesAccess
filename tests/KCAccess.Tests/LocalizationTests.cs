@@ -74,7 +74,7 @@ namespace KCAccess.Tests
             new[] { "Scanner, navigation and problems", "Scanner", "Navigator", "Navigation", "Problems", "Alerts", "Thoughts" },
             new[] { "Building and castle walls", "BuildMenu", "PlacementText", "CastleStacker", "CastleStack", "Reach" },
             new[] { "Kingdom status, notifications and events", "StatusMenu", "GameEvents", "FireWatch", "ThiefWatch", "MissionWatch", "NotificationLog", "LogBrowser", "GamePatches" },
-            new[] { "Army, ships, carts, routes and diplomacy", "UnitText", "Routes", "ShipWatch", "Diplomacy" },
+            new[] { "Army, ships, carts, routes and diplomacy", "UnitText", "Routes", "ShipWatch", "Diplomacy", "Trade" },
             new[] { "Controller", "ControllerMap", "ControllerInput" },
             new[] { "Streaming and Twitch", "Streaming" },
             new[] { "Setup program", "KCAccess.Installer/" },

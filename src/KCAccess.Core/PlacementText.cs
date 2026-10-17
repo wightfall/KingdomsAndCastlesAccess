@@ -23,7 +23,8 @@ namespace KCAccess.Core
             { "IronMineMustBeAdjacentToIron", Loc.N("iron mines must be next to an iron deposit") },
             { "IronMineMustBeOnTopOfIron", Loc.N("iron mines must be on top of iron") },
             { "ForesterTooCloseToForester", Loc.N("too close to another forester") },
-            { "MustBeUpAgainstRock", Loc.N("must be against rock") },
+            // Only Rock Removal: it goes on the tile it clears.
+            { "MustBeUpAgainstRock", Loc.N("must go on rock, a stone or iron deposit, or an empty cave") },
             { "TooManyQuarries", Loc.N("too many quarries on this deposit") },
             { "TooManyIronMines", Loc.N("too many iron mines on this deposit") },
             { "CastleBlockNoSupport", Loc.N("castle block has nothing to support it") },

@@ -231,10 +231,15 @@ focus on the current language; Enter switches language, Escape closes the list.
 
 * **Store and workshop links:** "DLC Available", "Wishlist our next game!" and workshop pages open in your web
   browser instead of the Steam overlay, which screen readers cannot read.
-* **Merchants:** when "A merchant ship has arrived" is announced, find it with the scanner (Your soldiers
-  and ships), press Shift+Enter on it and then F6. Each trade line reads "Wood: 2 gold each, 40 available,
-  buy 5, costs 10 gold"; Left / Right change the amount by 1, Page Up / Page Down by 10, Enter lets you
-  type it. Then choose the complete-transaction button.
+* **Merchants:** when a merchant ship docks you hear the game's message and "A merchant ship waits to trade,
+  2 tiles north west. Control E responds." Control E (or Shift+Enter on the ship, found with the scanner's
+  Your soldiers and ships) opens its trade window; F6 moves into it. The window says where the ship comes
+  from. Each trade line reads "Wood: 2 gold each, 40 available, buy 5, costs 10 gold"; Left / Right change
+  the amount by 1, Page Up / Page Down by 10, Enter lets you type it. The total line reads "Total cost: 18 gold,
+  you have 930" and the complete-transaction button names what you chose. Afterwards you hear "Bought 8 wheat,
+  5 wood for 18 gold, 912 gold left" or "Sold 10 wood for 20 gold, you now have 950 gold"; a purchase you
+  cannot pay for is refused with "Not enough gold: costs 18, you have 10". You sell what is stored at the
+  dock. Some merchants also offer a special upgrade (the Special Item tab, with its cost and your gold).
 * **Diplomacy:** every line an envoy or ruler says is read aloud, followed by the number of replies;
   focus jumps to the first reply. Up / Down choose, Enter answers. To visit a kingdom, select your envoy
   (Shift+Enter), put the cursor on the other kingdom's keep and press M: the visit opens when the envoy
@@ -350,6 +355,12 @@ what was painted and the brush size ("Painted very fertile land, brush size 2").
 When you pick up a building, the cursor marks its **south west corner**; a 3 by 3 building covers the
 cursor tile and the tiles to the north and east. Most buildings must be inside **road coverage**:
 build roads out from your keep first (I tells you whether a tile is covered).
+
+A **Large Quarry** or **Large Iron Mine** needs its middle tile (1 north, 1 east of the cursor) on a single
+stone or iron deposit tile and clear land on the other 8 tiles. When you pick one up you hear that rule and
+the nearest spot where it fits ("Nearest spot where it fits: 25 tiles south east, 11 south, 25 east"), or
+that no explored deposit has room (**Rock Removal** clears rock next to one). V says what is under the middle
+tile and what blocks the others, and repeats the nearest spot.
 
 ### Starting a new game
 

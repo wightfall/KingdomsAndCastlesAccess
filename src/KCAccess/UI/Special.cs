@@ -683,6 +683,7 @@ namespace KCAccess.UI
         {
             if (item == null || item.Go == null) return null;
             if (Game.Diplomacy.Describe(item) is string diplomacy) return diplomacy;
+            if (Game.Trade.Describe(item) is string trade) return trade;
             if (DragonRoostItem(item) is string roost) return roost;
             // The army panel's instructions are for the mouse ("Right click to move/attack").
             if (!item.IsControl && item.Go.name == "InstructionsText" && UnitUI.inst != null && item.Go.transform.IsChildOf(UnitUI.inst.transform))
@@ -1118,6 +1119,7 @@ namespace KCAccess.UI
             if (item == null || item.Go == null) return false;
             var stop = item.Go.GetComponentInParent<LogisticsDestUI>();
             if (stop != null && Game.Routes.HandleKey(stop, item)) return true;
+            if (Game.Trade.HandleKey(item)) return true;
             if (KInput.Plain(KeyCode.Delete))
             {
                 // Save / load slots: Delete removes the save (the game asks for confirmation).

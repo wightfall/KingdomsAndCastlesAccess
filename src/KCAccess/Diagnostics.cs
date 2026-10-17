@@ -86,6 +86,7 @@ namespace KCAccess
                 if (c is Text txt) sb.Append(" \"").Append(Short(txt.text)).Append('"');
                 else if (c is TMP_Text tmp) sb.Append(" \"").Append(Short(tmp.text)).Append('"');
                 else if (c is Selectable sel) sb.Append(sel.interactable ? "" : " disabled");
+                else if (c is Image im && im.sprite != null) sb.Append(" sprite=").Append(im.sprite.name);
                 else if (c is I2.Loc.Localize loc) sb.Append(" term=\"").Append(loc.mTerm).Append('"').Append(loc.enabled ? "" : " off");
                 else if (c is Behaviour b && !b.enabled) sb.Append(" off");
                 sb.Append('>');
@@ -176,6 +177,79 @@ namespace KCAccess
             var why = new StringBuilder();
             foreach (var kv in reasons) why.Append(' ').Append(kv.Key).Append('=').Append(kv.Value);
             return "cannot place " + uniqueName + " near " + start + ":" + why;
+        }
+
+        private static string MakeLargeQuarrySpot()
+        {
+            var w = World.inst;
+            var start = Game.MapController.Inst.CursorPos;
+            Cell best = null;
+            double bestD = double.MaxValue;
+            for (int z = 1; z < w.GridHeight - 1; z++)
+                for (int x = 1; x < w.GridWidth - 1; x++)
+                {
+                    var c = w.GetCellData(x, z);
+                    if (c == null || c.Type != ResourceType.Stone) continue;
+                    bool ok = true, covered = true;
+                    for (int dz = -1; dz <= 1 && ok; dz++)
+                        for (int dx = -1; dx <= 1 && ok; dx++)
+                        {
+                            var n = w.GetCellData(x + dx, z + dz);
+                            ok = n != null && n.Type != ResourceType.Water && n.OccupyingStructure.Count == 0 && !n.wolfTerritory;
+                            covered &= n != null && n.RoadCoverage > 0;
+                        }
+                    if (!ok) continue;
+                    // Inside road coverage first.
+                    double d = Core.Directions.Euclid(start, new Core.GridPos(x, z)) + (covered ? 0 : 1000);
+                    if (d < bestD) { bestD = d; best = c; }
+                }
+            if (best == null) return "no stone deposit with room to clear";
+            for (int dz = -1; dz <= 1; dz++)
+                for (int dx = -1; dx <= 1; dx++)
+                {
+                    if (dx == 0 && dz == 0) continue;
+                    var n = w.GetCellData(best.x + dx, best.z + dz);
+                    TreeSystem.inst.DeleteTreesAt(n);
+                    if (n.Type != ResourceType.None)
+                    {
+                        w.RemoveStone(n);
+                        n.Type = ResourceType.None;
+                        n.StorePostGenerationType();
+                    }
+                }
+            return "cleared around the stone at " + best.x + ", " + best.z + ", cursor spot " + (best.x - 1) + ", " + (best.z - 1) + (bestD >= 1000 ? ", outside road coverage" : string.Empty);
+        }
+
+        private static string FindSpot()
+        {
+            var held = GameUI.inst.CurrPlacementMode.GetHoverBuilding();
+            if (held == null) return "nothing held";
+            var start = Game.MapController.Inst.CursorPos;
+            var oldPos = held.transform.position;
+            var reasons = new System.Collections.Generic.Dictionary<PlacementValidationResult, int>();
+            string found = null;
+            // A footprint past the map edge makes CanPlace throw (a large quarry's middle tile has no cell there).
+            int size = Mathf.Max(Mathf.RoundToInt(held.size.x), Mathf.RoundToInt(held.size.z));
+            for (int ring = 0; ring <= 60 && found == null; ring++)
+                for (int dx = -ring; dx <= ring && found == null; dx++)
+                    for (int dz = -ring; dz <= ring && found == null; dz++)
+                    {
+                        if (Math.Max(Math.Abs(dx), Math.Abs(dz)) != ring) continue;
+                        int x = start.X + dx, z = start.Z + dz;
+                        if (x < 0 || z < 0 || x + size > World.inst.GridWidth || z + size > World.inst.GridHeight) continue;
+                        held.transform.position = new Vector3(x, 0f, z);
+                        held.BakeBoundingFootprint();
+                        held.RefreshCachedValues();
+                        var r = World.inst.CanPlace(held);
+                        reasons[r] = reasons.TryGetValue(r, out int seen) ? seen + 1 : 1;
+                        if (r == PlacementValidationResult.Valid) found = x + ", " + z + " (offset " + dx + ", " + dz + ")";
+                    }
+            held.transform.position = oldPos;
+            held.BakeBoundingFootprint();
+            held.RefreshCachedValues();
+            var why = new StringBuilder();
+            foreach (var kv in reasons) why.Append(' ').Append(kv.Key).Append('=').Append(kv.Value);
+            return (found ?? "none") + " from " + start + ":" + why;
         }
 
         private static float nextCheck;
@@ -630,6 +704,67 @@ namespace KCAccess
                         case "merchant":
                             ShipSystem.inst.merchantSpawnTimer = 0f;
                             break;
+                        case "dockgoods":
+                            // Developer only: puts 50 wheat and 50 wood in every dock's loading storage (what a merchant can buy from you).
+                            var docks = Player.inst.GetBuildingList(World.dockHash);
+                            for (int di = 0; di < docks.Count; di++)
+                            {
+                                var goods = default(Assets.Code.ResourceAmount);
+                                goods.Add(FreeResourceType.Wheat, 50);
+                                goods.Add(FreeResourceType.Tree, 50);
+                                docks.data[di].GetComponent<Dock>().loadingStorageComponent.Deposit(ref goods);
+                            }
+                            Plugin.Log.LogInfo("[dbg] dockgoods " + docks.Count);
+                            break;
+                        case "merchantspecial":
+                            // Developer only: the merchant whose trade window is open also offers a special upgrade (15% of
+                            // merchants do), so the Special tab can be tested.
+                            var mui = GameUI.inst.merchantUI;
+                            if (mui != null && mui.ship is MerchantShip special)
+                            {
+                                special.specialUpgrade = parts.Length > 1 ? (Player.UpgradeType)Enum.Parse(typeof(Player.UpgradeType), parts[1]) : Player.UpgradeType.BetterBreadOvens;
+                                mui.RefreshForMerchant(special);
+                                Plugin.Log.LogInfo("[dbg] merchant offers " + special.specialUpgrade);
+                            }
+                            break;
+                        case "spritelabels":
+                            // Developer only: "spritelabels <sprite>" logs how every button showing that sprite is read.
+                            foreach (var sb2 in Resources.FindObjectsOfTypeAll<Button>())
+                            {
+                                var simg = sb2.targetGraphic as Image ?? sb2.GetComponent<Image>();
+                                if (simg == null || simg.sprite == null || parts.Length < 2 || simg.sprite.name != parts[1] || !sb2.gameObject.scene.IsValid()) continue;
+                                var sitem = new UI.UIItem { Go = sb2.gameObject, Control = sb2 };
+                                Plugin.Log.LogInfo("[sprite] " + PathOf(sb2.transform) + " => label=" + UI.UIText.LabelOf(sb2) + " special=" + (UI.Special.Describe(sitem) ?? "-")
+                                    + " persistent=" + sb2.onClick.GetPersistentEventCount() + (sb2.onClick.GetPersistentEventCount() > 0 ? " " + sb2.onClick.GetPersistentMethodName(0) : string.Empty));
+                            }
+                            break;
+                        case "demowarn":
+                            // Developer only: the warning the game shows before demolishing more than 25 buildings at once.
+                            var dpos = Game.MapController.Inst.CursorPos;
+                            GameUI.inst.demolishWarningUI.ShowUI(dpos.X - 1, dpos.X + 1, dpos.Z - 1, dpos.Z + 1);
+                            break;
+                        case "ships":
+                            // Developer only: every ship, where it is and, for merchants, how far its trip got.
+                            for (int si = 0; si < ShipSystem.inst.ships.Count; si++)
+                            {
+                                var ship = ShipSystem.inst.ships.data[si];
+                                var ms = ship.GetComponent<MerchantShip>();
+                                var dock = ms != null ? ms.GetCurrentDock() : null;
+                                Plugin.Log.LogInfo("[dbg] ship " + ship.type + " team=" + ship.teamID + " at " + ship.transform.position + " state=" + ship.state + " arrived=" + ship.arrived + " pathFailed=" + ship.pathFailed
+                                    + (ms != null ? " status=" + ms.status + " dock=" + (dock != null ? dock.transform.position.ToString() : "none") : string.Empty));
+                            }
+                            Plugin.Log.LogInfo("[dbg] ships " + ShipSystem.inst.ships.Count + ", next merchant in " + ShipSystem.inst.merchantSpawnTimer.ToString("0") + " s");
+                            break;
+                        case "lqspot":
+                            // Developer only: clears rock and trees around the nearest stone deposit tile inside road
+                            // coverage, so a large quarry fits there (to test the mod's nearest-spot answer).
+                            Plugin.Log.LogInfo("[dbg] lqspot " + MakeLargeQuarrySpot());
+                            break;
+                        case "findspot":
+                            // Developer only: the nearest spot (up to 60 tiles) where the game accepts the held building,
+                            // without placing it, to check the mod's own "nearest spot" answers against World.CanPlace.
+                            Plugin.Log.LogInfo("[dbg] findspot " + FindSpot());
+                            break;
                         case "threatyears":
                             // Developer only: years until the next viking raid and dragon attack (the last-year warnings).
                             if (parts.Length > 1)
@@ -666,7 +801,7 @@ namespace KCAccess
                 }
                 catch (Exception e)
                 {
-                    Plugin.Log.LogWarning("Debug command failed: " + line + " – " + e.Message);
+                    Plugin.Log.LogWarning("Debug command failed: " + line + " – " + e);
                 }
             }
         }

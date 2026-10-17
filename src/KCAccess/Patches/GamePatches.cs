@@ -61,12 +61,6 @@ namespace KCAccess
         private static void Postfix() => GameEvents.OnThreat(KCAccess.Core.Loc.T("Dragons are attacking!"));
     }
 
-    [HarmonyPatch(typeof(MerchantNotification), nameof(MerchantNotification.ShowBanner))]
-    internal static class Patch_MerchantBanner
-    {
-        private static void Postfix() => GameEvents.OnInfo(KCAccess.Core.Loc.T("A merchant ship has arrived."));
-    }
-
     /// <summary>Announces how many pieces were built (the game restages the next piece instantly, so polling misses it).</summary>
     [HarmonyPatch(typeof(PlacementMode), nameof(PlacementMode.AcceptPlacement))]
     internal static class Patch_AcceptPlacement
