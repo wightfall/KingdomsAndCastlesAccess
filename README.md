@@ -13,8 +13,12 @@ SAPI and other screen readers automatically.
 * An accessible **build menu** with costs, sizes, availability and the reason a building is locked.
 * Placement feedback: sound cues for valid / invalid spots, the reason a spot is invalid and which
   tiles of the footprint are blocked.
+* Every building says what it is for, what its panel shows at a glance (workers, output, the problem it shows
+  in red) and what the map shows only as pictures: crops and orchards growing, harvest waiting, a gate shut
+  against enemies, a construction site waiting for materials. While a building is selected you hear it work
+  ("+2 stone"); hurt units say their health and loose resources on the ground are announced and listed.
 * Kingdom status, the game's detailed resource reports, notifications with location and history,
-  a scanner to find buildings, resources, fertile land and threats, and army control.
+  a scanner to find buildings, resources, fertile land, loose resources and threats, and army control.
 * **Navigation:** pick a target from the scanner, notifications or bookmarks, then auto-walk there along
   a route villagers can walk (N), walk in a straight line, jump, or follow a stereo **audio beacon**.
 * **O** surveys the area around the cursor (fertile soil, forest, stone, iron, water) to choose where to build.
@@ -22,7 +26,7 @@ SAPI and other screen readers automatically.
 * The mod speaks 19 languages, and the game's own texts (menus, windows, tooltips, buildings, events, places,
   diplomacy dialogue) can be translated for languages the game lacks: **Thai** is shipped complete, see
   [Translating the game's own texts](#translating-the-games-own-texts).
-* Procedurally generated sound cues (no audio files needed).
+* Procedurally generated sound cues (no audio files needed), each with its own volume in the mod settings.
 
 ## Installation
 
@@ -381,8 +385,9 @@ complete: until then selecting it says so; afterwards **M** sends it to the curs
 ### Creative mode
 
 F6 reaches **Creative mode options**: press the Creative Mode button to open the menu with its check
-boxes (Build For Free, Hide Fog of War, Viking Attacks …) and brushes (spawn knights, archers, vikings,
-dragons, resource stacks, fire, trees, removal tool). Picking a brush returns you to the map; **Enter**
+boxes (Build For Free, Hide Fog of War, Viking Attacks …) and brushes (spawn knights, archers, envoys, settlers,
+villagers, siege catapults, vikings, elite vikings, ogres, dragons, resource stacks, fire, trees, removal tool;
+resource stacks are loose resources and are announced like other piles). Picking a brush returns you to the map; **Enter**
 applies it at the cursor, **Escape** turns the brush off. The team buttons choose who spawned units belong
 to (your kingdom or a foreign island) and say the new team when pressed. On the map setup screen the map editor
 brushes work the same way: pick a brush, press Ctrl+M, move the cursor and press Enter to paint; you hear
@@ -609,18 +614,22 @@ being names, credits and font names that stay as they are.
 
 ## Sound cues
 
-Every sound can be previewed: Shift+F1, End, then Up through the sounds and press Enter.
+Every sound can be previewed: Shift+F1, End, then Up through the sounds and press Enter. In the mod settings
+(Ctrl+Shift+O) each sound also has its own volume line; Enter there plays it too.
 
 | Sound | Meaning |
 |-------|---------|
 | Short tick | Moved to another item / grass tile |
 | Rising chirp | List wrapped around |
 | Low thud | Edge of a list or of the map |
+| Quick double blip | A button or command was activated |
+| Low double buzz | Something is not possible right now |
+| Short tone, pitch follows the value | A slider or value changed |
 | Square blip | Tile with a building, stone or iron |
 | Bubbly glide | Water tile |
 | Soft hiss | Unexplored (fogged) tile |
 | High beep / buzz | Placement spot valid / invalid |
-| Three rising notes | Building placed |
+| Three rising notes | Building placed, or an auto-walk arrived at the target |
 | Two notes up / down | Toggle on / off |
 | Glide up / down | Window opened / closed |
 | Two bright notes | Notification |
