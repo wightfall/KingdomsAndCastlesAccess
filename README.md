@@ -738,7 +738,8 @@ controls), `thieves sink`, `findmethod <name>` (buttons calling a game method), 
 `witch [greedy|spells]`, `levelup [outpost]`, `survival intro|success`, `demowarn`, `spritelabels <sprite>`,
 `creative <option> on|off` (a creative mode option, for example `creative BuildForFree off`), `villagers <n>`
 (peasants at the cursor, so new workplaces get workers), `pile <resource> <n>` (loose resources at the cursor,
-for example `pile Tree 12`), and `audit` (in a panel opened with F6: logs every
+for example `pile Tree 12`), `hurt <percent> [all]` (health of the units on the cursor tile, or of all units),
+and `audit` (in a panel opened with F6: logs every
 visible text and tooltip line that no item of the panel says).
 
 ## License

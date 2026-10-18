@@ -290,7 +290,7 @@ namespace KCAccess.Game
                 if (field != null)
                 {
                     if (summer && field.yieldProducer != null) parts.Add(Loc.F("crop {0} grown", TextUtil.Percent(Mathf.Clamp01(field.yieldProducer.actualYieldPercentage))));
-                    int hay = field.HayStack != null ? field.HayStack.AvailableAmount().Get(FreeResourceType.Wheat) : 0;
+                    int hay = field.HayStack != null ? field.HayStack.Count() : 0; // on the field until carried off, even when a villager is on the way
                     if (hay > 0) parts.Add(Loc.F("{0} wheat harvested, waiting to be carried away", hay));
                 }
                 var orchard = b.GetComponent<Orchard>();
@@ -303,7 +303,7 @@ namespace KCAccess.Game
                         parts.Add(Loc.P(Mathf.Max(1, Mathf.CeilToInt(years)), "fully grown in about {0} year", "fully grown in about {0} years"));
                     }
                     else if (summer && orchard.yieldProducer != null) parts.Add(Loc.F("fruit {0} ripe", TextUtil.Percent(Mathf.Clamp01(orchard.yieldProducer.actualYieldPercentage))));
-                    int apples = orchard.AppleStack != null ? orchard.AppleStack.AvailableAmount().Get(FreeResourceType.Apples) : 0;
+                    int apples = orchard.AppleStack != null ? orchard.AppleStack.Count() : 0;
                     if (apples > 0) parts.Add(Loc.F("{0} apples picked, waiting to be carried away", apples));
                 }
                 var pen = b.GetComponent<Swineherd>();

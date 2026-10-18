@@ -886,6 +886,36 @@ namespace KCAccess
                             Plugin.Log.LogInfo("[dbg] " + (vc != null ? "added " + count + " villagers at " + at : "no cell at the cursor"));
                             break;
                         }
+                        case "hurt":
+                        {
+                            // Developer only: "hurt <percent> [all]" sets the health of the units on the cursor tile (or of
+                            // all units: soldiers, ships, ogres, dragons, siege catapults), to hear how the mod reads their
+                            // health bars.
+                            float share = parts.Length > 1 ? int.Parse(parts[1]) / 100f : 0.5f;
+                            bool everywhere = Array.IndexOf(parts, "all") > 1;
+                            var at = Game.MapController.Inst.CursorPos;
+                            int hurt = 0;
+                            bool On(Vector3 p) => everywhere || (int)p.x == at.X && (int)p.z == at.Z;
+                            var armies = UnitSystem.inst.armies;
+                            for (int i = 0; i < armies.Count; i++)
+                            {
+                                var army = armies.data[i];
+                                if (army == null || !On(army.GetPos())) continue;
+                                for (int u = 0; u < army.units.Count; u++) army.units.data[u].life = army.armyDef.unitLife * share;
+                                army.generalLife = army.armyDef.generalLife * share;
+                                hurt++;
+                            }
+                            var ships = everywhere ? ShipSystem.inst.ships : ShipSystem.inst.GetShipsAt(at.X, at.Z); // the grid the tile description reads
+                            for (int i = 0; ships != null && i < ships.Count; i++) if (ships.data[i] != null) { ships.data[i].life = ships.data[i].maxLife * share; hurt++; }
+                            var ogres = SiegeMonster.monsters;
+                            for (int i = 0; i < ogres.Count; i++) if (ogres.data[i] != null && On(ogres.data[i].GetPos())) { ogres.data[i].life = ogres.data[i].maxLife * share; hurt++; }
+                            var catapults = SiegeCatapultSystem.siegeCatapults;
+                            for (int i = 0; catapults != null && i < catapults.Count; i++) if (catapults.data[i] != null && On(catapults.data[i].GetPos())) { catapults.data[i].life = catapults.data[i].maxLife * share; hurt++; }
+                            var dragons = DragonSpawn.inst != null ? DragonSpawn.inst.currentDragons : null;
+                            for (int i = 0; dragons != null && i < dragons.Count; i++) if (dragons.data[i] != null && On(dragons.data[i].transform.position)) { dragons.data[i].hp = dragons.data[i].maxHp * share; hurt++; }
+                            Plugin.Log.LogInfo("[dbg] hurt " + hurt + " units at " + at);
+                            break;
+                        }
                         case "pile":
                         {
                             // Developer only: "pile <resource> <n>" drops loose resources at the cursor as a demolished
