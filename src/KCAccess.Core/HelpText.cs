@@ -67,10 +67,17 @@ namespace KCAccess.Core
             { "Status", Loc.N("Kingdom status list. Up and Down move through the lines, Enter on a resource, happiness or health line reads the game's report, Enter on the Twitch vote line opens the Twitch voting settings. Escape closes.") },
         };
 
+        /// <summary>Help added later to a screen, spoken after its text (keeps the earlier text's translations).</summary>
+        private static readonly Dictionary<string, string> More = new Dictionary<string, string>
+        {
+            { "ModSettings", Loc.N("Every sound cue has its own volume line: Left and Right change it in steps of 10 percent, Enter plays the sound, Delete sets it back to 100 percent. The line after the sounds resets every sound volume.") },
+        };
+
         public static string For(string screenId)
         {
             // Texts name rebindable keys as {BindingId}: always speak the player's current keys.
-            if (screenId != null && Screens.TryGetValue(screenId, out var text)) return KeyHelp.Resolve(Loc.T(text));
+            if (screenId != null && Screens.TryGetValue(screenId, out var text))
+                return KeyHelp.Resolve(Loc.T(text) + (More.TryGetValue(screenId, out var more) ? " " + Loc.T(more) : string.Empty));
             return Loc.T(Screens["Dialog"]);
         }
 

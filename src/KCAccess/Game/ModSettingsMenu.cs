@@ -27,6 +27,7 @@ namespace KCAccess.Game
         private string capturing;     // binding id waiting for a key
         private bool waitRelease;     // the Enter that started capturing must be released first
         private float resetArmedUntil = -1f;
+        private float soundResetArmedUntil = -1f;
 
         internal bool Capturing => capturing != null;
 
@@ -55,6 +56,7 @@ namespace KCAccess.Game
             Toggle(Loc.N("Speak cursor coordinates after each tile"), Plugin.CfgCoordinates);
             Toggle(Loc.N("Hints for new players"), Plugin.CfgHints);
             Toggle(Loc.N("Say what buildings are for, in the build menu and when you select one"), Plugin.CfgBuildingPurpose);
+            Toggle(Loc.N("Announce what the selected building makes or loses, for example +5 stone"), Plugin.CfgProduction);
             Toggle(Loc.N("Say the position in menus and lists, for example 3 of 19"), Plugin.CfgPositions);
             Header(Loc.N("Sound"));
             Toggle(Loc.N("Sound cues"), Plugin.CfgCues);
@@ -64,6 +66,13 @@ namespace KCAccess.Game
                     Plugin.CfgCueVolume.Value = Mathf.Clamp01(Mathf.Round((Plugin.CfgCueVolume.Value + d * 0.1f) * 10f) / 10f);
                     A.Cue(Cue.Value, 0.6f + Plugin.CfgCueVolume.Value);
                 });
+            Header(Loc.N("Volume of each sound, in percent of the sound cue volume. Left and Right change it, Enter plays the sound, Delete sets it back to 100 percent"));
+            foreach (Cue cue in CueLibrary.All)
+            {
+                var c = cue;
+                Add(new Setting { Label = () => CueLabel(c), Adjust = d => ChangeCue(c, d), Enter = () => AudioCues.Preview(c), Delete = () => RestoreCue(c) });
+            }
+            Add(new Setting { Label = () => Loc.T("Reset every sound to 100 percent, the sound cue volume stays as it is. Press Enter twice"), Enter = ResetSounds });
             Header(Loc.N("Map"));
             Toggle(Loc.N("Camera follows the cursor"), Plugin.CfgCameraFollow);
             Number(() => Loc.F("Auto-walk speed: {0}", Plugin.CfgWalkSpeed.Value <= 1 ? Loc.T("slow") : Plugin.CfgWalkSpeed.Value >= 3 ? Loc.T("fast") : Loc.T("normal")),
@@ -360,6 +369,67 @@ namespace KCAccess.Game
             }
         }
 
+        // ------------------------------------------------------------------ sound volumes
+
+        /// <summary>"Edge sound: 80 percent. Reached the edge of a list or of the map".</summary>
+        private static string CueLabel(Cue cue)
+        {
+            int p = Plugin.CueLevels.Get(cue);
+            return TextUtil.Sentences(Loc.F("{0} sound: {1} percent", CueLibrary.Name(cue), p) + (p == 0 ? ", " + Loc.T("silent") : string.Empty), CueLibrary.Meaning(cue));
+        }
+
+        private static void ChangeCue(Cue cue, int delta)
+        {
+            int before = Plugin.CueLevels.Get(cue);
+            int now = Plugin.CueLevels.Change(cue, delta);
+            if (now == before)
+            {
+                A.Cue(Cue.Edge);
+                A.Say(now == 0 ? Loc.T("Already silent") : Loc.F("Already the loudest, {0} percent", now), force: true);
+                return;
+            }
+            SaveCues();
+            A.Say(Loc.F("{0} percent", now) + (now == 0 ? ", " + Loc.T("silent") : string.Empty), force: true);
+            if (Plugin.CfgCues.Value) AudioCues.Preview(cue); // hear the new volume
+        }
+
+        private static void RestoreCue(Cue cue)
+        {
+            if (Plugin.CueLevels.IsDefault(cue))
+            {
+                A.Say(Loc.F("{0} sound is already at 100 percent", CueLibrary.Name(cue)), force: true);
+                return;
+            }
+            Plugin.CueLevels.Set(cue, CueVolumes.Default);
+            SaveCues();
+            A.Say(Loc.F("{0} sound back to 100 percent", CueLibrary.Name(cue)), force: true);
+            if (Plugin.CfgCues.Value) AudioCues.Preview(cue);
+        }
+
+        private static void SaveCues() => Plugin.CfgCueVolumes.Value = Plugin.CueLevels.Serialize();
+
+        /// <summary>Every sound back to 100 percent of the sound cue volume, which stays as it is (Enter twice).</summary>
+        private void ResetSounds()
+        {
+            if (Plugin.CueLevels.AllDefault)
+            {
+                A.Say(Loc.T("Every sound is already at 100 percent"), force: true);
+                return;
+            }
+            if (Time.unscaledTime > soundResetArmedUntil)
+            {
+                soundResetArmedUntil = Time.unscaledTime + 5f;
+                A.Say(Loc.T("Press Enter again within 5 seconds to set every sound back to 100 percent"), force: true);
+                return;
+            }
+            soundResetArmedUntil = -1f;
+            Plugin.CueLevels.Reset();
+            SaveCues();
+            Plugin.ConfigRef.Save();
+            A.Cue(Cue.Placed);
+            A.Say(Loc.T("Every sound is back to 100 percent"), force: true);
+        }
+
         // ------------------------------------------------------------------ reset
 
         private void ResetAll()
@@ -378,6 +448,7 @@ namespace KCAccess.Game
                 entry.BoxedValue = entry.DefaultValue;
             }
             Plugin.Keys.Reset();
+            Plugin.CueLevels.Load(Plugin.CfgCueVolumes.Value);
             Plugin.ConfigRef.Save();
             ModLanguage.Apply(announce: false);
             A.Cue(Cue.Placed);

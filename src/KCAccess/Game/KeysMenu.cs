@@ -33,25 +33,8 @@ namespace KCAccess.Game
             foreach (Cue cue in CueLibrary.All)
             {
                 var c = cue;
-                Add(Loc.F("Sound: {0}. {1}", CueLibrary.Name(c), CueLibrary.Meaning(c)), () => Preview(c));
+                Add(Loc.F("Sound: {0}. {1}", CueLibrary.Name(c), CueLibrary.Meaning(c)), () => AudioCues.Preview(c));
             }
-        }
-
-        private static void Preview(Cue cue)
-        {
-            if (!Plugin.CfgCues.Value)
-            {
-                A.Say(KeyHelp.Resolve(Loc.T("Sound cues are off. {Mute} turns them on.")), force: true);
-                return;
-            }
-            if (cue == Cue.Beacon)
-            {
-                // Show the stereo idea: a ping from the left (west) and from the right (east).
-                AudioCues.PlayPanned(Cue.Beacon, -0.9f, 1f);
-                Inst.Run(0.5f, () => AudioCues.PlayPanned(Cue.Beacon, 0.9f, 1f));
-                return;
-            }
-            AudioCues.Play(cue);
         }
 
         protected override bool HandleExtraKeys()
@@ -83,33 +66,6 @@ namespace KCAccess.Game
         {
             if (fromMap) MapController.Inst.OnReturnToMap();
             else AccessController.Inst.Nav.SpeakCurrent();
-        }
-
-        /// <summary>Tiny scheduler for the delayed second beacon ping.</summary>
-        private static Runner Inst => Runner.Get();
-
-        private sealed class Runner : MonoBehaviour
-        {
-            private static Runner inst;
-
-            internal static Runner Get()
-            {
-                if (inst == null)
-                {
-                    var go = new GameObject("KCAccessKeysMenuRunner");
-                    Object.DontDestroyOnLoad(go);
-                    inst = go.AddComponent<Runner>();
-                }
-                return inst;
-            }
-
-            internal void Run(float delay, System.Action action) => StartCoroutine(Later(delay, action));
-
-            private System.Collections.IEnumerator Later(float delay, System.Action action)
-            {
-                yield return new WaitForSecondsRealtime(delay);
-                action();
-            }
         }
     }
 }

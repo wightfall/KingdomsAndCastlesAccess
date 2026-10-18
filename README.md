@@ -188,6 +188,10 @@ for a ship (I on the tile says these too). A construction site says what it is s
 wood 20, stone 10"), or that it is finishing up, paused, or that no villager is free to build it. An empty tile
 adds the hint of the game's tile panel ("Land is ready for agriculture").
 
+While a building is selected, the numbers the game shows floating up from it are spoken: what it makes ("+5
+stone" from a quarry, a farm's harvest, a fishing hut's catch) and what it loses ("-12 wheat" left on a field
+when winter comes). So you hear it work, as a sighted player sees it. The mod settings can turn this off.
+
 While you drag out a line or area of roads, walls or fields, the mod says how many pieces are planned, how
 many can be built and what they cost together ("4 pieces planned, cost wood 4"; what you are short of is
 added as "(have 3)").
@@ -476,10 +480,16 @@ Page Down jump between the groups (you hear when you reach the first or last gro
   language has a game text file (see [Translating the game's own texts](#translating-the-games-own-texts)).
 * **Speech:** announce notifications, announce seasons and new years, detailed tile descriptions while
   moving, speak coordinates after each tile, hints for new players, **say what buildings are for** in the
-  build menu and when you select one (on by default), and **say the position in menus and lists** ("Load,
-  4 of 19"; off by default, F5 always says it).
+  build menu and when you select one (on by default), **announce what the selected building makes or loses**
+  ("+5 stone"; on by default), and **say the position in menus and lists** ("Load, 4 of 19"; off by default,
+  F5 always says it).
 * **Sound:** sound cues on or off, sound cue volume (Left / Right in steps of 10 percent; you hear the new
   volume).
+* **Volume of each sound:** one line per sound cue ("Edge sound: 80 percent. Reached the edge of a list or of
+  the map"), in percent of the sound cue volume: Left / Right change it in steps of 10 percent from silent to
+  200 percent and play the sound at its new volume, Enter plays it, Delete sets it back to 100 percent. The
+  line after the sounds sets every sound back to 100 percent (press Enter twice); the sound cue volume stays as
+  it is.
 * **Map:** camera follows the cursor, auto-walk speed (slow, normal, fast).
 * **Keyboard and logs:** deliver key presses the game missed, key log, speech log.
 * **Streaming:** Twitch vote countdown, read Twitch chat aloud, speech captions on screen, status file for
@@ -613,6 +623,7 @@ Every sound can be previewed: Shift+F1, End, then Up through the sounds and pres
 |---------|---------|---------|
 | Audio / SoundCues | true | Play sound cues |
 | Audio / CueVolume | 0.5 | Cue volume 0 – 1 |
+| Audio / CueVolumes | (empty) | Volume of single cues in percent of CueVolume, e.g. `Navigate=50;Alert=150` (easier in the game with Ctrl+Shift+O) |
 | Map / SpeakCoordinates | false | Add X, Z to every tile description |
 | Map / VerboseCells | false | Speak fertility for every tile while moving |
 | Map / CameraFollowsCursor | true | Camera follows the keyboard cursor (helps sighted helpers) |
@@ -622,6 +633,7 @@ Every sound can be previewed: Shift+F1, End, then Up through the sounds and pres
 | Speech / AnnounceSeasons | true | Speak the start of every summer, winter and new year (and heavy rain / thunderstorms) |
 | Speech / Hints | true | Short hints for new players |
 | Speech / BuildingPurpose | true | Say what a building is for (the game's description) in the build menu and when you select it |
+| Speech / AnnounceProduction | true | Speak the numbers the game shows over the selected building when it makes or loses something ("+5 stone") |
 | Language / Language | auto | Language the mod speaks: `auto` follows the game, `en` English, or a file name in `Languages` such as `th` |
 | Language / GameTexts | true | Show and read the game's own texts in the mod's language where `Languages\game\<code>.txt` translates them |
 | Speech / SayPositions | false | Say the position after each item in menus and lists ("3 of 19") |
@@ -716,8 +728,9 @@ controls), `thieves sink`, `findmethod <name>` (buttons calling a game method), 
 `merchant` (a merchant ship sails to your docks), `dockgoods`, `ships`, `merchantspecial [upgrade]`, `findspot`
 (where the game accepts the held building), `lqspot`, `wreck` (the building at the cursor falls into rubble),
 `witch [greedy|spells]`, `levelup [outpost]`, `survival intro|success`, `demowarn`, `spritelabels <sprite>`,
-`creative <option> on|off` (a creative mode option, for example `creative BuildForFree off`), and `audit` (in a
-panel opened with F6: logs every visible text and tooltip line that no item of the panel says).
+`creative <option> on|off` (a creative mode option, for example `creative BuildForFree off`), `villagers <n>`
+(peasants at the cursor, so new workplaces get workers), and `audit` (in a panel opened with F6: logs every
+visible text and tooltip line that no item of the panel says).
 
 ## License
 

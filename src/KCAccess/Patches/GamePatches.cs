@@ -349,6 +349,33 @@ namespace KCAccess
             rebuilt.Clear();
         }
     }
+
+    /// <summary>
+    /// A working building shows what it makes or loses as numbers floating up from it ("+5 stone" from a quarry, a
+    /// farm's harvest, apples rotting in winter). Those of the selected building are spoken (AnnounceProduction setting),
+    /// so you hear it work as a sighted player sees it.
+    /// </summary>
+    [HarmonyPatch(typeof(Assets.ResourceTextStackManager), nameof(Assets.ResourceTextStackManager.ShowResourceAmount))]
+    internal static class Patch_ProductionNumbers
+    {
+        private static void Prefix(Vector3 start, FreeResourceType type, int amount)
+        {
+            if (amount == 0 || !Plugin.CfgProduction.Value) return;
+            try
+            {
+                var b = GameUI.inst != null ? GameUI.inst.GetBuildingSelected() : null;
+                if (b == null || b.TeamID() != 0) return;
+                var cell = World.inst.GetCellData(start);
+                if (cell == null || !cell.OccupyingStructure.Contains(b)) return; // shown over another building
+                string res = KCAccess.Core.ResourceNames.Name(type.ToString());
+                A.SayQueued(amount > 0 ? KCAccess.Core.Loc.F("+{0} {1}", amount, res) : KCAccess.Core.Loc.F("-{0} {1}", -amount, res));
+            }
+            catch
+            {
+                // announcement only
+            }
+        }
+    }
 }
 
 namespace KCAccess

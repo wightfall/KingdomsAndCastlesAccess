@@ -875,6 +875,17 @@ namespace KCAccess
                             Plugin.Log.LogInfo("[nav] root=" + (nav.Root != null ? PathOf(nav.Root) : "null") + " count=" + nav.Count);
                             foreach (var it in nav.AllItems) Plugin.Log.LogInfo("[nav]  " + PathOf(it.Go.transform) + " => " + nav.Describe(it));
                             break;
+                        case "villagers":
+                        {
+                            // Developer only: "villagers <n>" adds peasants at the cursor as the Twitch population boost
+                            // does (the test world has 5, all busy, so a new workplace never gets workers).
+                            int count = parts.Length > 1 ? int.Parse(parts[1]) : 10;
+                            var at = Game.MapController.Inst.CursorPos;
+                            var vc = World.inst.GetCellData(at.X, at.Z);
+                            for (int i = 0; vc != null && i < count; i++) Player.inst.AddVillager(vc.Position + new Vector3(0.5f, 0f, 0.5f));
+                            Plugin.Log.LogInfo("[dbg] " + (vc != null ? "added " + count + " villagers at " + at : "no cell at the cursor"));
+                            break;
+                        }
                         case "creative":
                             // Developer only: "creative BuildForFree off" switches a creative mode option (the test world
                             // builds for free, so costs and construction waiting for materials cannot be heard otherwise).

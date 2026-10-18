@@ -49,7 +49,7 @@ namespace KCAccess
             }
             inst.beaconSource.panStereo = Mathf.Clamp(pan, -1f, 1f);
             inst.beaconSource.pitch = Mathf.Clamp(pitch, 0.25f, 3f);
-            inst.beaconSource.PlayOneShot(clip, Plugin.CfgCueVolume.Value);
+            inst.beaconSource.PlayOneShot(clip, Volume(cue));
         }
 
         internal static void Play(Cue cue, float pitchScale = 1f)
@@ -57,7 +57,36 @@ namespace KCAccess
             if (inst == null || !Plugin.CfgCues.Value) return;
             if (!inst.clips.TryGetValue(cue, out var clip)) return;
             inst.source.pitch = Mathf.Clamp(pitchScale, 0.25f, 3f);
-            inst.source.PlayOneShot(clip, Plugin.CfgCueVolume.Value);
+            inst.source.PlayOneShot(clip, Volume(cue));
+        }
+
+        /// <summary>The overall cue volume times the cue's own volume (mod settings), at most full volume.</summary>
+        private static float Volume(Cue cue) => Mathf.Clamp01(Plugin.CfgCueVolume.Value * Plugin.CueLevels.Scale(cue));
+
+        /// <summary>
+        /// Plays a cue to show what it sounds like (key list, mod settings); the beacon pings once from the left (west)
+        /// and once from the right (east). Says so when sound cues are off.
+        /// </summary>
+        internal static void Preview(Cue cue)
+        {
+            if (!Plugin.CfgCues.Value)
+            {
+                A.Say(KeyHelp.Resolve(Loc.T("Sound cues are off. {Mute} turns them on.")), force: true);
+                return;
+            }
+            if (cue != Cue.Beacon)
+            {
+                Play(cue);
+                return;
+            }
+            PlayPanned(Cue.Beacon, -0.9f, 1f);
+            if (inst != null) inst.StartCoroutine(inst.Later(0.5f, () => PlayPanned(Cue.Beacon, 0.9f, 1f)));
+        }
+
+        private System.Collections.IEnumerator Later(float delay, System.Action action)
+        {
+            yield return new WaitForSecondsRealtime(delay);
+            action();
         }
     }
 }
