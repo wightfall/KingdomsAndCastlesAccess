@@ -359,6 +359,9 @@ namespace KCAccess.UI
             if (saveSlot != null && saveSlot.deleteButton != null && (go.transform == saveSlot.deleteButton.transform || go.transform.IsChildOf(saveSlot.deleteButton.transform))) return true;
             // Villager lists: the camera-only "find everyone" glass, and names already spoken by each row's button.
             if (go.name == "FindVillagersButton" && go.GetComponentInParent<VillagerListUI>() != null) return true;
+            // The construction site's "find builders" glass only moves the camera too (it was read as "Magnifying glass").
+            var site = GameUI.inst != null ? GameUI.inst.constructUI : null;
+            if (site != null && site.FindBuildersButton != null && go == site.FindBuildersButton.gameObject) return true;
             var person = go.GetComponentInParent<PersonListItemUI>();
             if (person != null && person.MagGlass != null && go.transform != person.MagGlass.transform && !person.MagGlass.transform.IsChildOf(go.transform)) return true;
             // Portrait captions duplicate the advisor buttons' names.

@@ -135,6 +135,25 @@ namespace KCAccess.Game
             return Loc.F("cost {0}", ResourceNames.Cost(names, need, got));
         }
 
+        /// <summary>"cost wood 30 (have 12)": an amount paid from the island's stock and the treasury.</summary>
+        internal static string CostFrom(ResourceAmount cost, int landMass)
+        {
+            var all = Player.inst.resourcesPerLandmass;
+            ResourceAmount have = all != null && landMass >= 0 && landMass < all.Length ? all[landMass] : default(ResourceAmount);
+            have.Set(FreeResourceType.Gold, Player.inst.PlayerLandmassOwner.Gold);
+            const int n = 12;
+            var names = new string[n];
+            var need = new int[n];
+            var got = new int[n];
+            for (int i = 0; i < n; i++)
+            {
+                names[i] = ((FreeResourceType)i).ToString();
+                need[i] = cost.Get((FreeResourceType)i);
+                got[i] = have.Get((FreeResourceType)i);
+            }
+            return Loc.F("cost {0}", ResourceNames.Cost(names, need, got));
+        }
+
         /// <summary>Rubble in the area that rebuild mode could put up again (not the keep's).</summary>
         internal static int RebuildableRubble(int minX, int minZ, int maxX, int maxZ)
         {
@@ -150,11 +169,20 @@ namespace KCAccess.Game
             return count;
         }
 
-        /// <summary>"Small House, under construction 40 percent, yours".</summary>
-        internal static string BuildingSummary(Building b, bool brief)
+        /// <summary>
+        /// "Small House, under construction 40 percent, yours". Not <paramref name="brief"/>: also workers, a construction
+        /// site's missing materials, the problem the panel shows in red and tower ranges. <paramref name="selected"/> (the
+        /// building was just selected): the rest of what its panel shows at a glance and what the map shows of it.
+        /// </summary>
+        internal static string BuildingSummary(Building b, bool brief, bool selected = false)
         {
             var parts = new List<string> { RubbleOf(b) is string was ? Loc.F("Rubble of {0}", was) : b.FriendlyName };
-            if (!b.IsBuilt()) parts.Add(Loc.F("under construction {0}", TextUtil.Percent(Mathf.Clamp01(b.constructionProgress))));
+            bool own = b.TeamID() == 0 && !World.IsAILandmass(b.LandMass());
+            if (!b.IsBuilt())
+            {
+                parts.Add(Loc.F("under construction {0}", TextUtil.Percent(Mathf.Clamp01(b.constructionProgress))));
+                if (!brief && own) parts.Add(ConstructionState(b));
+            }
             else
             {
                 float health = Overlays.Integrity(b); // stacked castle blocks can take more than one building's damage
@@ -165,6 +193,15 @@ namespace KCAccess.Game
                 {
                     parts.Add(Loc.F("{0} of {1} workers", b.WorkersAllocated, b.WorkersForFullYield));
                 }
+                var home = selected && own ? b.GetComponent<Home>() : null;
+                if (home != null && home.Residents != null)
+                {
+                    parts.Add(Loc.F("{0} of {1} residents", home.Residents.Count, home.MaxResidents));
+                    // A lived-in house's panel starts with its happiness ("Happiness: 60 in home").
+                    if (home.Residents.Count > 0) parts.Add(Loc.Format(I2.Loc.ScriptLocalization.HomeTitle, home.GetHappiness()));
+                }
+                if (!brief && own) parts.Add(OutputLine(b, withTitle: selected));
+                if (selected && own) parts.Add(Looks(b));
             }
             if (!brief && b.IsBuilt())
             {
@@ -178,6 +215,117 @@ namespace KCAccess.Game
                 parts.Add(rel == World.Relations.Enemy ? Loc.T("enemy") : Loc.T("foreign"));
             }
             return TextUtil.Join(", ", parts);
+        }
+
+        /// <summary>What the construction panel shows: paused, the materials still to come (or finishing up), no free builders.</summary>
+        internal static string ConstructionState(Building b)
+        {
+            try
+            {
+                var parts = new List<string>();
+                if (b.constructionPaused) parts.Add(Loc.T("construction paused"));
+                ResourceAmount left = b.ResourcesNotCollected();
+                left.Set(FreeResourceType.Gold, 0);
+                string waiting = Amounts(left);
+                parts.Add(waiting != null ? Loc.F("waiting for {0}", waiting) : Loc.T("finishing up"));
+                if (!b.constructionPaused && World.inst.AvailableWorkersOnLandMass(b.LandMass()) <= 0 && b.GetWorkerPercent() <= 0f) parts.Add(Loc.T("no free villagers to build it"));
+                return TextUtil.Join(", ", parts);
+            }
+            catch (System.Exception)
+            {
+                return null;
+            }
+        }
+
+        /// <summary>"wood 10, stone 5" for the amounts above zero, or null.</summary>
+        internal static string Amounts(ResourceAmount amount)
+        {
+            const int n = 12;
+            var names = new string[n];
+            var count = new int[n];
+            bool any = false;
+            for (int i = 0; i < n; i++)
+            {
+                names[i] = ((FreeResourceType)i).ToString();
+                count[i] = amount.Get((FreeResourceType)i);
+                if (count[i] > 0) any = true;
+            }
+            return any ? ResourceNames.Cost(names, count, null) : null;
+        }
+
+        private static readonly System.Text.RegularExpressions.Regex Fraction = new System.Text.RegularExpressions.Regex(@"(\d+)\s*/\s*(\d+)");
+
+        /// <summary>
+        /// The top of the building panel's output section, read there at a glance: its title ("Food Output: 5 of 5 per
+        /// year", "Pork produced last year: 0"; only <paramref name="withTitle"/>) and the red problem line (a blacksmith
+        /// without iron, a flooded field). Null when it shows neither.
+        /// </summary>
+        internal static string OutputLine(Building b, bool withTitle)
+        {
+            var info = b.GetComponent<IOutputInfo>();
+            if (info == null) return null;
+            try
+            {
+                string title = withTitle ? Fraction.Replace(TextUtil.Clean(info.GetTitle() + " " + info.GetNum() + " " + info.GetUnit()), m => Loc.F("{0} of {1}", m.Groups[1].Value, m.Groups[2].Value)) : null;
+                return TextUtil.Join(", ", title, info.GetError());
+            }
+            catch (System.Exception)
+            {
+                return null; // not set up yet
+            }
+        }
+
+        /// <summary>
+        /// What a building shows only on the map: how far a farm's crop or an orchard's young trees and fruit have grown,
+        /// harvested food waiting to be carried off, the pigs in a pen, graves taken, a gate shut or a drawbridge raised
+        /// against enemies, a sea gate open for a ship. Null when there is nothing to say.
+        /// </summary>
+        internal static string Looks(Building b)
+        {
+            try
+            {
+                bool summer = Weather.inst != null && Weather.inst.season == Weather.Season.Summer;
+                var parts = new List<string>();
+                var field = b.GetComponent<Field>();
+                if (field != null)
+                {
+                    if (summer && field.yieldProducer != null) parts.Add(Loc.F("crop {0} grown", TextUtil.Percent(Mathf.Clamp01(field.yieldProducer.actualYieldPercentage))));
+                    int hay = field.HayStack != null ? field.HayStack.AvailableAmount().Get(FreeResourceType.Wheat) : 0;
+                    if (hay > 0) parts.Add(Loc.F("{0} wheat harvested, waiting to be carried away", hay));
+                }
+                var orchard = b.GetComponent<Orchard>();
+                if (orchard != null)
+                {
+                    if (orchard.lifeTime < orchard.matureTime)
+                    {
+                        float years = (orchard.matureTime - orchard.lifeTime) / Weather.inst.TimeInYear();
+                        parts.Add(Loc.F("young trees {0} grown, no fruit yet", TextUtil.Percent(Mathf.Clamp01(orchard.lifeTime / orchard.matureTime))));
+                        parts.Add(Loc.P(Mathf.Max(1, Mathf.CeilToInt(years)), "fully grown in about {0} year", "fully grown in about {0} years"));
+                    }
+                    else if (summer && orchard.yieldProducer != null) parts.Add(Loc.F("fruit {0} ripe", TextUtil.Percent(Mathf.Clamp01(orchard.yieldProducer.actualYieldPercentage))));
+                    int apples = orchard.AppleStack != null ? orchard.AppleStack.AvailableAmount().Get(FreeResourceType.Apples) : 0;
+                    if (apples > 0) parts.Add(Loc.F("{0} apples picked, waiting to be carried away", apples));
+                }
+                var pen = b.GetComponent<Swineherd>();
+                if (pen != null && pen.pigs != null) parts.Add(Loc.P(pen.pigs.Count, "{0} pig", "{0} pigs"));
+                var cemetery = b.GetComponent<Cemetery>();
+                if (cemetery != null && cemetery.gravesData != null)
+                {
+                    int graves = cemetery.gravesData.Length;
+                    parts.Add(Loc.F("{0} of {1} graves taken", graves - cemetery.GetOpenGraves(), graves));
+                }
+                var gate = b.GetComponent<Gate>();
+                if (gate != null && gate.gateTime < 0.5f) parts.Add(Loc.T("shut, enemies are near"));
+                var drawbridge = b.GetComponent<DrawBridge>();
+                if (drawbridge != null && drawbridge.openTime > 0.5f) parts.Add(Loc.T("raised"));
+                var seaGate = b.GetComponent<SeaGate>();
+                if (seaGate != null && seaGate.openTime > 0.5f) parts.Add(Loc.T("open for a ship"));
+                return parts.Count > 0 ? TextUtil.Join(", ", parts) : null;
+            }
+            catch (System.Exception)
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -476,7 +624,10 @@ namespace KCAccess.Game
             if (c.Danger > 0) parts.Add(Loc.T("dangerous area"));
             foreach (var b in c.OccupyingStructure)
             {
-                if (b != null && b.IsBuilt() && b.WorkersForFullYield > 0 && b.CategoryName != "house") parts.Add(b.FriendlyName + ": " + Loc.F("{0} of {1} workers", b.WorkersAllocated, b.WorkersForFullYield));
+                if (b == null || !b.IsBuilt()) continue;
+                if (b.WorkersForFullYield > 0 && b.CategoryName != "house") parts.Add(b.FriendlyName + ": " + Loc.F("{0} of {1} workers", b.WorkersAllocated, b.WorkersForFullYield));
+                string looks = Looks(b);
+                if (looks != null) parts.Add(b.FriendlyName + ": " + looks);
             }
             return TextUtil.Sentences(parts.ToArray());
         }

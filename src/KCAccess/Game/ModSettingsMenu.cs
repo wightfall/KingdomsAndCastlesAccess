@@ -54,6 +54,7 @@ namespace KCAccess.Game
             Toggle(Loc.N("Detailed tile descriptions while moving (fertility and road coverage)"), Plugin.CfgVerboseCells);
             Toggle(Loc.N("Speak cursor coordinates after each tile"), Plugin.CfgCoordinates);
             Toggle(Loc.N("Hints for new players"), Plugin.CfgHints);
+            Toggle(Loc.N("Say what buildings are for, in the build menu and when you select one"), Plugin.CfgBuildingPurpose);
             Toggle(Loc.N("Say the position in menus and lists, for example 3 of 19"), Plugin.CfgPositions);
             Header(Loc.N("Sound"));
             Toggle(Loc.N("Sound cues"), Plugin.CfgCues);

@@ -270,16 +270,17 @@ namespace KCAccess.Game
             if (KInput.Alt) return false;
 
             bool moved;
+            bool verbose = Plugin.CfgVerboseCells.Value || HoldsCrop();
             if (KInput.Ctrl)
             {
                 int n = cursor.MoveUntilChange(dx, dz, (x, z) => CellInfo.Signature(World.inst.GetCellData(x, z)));
                 moved = n > 0;
-                if (moved) A.Say(Loc.P(n, "{0} tile", "{0} tiles") + ", " + CellInfo.Brief(CurrentCell, Plugin.CfgVerboseCells.Value), force: true);
+                if (moved) A.Say(Loc.P(n, "{0} tile", "{0} tiles") + ", " + CellInfo.Brief(CurrentCell, verbose), force: true);
             }
             else
             {
                 moved = cursor.Move(dx, dz, KInput.Shift ? 5 : 1) == MoveResult.Moved;
-                if (moved) A.Say(CellInfo.Brief(CurrentCell, Plugin.CfgVerboseCells.Value), force: true);
+                if (moved) A.Say(CellInfo.Brief(CurrentCell, verbose), force: true);
             }
             if (!moved)
             {
@@ -291,6 +292,17 @@ namespace KCAccess.Game
             UpdatePointer(follow: true);
             if (IsPlacing) validityCheckFrame = Time.frameCount + 2;
             return true;
+        }
+
+        /// <summary>
+        /// A farm or orchard is held: its yield depends on the soil, which the game shows as greener ground, so moving
+        /// says the fertility of each tile as well.
+        /// </summary>
+        private bool HoldsCrop()
+        {
+            if (!IsPlacing) return false;
+            var held = GameUI.inst.CurrPlacementMode.GetHoverBuilding();
+            return held != null && (held.uniqueNameHash == World.farmHash || held.uniqueNameHash == World.orchardHash);
         }
 
         private static void StepCue(Cell c)
@@ -1149,14 +1161,19 @@ namespace KCAccess.Game
             string text;
             if (b != null)
             {
-                text = CellInfo.BuildingSummary(b, brief: false);
+                text = CellInfo.BuildingSummary(b, brief: false, selected: true);
                 if (b.TeamID() == 0) text = TextUtil.Join(", ", text, Reach.Text(b));
-                if (detailed) text = TextUtil.Sentences(text, b.Description);
+                // The panel shows what the building is for under its name (rubble's "description" is only its name again).
+                if ((detailed || Plugin.CfgBuildingPurpose.Value) && CellInfo.RubbleOf(b) == null) text = TextUtil.Sentences(text, b.Description);
                 text = TextUtil.Sentences(text, Loc.T("F6 for the building panel"));
             }
             else if (ui.GetCellSelected() != null)
             {
-                text = TextUtil.Sentences(Loc.T("Selected tile"), CellInfo.Brief(ui.GetCellSelected(), true), Loc.T("F6 for tile actions"));
+                // The tile panel's hint under the terrain ("Land is ready for agriculture", what a deposit is for). The
+                // panel grows from nothing when it opens, so its own visible flag tells whether it shows.
+                var tileUi = ui.tileInfoUI;
+                string tip = tileUi != null && tileUi.tipTextUI != null && tileUi.Visible ? tileUi.tipTextUI.text : null;
+                text = TextUtil.Sentences(Loc.T("Selected tile"), CellInfo.Brief(ui.GetCellSelected(), true), tip, Loc.T("F6 for tile actions"));
             }
             else if (ui.IsUnitSelected())
             {
@@ -1477,7 +1494,9 @@ namespace KCAccess.Game
                 int ok = 0;
                 foreach (var b in GameUI.inst.CurrPlacementMode.buildings)
                     if (b != null && World.inst.CanPlace(b) == PlacementValidationResult.Valid) ok++;
-                A.SayQueued(Loc.P(count, "{0} piece planned", "{0} pieces planned") + (ok < count ? ", " + Loc.F("{0} can be built", ok) : string.Empty));
+                // The game shows what the pieces that can be built cost together.
+                string cost = ok > 0 ? CellInfo.CostFrom(GameUI.inst.CurrPlacementMode.GetPlacementCost(), Player.inst.FocusedLandMass) : null;
+                A.SayQueued(TextUtil.Join(", ", Loc.P(count, "{0} piece planned", "{0} pieces planned") + (ok < count ? ", " + Loc.F("{0} can be built", ok) : string.Empty), cost));
             }
         }
 

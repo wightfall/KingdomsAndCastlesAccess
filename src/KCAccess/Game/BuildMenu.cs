@@ -89,7 +89,7 @@ namespace KCAccess.Game
                 text = intro + Loc.F("{0}, locked.", catName) + " " + LockReason(tab);
             }
             else if (items.Count == 0) text = intro + Loc.F("{0}, empty", catName);
-            else text = intro + (announceCategory ? catName + ", " + Loc.P(items.Count, "{0} building", "{0} buildings") + ". " : string.Empty) + Describe(items.Current, brief: true);
+            else text = TextUtil.Sentences(intro + (announceCategory ? catName + ", " + Loc.P(items.Count, "{0} building", "{0} buildings") + ". " : string.Empty) + Describe(items.Current, brief: true), Purpose(items.Current));
             A.Say(text);
         }
 
@@ -180,7 +180,14 @@ namespace KCAccess.Game
             }
             A.Cue(r == NavResult.HitEdge ? Cue.Edge : Cue.Navigate);
             lastIndex[CurrentTab.title] = items.Index;
-            A.Say(Describe(items.Current, brief: true) + (Plugin.CfgPositions.Value && items.Count > 1 ? ", " + items.PositionText : string.Empty));
+            A.Say(TextUtil.Sentences(Describe(items.Current, brief: true) + (Plugin.CfgPositions.Value && items.Count > 1 ? ", " + items.PositionText : string.Empty), Purpose(items.Current)));
+        }
+
+        /// <summary>What the building is for, as its tooltip in the game's build menu says under the name (BuildingPurpose setting).</summary>
+        private static string Purpose(BuildingCostUpdater b)
+        {
+            if (b == null || b.prefab == null || !Plugin.CfgBuildingPurpose.Value || IsSubMenuEntry(b, out _)) return null;
+            return b.prefab.Description;
         }
 
         private static bool IsSubMenuEntry(BuildingCostUpdater b, out string tab)

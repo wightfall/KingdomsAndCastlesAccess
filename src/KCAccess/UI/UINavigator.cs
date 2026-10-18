@@ -151,6 +151,9 @@ namespace KCAccess.UI
         public void AnnounceScreen(string intro = null)
         {
             string current = list.HasCurrent ? Describe(list.Current) : Loc.T("no items");
+            // A panel named after its first text (a construction site's "Cottage") says the name once.
+            if (string.IsNullOrEmpty(intro) && string.Equals(TextUtil.Clean(current).TrimEnd('.', '!', '?', ':'), TextUtil.Clean(Title).TrimEnd('.', '!', '?', ':'), StringComparison.OrdinalIgnoreCase))
+                current = null;
             A.Say(TextUtil.Sentences(Title, intro, current));
         }
 
@@ -217,8 +220,8 @@ namespace KCAccess.UI
                 var it = merged[i];
                 if (it.IsControl) continue;
                 string txt = UIText.JoinTexts(it.Texts);
-                bool dup = (i > 0 && merged[i - 1].IsControl && SameLabel(UIText.LabelOf(merged[i - 1].Control), txt))
-                    || (i + 1 < merged.Count && merged[i + 1].IsControl && SameLabel(UIText.LabelOf(merged[i + 1].Control), txt));
+                bool dup = (i > 0 && merged[i - 1].IsControl && SameLabel(UIText.LabelOf(merged[i - 1].Control), txt) && Says(merged[i - 1], txt))
+                    || (i + 1 < merged.Count && merged[i + 1].IsControl && SameLabel(UIText.LabelOf(merged[i + 1].Control), txt) && Says(merged[i + 1], txt));
                 if (dup) merged.RemoveAt(i);
             }
             // The language list has an invisible full-screen button behind it that closes it on a click outside
@@ -228,6 +231,12 @@ namespace KCAccess.UI
             AddContextToDuplicates(merged);
             return merged;
         }
+
+        /// <summary>
+        /// The control's spoken description contains the text. A control the mod describes itself may not use its caption:
+        /// the moat's panel has only its description next to the name field, which would otherwise vanish as that label.
+        /// </summary>
+        private bool Says(UIItem control, string text) => Describe(control).IndexOf(text, StringComparison.OrdinalIgnoreCase) >= 0;
 
         /// <summary>The text is the control's label, or the first part of it ("Bryce" vs "Bryce, Find Villager").</summary>
         private static bool SameLabel(string label, string text)

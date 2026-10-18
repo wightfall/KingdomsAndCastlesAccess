@@ -128,11 +128,11 @@ replaces the mouse drag), Left / Right change the limit, from 0 up to the job po
 | Arrow keys | Move the cursor one tile (north is up) |
 | Shift+Arrows | Move 5 tiles |
 | Ctrl+Arrows | Jump to the next tile that is different (edge of a forest, a building, water …) |
-| Enter | Select the building or tile under the cursor; while placing: build; in chop / demolish mode: apply |
+| Enter | Select the building or tile under the cursor (see [Selecting a building](#selecting-a-building)); while placing: build; in chop / demolish mode: apply |
 | Shift+Enter | While placing roads, walls or fields: set the start point, then Enter at the end point builds the whole line or area. In chop / demolish mode: mark one corner of an area. Otherwise: select soldiers, a siege catapult, your dragon, a ship (a foreign merchant ship opens the trade window; your own merchant and cargo ships their route panel; troop and exploration ships their panel), a transport cart or a villager on the tile (press again to cycle) |
 | Ctrl+Shift+Enter | Add the soldiers (siege catapults, dragons) on the tile to the selection, so several armies move together with M |
 | I | Everything about the tile (terrain, fertility, road coverage, workers …) |
-| Shift+I | Details of the selected building |
+| Shift+I | Details of the selected building, always with what it is for |
 | F5 | Repeat the tile description |
 | G | Cursor coordinates and map size |
 | O | Area survey: land, open, fertile, forest, stone, iron and water tiles within 6 tiles, plus the nearest stone, iron or water when none is close |
@@ -170,6 +170,27 @@ The game's own keys keep working: **Space** pause, **1 2 3** speed, **R** rotate
 **Delete** demolish the selected building, **C** chop trees on the selected tile, **J** job priority,
 **Escape** cancel / close / pause menu, **WASD QE** camera. **U** (hide the game interface) is
 blocked by the mod, because hidden panels cannot be read; if the interface was hidden anyway, F6 shows it again.
+
+### Selecting a building
+
+Enter on a building says what its panel shows at a glance: the name, damage, closed, workers, a house's
+residents and happiness ("Hovel, 5 of 5 residents, Happiness: 60 in home"), the top line of its output ("Farm,
+1 of 1 workers, Food Output: 5 of 5 per year") and the problem the panel shows in red (for example that a
+blacksmith needs iron or a field is flooded). Then what the building is for, the game's description under its
+name ("Heals people who are sick with plague …"; the mod settings can turn this off, Shift+I always says it),
+and "F6 for the building panel". The scanner's building lists add the red problem line too.
+
+It also says what the game shows only as pictures on the map: how far a farm's crop has grown in summer, an
+orchard's young trees ("young trees 40 percent grown, no fruit yet, fully grown in about 2 years") and its
+ripening fruit, harvested wheat or apples still waiting to be carried to a granary, the pigs in a pen, how many
+graves of a cemetery are taken, a gate shut because enemies are near, a raised drawbridge and a sea gate open
+for a ship (I on the tile says these too). A construction site says what it is still waiting for ("waiting for
+wood 20, stone 10"), or that it is finishing up, paused, or that no villager is free to build it. An empty tile
+adds the hint of the game's tile panel ("Land is ready for agriculture").
+
+While you drag out a line or area of roads, walls or fields, the mod says how many pieces are planned, how
+many can be built and what they cost together ("4 pieces planned, cost wood 4"; what you are short of is
+added as "(have 3)").
 
 ### Problems, fish, plague and weather
 
@@ -355,7 +376,7 @@ what was painted and the brush size ("Painted very fertile land, brush size 2").
 | Key | Action |
 |-----|--------|
 | Left / Right or Tab | Previous / next category (Castle, Town, Advanced town, Food, Industry, Maritime) |
-| Up / Down, Home / End | Choose a building: name, cost (what you are missing), size, available or why not |
+| Up / Down, Home / End | Choose a building: name, cost (what you are missing), size, available or why not, then what it is for (the game's tooltip text) |
 | I or F5 | Full description, workers, wages and the range of towers |
 | Letters | Jump to a building by name |
 | Enter or Space | Pick up the building (archer towers and ballistas go on top of castle blocks); cemeteries, statues and parks open their own list |
@@ -363,7 +384,9 @@ what was painted and the brush size ("Painted very fertile land, brush size 2").
 
 When you pick up a building, the cursor marks its **south west corner**; a 3 by 3 building covers the
 cursor tile and the tiles to the north and east. Most buildings must be inside **road coverage**:
-build roads out from your keep first (I tells you whether a tile is covered).
+build roads out from your keep first (I tells you whether a tile is covered). While you hold a farm or an
+orchard, moving the cursor also says how fertile each tile is (their harvest depends on it; the game shows it
+as greener ground).
 
 A **Large Quarry** or **Large Iron Mine** needs its middle tile (1 north, 1 east of the cursor) on a single
 stone or iron deposit tile and clear land on the other 8 tiles. When you pick one up you hear that rule and
@@ -452,8 +475,9 @@ Page Down jump between the groups (you hear when you reach the first or last gro
   the mod language too** (on by default): the game's own texts also appear in the mod's language where that
   language has a game text file (see [Translating the game's own texts](#translating-the-games-own-texts)).
 * **Speech:** announce notifications, announce seasons and new years, detailed tile descriptions while
-  moving, speak coordinates after each tile, hints for new players, and **say the position in menus
-  and lists** ("Load, 4 of 19"; off by default, F5 always says it).
+  moving, speak coordinates after each tile, hints for new players, **say what buildings are for** in the
+  build menu and when you select one (on by default), and **say the position in menus and lists** ("Load,
+  4 of 19"; off by default, F5 always says it).
 * **Sound:** sound cues on or off, sound cue volume (Left / Right in steps of 10 percent; you hear the new
   volume).
 * **Map:** camera follows the cursor, auto-walk speed (slow, normal, fast).
@@ -597,6 +621,7 @@ Every sound can be previewed: Shift+F1, End, then Up through the sounds and pres
 | Speech / LogSpeech | true | Write everything spoken to `BepInEx\LogOutput.log` |
 | Speech / AnnounceSeasons | true | Speak the start of every summer, winter and new year (and heavy rain / thunderstorms) |
 | Speech / Hints | true | Short hints for new players |
+| Speech / BuildingPurpose | true | Say what a building is for (the game's description) in the build menu and when you select it |
 | Language / Language | auto | Language the mod speaks: `auto` follows the game, `en` English, or a file name in `Languages` such as `th` |
 | Language / GameTexts | true | Show and read the game's own texts in the mod's language where `Languages\game\<code>.txt` translates them |
 | Speech / SayPositions | false | Say the position after each item in menus and lists ("3 of 19") |
@@ -690,7 +715,9 @@ selected mason's target becomes the building at the cursor), `gold <n>`, `probe 
 controls), `thieves sink`, `findmethod <name>` (buttons calling a game method), `liveries`, `canvases`,
 `merchant` (a merchant ship sails to your docks), `dockgoods`, `ships`, `merchantspecial [upgrade]`, `findspot`
 (where the game accepts the held building), `lqspot`, `wreck` (the building at the cursor falls into rubble),
-`witch [greedy|spells]`, `levelup [outpost]`, `survival intro|success`, `demowarn`, `spritelabels <sprite>`.
+`witch [greedy|spells]`, `levelup [outpost]`, `survival intro|success`, `demowarn`, `spritelabels <sprite>`,
+`creative <option> on|off` (a creative mode option, for example `creative BuildForFree off`), and `audit` (in a
+panel opened with F6: logs every visible text and tooltip line that no item of the panel says).
 
 ## License
 

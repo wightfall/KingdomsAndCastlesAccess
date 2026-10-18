@@ -95,6 +95,46 @@ namespace KCAccess
             for (int i = 0; i < t.childCount; i++) Dump(t.GetChild(i), depth + 1, sb, activeOnly);
         }
 
+        /// <summary>Debug command audit: lines of visible texts and tooltips in the navigated panels that no item speaks.</summary>
+        private static void Audit()
+        {
+            var nav = AccessController.Inst.Nav;
+            var spoken = new StringBuilder();
+            foreach (var it in nav.AllItems)
+            {
+                spoken.Append(AuditNorm(nav.Describe(it))).Append(" | ");
+                string tip = UI.Special.ExtraTooltip(it) ?? (it.IsControl ? UI.UIText.TooltipOf(it.Go) : null);
+                if (tip != null) spoken.Append(AuditNorm(tip)).Append(" | ");
+            }
+            string all = spoken.ToString();
+            int missing = 0;
+            void Check(string kind, Transform t, string raw)
+            {
+                foreach (string line in (raw ?? string.Empty).Split('\n'))
+                {
+                    string s = AuditNorm(line);
+                    if (s.Length == 0 || all.Contains(s)) continue;
+                    Plugin.Log.LogInfo("[audit] " + kind + " " + PathOf(t) + " => " + KCAccess.Core.TextUtil.Clean(line));
+                    missing++;
+                }
+            }
+            foreach (var root in nav.Roots)
+            {
+                if (root == null) continue;
+                foreach (var t in UI.UIText.VisibleTexts(root)) Check("text", t.transform, UI.UIText.TextOf(t));
+                foreach (var hook in root.GetComponentsInChildren<TooltipHook>(false))
+                {
+                    if (!hook.enabled || !UI.UIText.IsVisible(hook.gameObject)) continue;
+                    string tip = hook.toolTipText;
+                    if (!KCAccess.Core.TextUtil.HasContent(tip) || tip == "missing tip" || tip.StartsWith("<localization", StringComparison.Ordinal)) continue;
+                    Check("tip", hook.transform, tip);
+                }
+            }
+            Plugin.Log.LogInfo("[audit] " + nav.Title + ": " + nav.Count + " items, " + missing + " lines not said");
+        }
+
+        private static string AuditNorm(string s) => KCAccess.Core.TextUtil.Clean(s ?? string.Empty).Trim().TrimEnd('.', ':', '!').ToLowerInvariant();
+
         private static string Short(string s)
         {
             if (s == null) return "";
@@ -834,6 +874,21 @@ namespace KCAccess
                             var nav = AccessController.Inst.Nav;
                             Plugin.Log.LogInfo("[nav] root=" + (nav.Root != null ? PathOf(nav.Root) : "null") + " count=" + nav.Count);
                             foreach (var it in nav.AllItems) Plugin.Log.LogInfo("[nav]  " + PathOf(it.Go.transform) + " => " + nav.Describe(it));
+                            break;
+                        case "creative":
+                            // Developer only: "creative BuildForFree off" switches a creative mode option (the test world
+                            // builds for free, so costs and construction waiting for materials cannot be heard otherwise).
+                            if (parts.Length > 2)
+                            {
+                                var option = (Player.CreativeOptions)Enum.Parse(typeof(Player.CreativeOptions), parts[1], true);
+                                Player.inst.SetCreativeModeOption(option, parts[2] == "on");
+                                Plugin.Log.LogInfo("[dbg] " + option + " " + Player.inst.IsCreativeModeOptionOn(option));
+                            }
+                            break;
+                        case "audit":
+                            // Developer only: what the open panel shows that no item says (texts, and the tooltips a
+                            // sighted player sees by pointing at them).
+                            Audit();
                             break;
                         case "tracespeech":
                             // Developer only: log where texts starting with the given words are spoken from.
