@@ -836,6 +836,7 @@ Tile {0}, {1} = 타일 {0}, {1}
 inside road coverage = 도로 범위 안
 outside road coverage = 도로 범위 밖
 irrigated = 관개됨
+Villagers carry loose resources to storage that has room for them = 주민들이 흩어진 자원을 공간이 있는 저장소로 옮깁니다
 wolf territory = 늑대 영역
 dangerous area = 위험 지역
 {0} of {1} left in this deposit = 이 매장지에 {1} 중 {0} 남음
@@ -1058,6 +1059,7 @@ Construction sites = 건설 현장
 Your soldiers and ships = 내 병사와 배
 Alerts = 경고
 Problems = 문제
+Loose resources = 흩어진 자원
 Threats = 위협
 Stone = 돌
 Iron = 철
@@ -1600,3 +1602,6 @@ Unsafe path in package: {0} = 패키지에 안전하지 않은 경로가 있습�
 This package does not contain KCAccess. = 이 패키지에는 KCAccess가 들어 있지 않습니다.
 BepInEx is not installed and this package does not contain it. Use the -with-BepInEx package. = BepInEx가 설치되어 있지 않고 이 패키지에도 들어 있지 않습니다. -with-BepInEx 패키지를 사용하세요.
 not installed = 설치되지 않음
+
+# ===== Other =====
+On the ground: {0} = 땅 위에: {0}

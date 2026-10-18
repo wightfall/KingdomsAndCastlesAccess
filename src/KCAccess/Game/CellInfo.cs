@@ -629,6 +629,13 @@ namespace KCAccess.Game
         /// </summary>
         internal static string Piles(Cell c)
         {
+            string list = PileAmounts(c);
+            return list != null ? Loc.F("{0} lying here", list) : null;
+        }
+
+        /// <summary>The loose resources on the tile ("wood 12, stone 5"), or null.</summary>
+        internal static string PileAmounts(Cell c)
+        {
             try
             {
                 var grid = Assets.Code.ResourceStackAutoManager.stackGrid;
@@ -637,8 +644,7 @@ namespace KCAccess.Game
                 var amount = default(ResourceAmount);
                 foreach (var pile in grid[i])
                     if (pile != null && pile.stack != null) amount.Add(pile.stack.StackType, pile.stack.Count());
-                string list = Amounts(amount);
-                return list != null ? Loc.F("{0} lying here", list) : null;
+                return Amounts(amount);
             }
             catch (System.Exception)
             {
@@ -664,6 +670,7 @@ namespace KCAccess.Game
             }
             string left = DepositLeft(c);
             if (left != null) parts.Add(left);
+            if (PileAmounts(c) != null) parts.Add(Loc.T("Villagers carry loose resources to storage that has room for them"));
             if (c.wolfTerritory) parts.Add(Loc.T("wolf territory"));
             if (c.Danger > 0) parts.Add(Loc.T("dangerous area"));
             foreach (var b in c.OccupyingStructure)

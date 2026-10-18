@@ -836,6 +836,7 @@ Tile {0}, {1} = ช่อง {0}, {1}
 inside road coverage = อยู่ในพื้นที่ครอบคลุมของถนน
 outside road coverage = อยู่นอกพื้นที่ครอบคลุมของถนน
 irrigated = มีระบบชลประทาน
+Villagers carry loose resources to storage that has room for them = ชาวบ้านจะขนทรัพยากรที่วางอยู่ไปยังคลังที่ยังมีที่ว่าง
 wolf territory = อาณาเขตหมาป่า
 dangerous area = พื้นที่อันตราย
 {0} of {1} left in this deposit = เหลือ {0} จาก {1} ในแหล่งนี้
@@ -1058,6 +1059,7 @@ Construction sites = สถานที่ก่อสร้าง
 Your soldiers and ships = ทหารและเรือของคุณ
 Alerts = การแจ้งเตือน
 Problems = ปัญหา
+Loose resources = ทรัพยากรที่วางอยู่บนพื้น
 Threats = ภัยคุกคาม
 Stone = หิน
 Iron = เหล็ก
@@ -1600,3 +1602,6 @@ Unsafe path in package: {0} = เส้นทางไม่ปลอดภั�
 This package does not contain KCAccess. = แพ็กเกจนี้ไม่มี KCAccess
 BepInEx is not installed and this package does not contain it. Use the -with-BepInEx package. = ยังไม่ได้ติดตั้ง BepInEx และแพ็กเกจนี้ไม่มี BepInEx ให้ใช้แพ็กเกจ -with-BepInEx
 not installed = ยังไม่ได้ติดตั้ง
+
+# ===== Other =====
+On the ground: {0} = บนพื้น: {0}

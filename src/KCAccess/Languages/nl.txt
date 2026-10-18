@@ -836,6 +836,7 @@ Tile {0}, {1} = Vak {0}, {1}
 inside road coverage = binnen het bereik van wegen
 outside road coverage = buiten het bereik van wegen
 irrigated = bevloeid
+Villagers carry loose resources to storage that has room for them = Dorpelingen brengen losse grondstoffen naar opslag met ruimte ervoor
 wolf territory = wolvengebied
 dangerous area = gevaarlijk gebied
 {0} of {1} left in this deposit = {0} van {1} over in deze afzetting
@@ -1058,6 +1059,7 @@ Construction sites = Bouwplaatsen
 Your soldiers and ships = Je soldaten en schepen
 Alerts = Waarschuwingen
 Problems = Problemen
+Loose resources = Losse grondstoffen
 Threats = Dreigingen
 Stone = Steen
 Iron = IJzer
@@ -1600,3 +1602,6 @@ Unsafe path in package: {0} = Onveilig pad in pakket: {0}
 This package does not contain KCAccess. = Dit pakket bevat geen KCAccess.
 BepInEx is not installed and this package does not contain it. Use the -with-BepInEx package. = BepInEx is niet geïnstalleerd en dit pakket bevat het niet. Gebruik het pakket -with-BepInEx.
 not installed = niet geïnstalleerd
+
+# ===== Other =====
+On the ground: {0} = Op de grond: {0}

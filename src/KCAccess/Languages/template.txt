@@ -842,6 +842,7 @@ Tile {0}, {1} =
 inside road coverage =
 outside road coverage =
 irrigated =
+Villagers carry loose resources to storage that has room for them =
 wolf territory =
 dangerous area =
 {0} of {1} left in this deposit =
@@ -1064,6 +1065,7 @@ Construction sites =
 Your soldiers and ships =
 Alerts =
 Problems =
+Loose resources =
 Threats =
 Stone =
 Iron =
@@ -1606,3 +1608,6 @@ Unsafe path in package: {0} =
 This package does not contain KCAccess. =
 BepInEx is not installed and this package does not contain it. Use the -with-BepInEx package. =
 not installed =
+
+# ===== Other =====
+On the ground: {0} =

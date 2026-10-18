@@ -298,8 +298,25 @@ namespace KCAccess
         /// Polls the command file. Each line: "key KeyCode [shift] [ctrl] [alt]", "dump", "dumpall", "say text".
         /// The file is deleted after it is read. Disabled unless Debug.CommandFile is true in the config.
         /// </summary>
+        private static float watchUntil;
+        private static Core.GridPos watchAt;
+        private static string watchLast;
+
+        /// <summary>Debug command watchlooks: logs what the map shows of the building on a tile (CellInfo.Looks) whenever it changes.</summary>
+        private static void WatchLooks()
+        {
+            if (Time.realtimeSinceStartup > watchUntil || World.inst == null) return;
+            var c = World.inst.GetCellData(watchAt.X, watchAt.Z);
+            var b = c != null && c.OccupyingStructure.Count > 0 ? c.OccupyingStructure[c.OccupyingStructure.Count - 1] : null;
+            string now = b != null ? Game.CellInfo.Looks(b) ?? "-" : "no building";
+            if (now == watchLast) return;
+            watchLast = now;
+            Plugin.Log.LogInfo("[watch] " + now);
+        }
+
         internal static void PollCommands()
         {
+            if (Plugin.CfgDebugCommands.Value) WatchLooks();
             if (!Plugin.CfgDebugCommands.Value || Time.realtimeSinceStartup < nextCheck) return;
             nextCheck = Time.realtimeSinceStartup + 0.25f;
             string path = CommandPath;
@@ -884,6 +901,36 @@ namespace KCAccess
                             var vc = World.inst.GetCellData(at.X, at.Z);
                             for (int i = 0; vc != null && i < count; i++) Player.inst.AddVillager(vc.Position + new Vector3(0.5f, 0f, 0.5f));
                             Plugin.Log.LogInfo("[dbg] " + (vc != null ? "added " + count + " villagers at " + at : "no cell at the cursor"));
+                            break;
+                        }
+                        case "watchlooks":
+                            // Developer only: "watchlooks <seconds>" logs every change of what the map shows of the building
+                            // at the cursor (a gate shutting, a sea gate opening for a passing ship).
+                            watchAt = Game.MapController.Inst.CursorPos;
+                            watchUntil = Time.realtimeSinceStartup + (parts.Length > 1 ? int.Parse(parts[1]) : 30);
+                            watchLast = null;
+                            break;
+                        case "around":
+                        {
+                            // Developer only: "around [radius]" logs the tiles around the cursor, north at the top:
+                            // ~ water, # deep water, . land, T trees, B building, S ship, @ the cursor.
+                            int r = parts.Length > 1 ? int.Parse(parts[1]) : 5;
+                            var at = Game.MapController.Inst.CursorPos;
+                            for (int z = at.Z + r; z >= at.Z - r; z--)
+                            {
+                                var row = new StringBuilder(z.ToString().PadLeft(4) + " ");
+                                for (int x = at.X - r; x <= at.X + r; x++)
+                                {
+                                    var c = World.inst.GetCellData(x, z);
+                                    var ships = c != null ? ShipSystem.inst.GetShipsAt(x, z) : null;
+                                    char ch = c == null ? ' ' : x == at.X && z == at.Z ? '@' : ships != null && ships.Count > 0 ? 'S'
+                                        : c.OccupyingStructure.Count > 0 || c.SubStructure.Count > 0 ? 'B' : c.Type == ResourceType.Water ? (c.deepWater ? '#' : '~')
+                                        : c.TreeAmount > 0 ? 'T' : '.';
+                                    row.Append(ch);
+                                }
+                                Plugin.Log.LogInfo("[around] " + row);
+                            }
+                            Plugin.Log.LogInfo("[around] columns " + (at.X - r) + " to " + (at.X + r));
                             break;
                         }
                         case "hurt":

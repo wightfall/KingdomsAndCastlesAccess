@@ -45,6 +45,7 @@ namespace KCAccess.Game
                 EnvoyWatch.Reset();
                 ShipWatch.Reset();
                 FireWatch.Reset();
+                PileWatch.Reset();
                 ThiefWatch.Reset();
                 MissionWatch.Reset();
                 Twitch.Reset();
@@ -63,6 +64,7 @@ namespace KCAccess.Game
             FlushBuilt();
             ShipWatch.Tick();
             FireWatch.Tick();
+            PileWatch.Tick();
             MissionWatch.Tick();
             if (Weather.inst != null)
             {

@@ -106,7 +106,8 @@ namespace KCAccess.Core
             if (string.IsNullOrEmpty(place)) return text ?? string.Empty;
             if (string.IsNullOrEmpty(text)) return place;
             text = text.TrimEnd();
-            return text + (".!?\u3002\uFF01\uFF1F".IndexOf(text[text.Length - 1]) >= 0 ? " " : ", ") + place;
+            // After a full sentence the place starts a new one ("Rock removed. At the cursor"), inside one it follows a comma.
+            return ".!?\u3002\uFF01\uFF1F".IndexOf(text[text.Length - 1]) >= 0 ? text + " " + Capitalize(place) : text + ", " + place;
         }
 
         /// <summary>First letter in upper case.</summary>

@@ -836,6 +836,7 @@ Tile {0}, {1} = Casilla {0}, {1}
 inside road coverage = dentro del alcance de los caminos
 outside road coverage = fuera del alcance de los caminos
 irrigated = con regadío
+Villagers carry loose resources to storage that has room for them = Los aldeanos llevan los recursos sueltos a un almacén con sitio para ellos
 wolf territory = territorio de lobos
 dangerous area = zona peligrosa
 {0} of {1} left in this deposit = Quedan {0} de {1} en este yacimiento
@@ -1058,6 +1059,7 @@ Construction sites = Obras en construcción
 Your soldiers and ships = Tus soldados y barcos
 Alerts = Alertas
 Problems = Problemas
+Loose resources = Recursos sueltos
 Threats = Amenazas
 Stone = Piedra
 Iron = Hierro
@@ -1600,3 +1602,6 @@ Unsafe path in package: {0} = Ruta no segura en el paquete: {0}
 This package does not contain KCAccess. = Este paquete no contiene KCAccess.
 BepInEx is not installed and this package does not contain it. Use the -with-BepInEx package. = BepInEx no está instalado y este paquete no lo contiene. Usa el paquete -with-BepInEx.
 not installed = no instalado
+
+# ===== Other =====
+On the ground: {0} = En el suelo: {0}

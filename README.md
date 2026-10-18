@@ -147,7 +147,7 @@ replaces the mouse drag), Left / Right change the limit, from 0 up to the job po
 | End | Jump to the selected building |
 | Ctrl+Shift+1 … 9 | Store a bookmark at the cursor (saved per kingdom) |
 | Ctrl+1 … 9 | Jump to a bookmark |
-| Page Up / Page Down | Choose a scan category: your buildings, construction sites, your soldiers and ships (also siege catapults, your dragons and transport carts), alerts, problems (hungry, starving, plague, unpaid wages, homeless, rats, unburied dead, buildings that cannot work), threats (enemy armies and ships, viking siege catapults, wild dragons, ogres, fires, hunting wolves, wolf dens), stone, iron, open fertile land, forests, fresh water, fishing grounds, foreign kingdoms, islands (every island with its owner, size and whether it is explored), special places |
+| Page Up / Page Down | Choose a scan category: your buildings, construction sites, your soldiers and ships (also siege catapults, your dragons and transport carts), alerts, problems (hungry, starving, plague, unpaid wages, homeless, rats, unburied dead, buildings that cannot work), loose resources lying on the ground, threats (enemy armies and ships, viking siege catapults, wild dragons, ogres, fires, hunting wolves, wolf dens), stone, iron, open fertile land, forests, fresh water, fishing grounds, foreign kingdoms, islands (every island with its owner, size and whether it is explored), special places |
 | [ and ] | Choose the previous / next item of that category as the navigation target, nearest first (the list refreshes itself) |
 | N | Auto-walk the cursor to the target along a route villagers can walk (ends next to it if the target itself is blocked) |
 | Ctrl+N | Walk to the target in a straight line, over water and buildings |
@@ -209,10 +209,15 @@ thunderstorms (fires) are announced, as are newly unlocked achievements. Stacked
 "stacked 4 high".
 
 Soldiers, ships, ogres, dragons and siege catapults that are hurt say how much health they have left, as their
-health bar shows it ("your soldiers, 88 percent health"), on the tile and in the scanner lists. Loose resources
-lying on the ground for villagers to carry away (from a demolished building or disbanded soldiers) are read on
-their tile ("wood 12 lying here"). A finished granary, produce storage or fishmonger says how much food storage it
-added ("Granary: + 450 Food Storage").
+health bar shows it ("your soldiers, 88 percent health"), on the tile and in the scanner lists. A finished
+granary, produce storage or fishmonger says how much food storage it added ("Granary: + 450 Food Storage").
+
+**Loose resources** lie on the ground when a building is demolished (its stock falls out), rock removal takes
+away a stone or iron deposit, soldiers disband, bought goods have no room at the dock, or storage is full. New
+piles on your islands are announced ("Demolished Small Stockpile", then "On the ground: wood 38, at the cursor"),
+their tile says them ("wood 12 lying here"; I adds that villagers carry them away), and the scanner category
+**Loose resources** finds them. You cannot pick them up yourself: the workers of stockpiles, granaries, the dock
+and workshops carry them to storage that has room, so build storage if they stay.
 
 **Viking thieves** take up to 100 gold (200 in survival) from your Treasure Room or Dragon Roost and run to
 their ship: the theft is announced, the tile says "thieves carrying 100 gold", killing them on land says the gold
@@ -739,7 +744,8 @@ controls), `thieves sink`, `findmethod <name>` (buttons calling a game method), 
 `creative <option> on|off` (a creative mode option, for example `creative BuildForFree off`), `villagers <n>`
 (peasants at the cursor, so new workplaces get workers), `pile <resource> <n>` (loose resources at the cursor,
 for example `pile Tree 12`), `hurt <percent> [all]` (health of the units on the cursor tile, or of all units),
-and `audit` (in a panel opened with F6: logs every
+`around [radius]` (a text map of the tiles around the cursor), `watchlooks <seconds>` (logs every change of what
+the map shows of the building at the cursor), and `audit` (in a panel opened with F6: logs every
 visible text and tooltip line that no item of the panel says).
 
 ## License

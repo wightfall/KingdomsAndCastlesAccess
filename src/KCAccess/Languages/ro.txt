@@ -836,6 +836,7 @@ Tile {0}, {1} = Pătratul {0}, {1}
 inside road coverage = în acoperirea drumurilor
 outside road coverage = în afara acoperirii drumurilor
 irrigated = irigat
+Villagers carry loose resources to storage that has room for them = Sătenii duc resursele răspândite la un depozit care are loc pentru ele
 wolf territory = teritoriul lupilor
 dangerous area = zonă periculoasă
 {0} of {1} left in this deposit = Au rămas {0} din {1} în acest zăcământ
@@ -1058,6 +1059,7 @@ Construction sites = Șantiere
 Your soldiers and ships = Soldații și corăbiile tale
 Alerts = Alerte
 Problems = Probleme
+Loose resources = Resurse răspândite
 Threats = Amenințări
 Stone = Piatră
 Iron = Fier
@@ -1600,3 +1602,6 @@ Unsafe path in package: {0} = Cale nesigură în pachet: {0}
 This package does not contain KCAccess. = Acest pachet nu conține KCAccess.
 BepInEx is not installed and this package does not contain it. Use the -with-BepInEx package. = BepInEx nu este instalat și acest pachet nu îl conține. Folosește pachetul -with-BepInEx.
 not installed = neinstalat
+
+# ===== Other =====
+On the ground: {0} = Pe jos: {0}

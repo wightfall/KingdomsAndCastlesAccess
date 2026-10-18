@@ -836,6 +836,7 @@ Tile {0}, {1} = Ruta {0}, {1}
 inside road coverage = inom vägarnas räckvidd
 outside road coverage = utanför vägarnas räckvidd
 irrigated = bevattnad
+Villagers carry loose resources to storage that has room for them = Byborna bär lösa resurser till ett lager som har plats för dem
 wolf territory = vargrevir
 dangerous area = farligt område
 {0} of {1} left in this deposit = {0} av {1} kvar i denna fyndighet
@@ -1058,6 +1059,7 @@ Construction sites = Byggplatser
 Your soldiers and ships = Dina soldater och skepp
 Alerts = Varningar
 Problems = Problem
+Loose resources = Lösa resurser
 Threats = Hot
 Stone = Sten
 Iron = Järn
@@ -1600,3 +1602,6 @@ Unsafe path in package: {0} = Osäker sökväg i paketet: {0}
 This package does not contain KCAccess. = Det här paketet innehåller inte KCAccess.
 BepInEx is not installed and this package does not contain it. Use the -with-BepInEx package. = BepInEx är inte installerat och det här paketet innehåller det inte. Använd paketet -with-BepInEx.
 not installed = inte installerat
+
+# ===== Other =====
+On the ground: {0} = På marken: {0}

@@ -21,7 +21,7 @@ namespace KCAccess.Game
 
         private static readonly string[] Categories =
         {
-            Loc.N("Your buildings"), Loc.N("Construction sites"), Loc.N("Your soldiers and ships"), Loc.N("Alerts"), Loc.N("Problems"), Loc.N("Threats"), Loc.N("Stone"), Loc.N("Iron"),
+            Loc.N("Your buildings"), Loc.N("Construction sites"), Loc.N("Your soldiers and ships"), Loc.N("Alerts"), Loc.N("Problems"), Loc.N("Loose resources"), Loc.N("Threats"), Loc.N("Stone"), Loc.N("Iron"),
             Loc.N("Fertile land"), Loc.N("Forests"), Loc.N("Fresh water"), Loc.N("Fishing grounds"), Loc.N("Foreign kingdoms"), Loc.N("Islands"), Loc.N("Special places")
         };
 
@@ -223,6 +223,20 @@ namespace KCAccess.Game
                 case "Problems":
                     foreach (var p in Problems.All()) found.Add(new Item { Label = p.Label, Pos = p.Pos });
                     break;
+                case "Loose resources":
+                {
+                    // Piles on the ground until villagers carry them to storage (a demolished building's stock, rock
+                    // removal's stone, what full storage could not take).
+                    var grid = Assets.Code.ResourceStackAutoManager.stackGrid;
+                    for (int i = 0; grid != null && i < grid.Length; i++)
+                    {
+                        if (grid[i] == null || grid[i].Count == 0) continue;
+                        var c = w.GetCellData(i % w.GridWidth, i / w.GridWidth);
+                        string list = c != null && CellInfo.Explored(c) ? CellInfo.PileAmounts(c) : null;
+                        if (list != null) found.Add(new Item { Label = list, Pos = new GridPos(c.x, c.z) });
+                    }
+                    break;
+                }
                 case "Fishing grounds":
                 {
                     var fc = FishSystem.inst != null ? FishSystem.inst.fishCells : null;

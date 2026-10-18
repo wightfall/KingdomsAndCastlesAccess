@@ -836,6 +836,7 @@ Tile {0}, {1} = 地塊 {0}，{1}
 inside road coverage = 在道路覆蓋範圍內
 outside road coverage = 在道路覆蓋範圍外
 irrigated = 已灌溉
+Villagers carry loose resources to storage that has room for them = 村民會把散落的資源運到有空位的倉庫
 wolf territory = 狼的領地
 dangerous area = 危險區域
 {0} of {1} left in this deposit = 此礦床還剩 {0}，共 {1}
@@ -1058,6 +1059,7 @@ Construction sites = 建築工地
 Your soldiers and ships = 你的士兵和船隻
 Alerts = 提醒
 Problems = 問題
+Loose resources = 散落的資源
 Threats = 威脅
 Stone = 石頭
 Iron = 鐵礦
@@ -1600,3 +1602,6 @@ Unsafe path in package: {0} = 安裝包中有不安全的路徑：{0}
 This package does not contain KCAccess. = 此安裝包不包含 KCAccess。
 BepInEx is not installed and this package does not contain it. Use the -with-BepInEx package. = BepInEx 未安裝，且此安裝包不包含它。請使用 -with-BepInEx 安裝包。
 not installed = 未安裝
+
+# ===== Other =====
+On the ground: {0} = 地上：{0}

@@ -836,6 +836,7 @@ Tile {0}, {1} = Клетка {0}, {1}
 inside road coverage = в зоне дорог
 outside road coverage = вне зоны дорог
 irrigated = орошается
+Villagers carry loose resources to storage that has room for them = Жители относят ресурсы с земли на склад, где для них есть место
 wolf territory = территория волков
 dangerous area = опасная зона
 {0} of {1} left in this deposit = В этой залежи осталось {0} из {1}
@@ -1058,6 +1059,7 @@ Construction sites = Стройки
 Your soldiers and ships = Ваши солдаты и корабли
 Alerts = Сигналы
 Problems = Проблемы
+Loose resources = Ресурсы на земле
 Threats = Угрозы
 Stone = Камень
 Iron = Железо
@@ -1600,3 +1602,6 @@ Unsafe path in package: {0} = Небезопасный путь в пакете:
 This package does not contain KCAccess. = Этот пакет не содержит KCAccess.
 BepInEx is not installed and this package does not contain it. Use the -with-BepInEx package. = BepInEx не установлен, и этот пакет его не содержит. Используйте пакет -with-BepInEx.
 not installed = не установлен
+
+# ===== Other =====
+On the ground: {0} = На земле: {0}
