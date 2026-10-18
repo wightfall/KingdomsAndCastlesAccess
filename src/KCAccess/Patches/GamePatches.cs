@@ -355,6 +355,29 @@ namespace KCAccess
     /// farm's harvest, apples rotting in winter). Those of the selected building are spoken (AnnounceProduction setting),
     /// so you hear it work as a sighted player sees it.
     /// </summary>
+    /// <summary>
+    /// A finished granary, produce storage or fishmonger shows how much more food the kingdom can now store, floating up
+    /// from it; it is spoken after the construction announcement (GameEvents.OnBuiltNote). (The other floating text, open or closed, is said by
+    /// the panel's check box.)
+    /// </summary>
+    [HarmonyPatch(typeof(Assets.ResourceTextStackManager), nameof(Assets.ResourceTextStackManager.ShowText))]
+    internal static class Patch_StorageText
+    {
+        private static void Prefix(object owner, string text)
+        {
+            if (!(owner is Granary || owner is ProduceStand || owner is FishMonger)) return;
+            try
+            {
+                var b = ((MonoBehaviour)owner).GetComponent<Building>();
+                if (b != null && b.TeamID() == 0 && !World.IsAILandmass(b.LandMass())) GameEvents.OnBuiltNote(b.FriendlyName + ": " + KCAccess.Core.TextUtil.Clean(text));
+            }
+            catch
+            {
+                // announcement only
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(Assets.ResourceTextStackManager), nameof(Assets.ResourceTextStackManager.ShowResourceAmount))]
     internal static class Patch_ProductionNumbers
     {

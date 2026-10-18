@@ -34,9 +34,20 @@ namespace KCAccess.Game
                 string meaning = Thoughts.Meaning(t);
                 if (meaning == null) continue;
                 var pos = new GridPos(Mathf.FloorToInt(b.pos.x), Mathf.FloorToInt(b.pos.z));
+                if (t == "GeneralError" && Reason(pos) is string why) meaning = Loc.F("cannot work: {0}", why);
                 list.Add(new Problem { Thought = t, Pos = pos, Label = Owner(pos, t) + ": " + meaning });
             }
             return list;
+        }
+
+        /// <summary>Why the building under a "cannot work" bubble stopped: the red line of its panel ("Requires iron"), or null.</summary>
+        private static string Reason(GridPos p)
+        {
+            var c = World.inst.GetCellData(p.X, p.Z);
+            var b = c != null && c.OccupyingStructure.Count > 0 ? c.OccupyingStructure[c.OccupyingStructure.Count - 1] : null;
+            if (b == null || !b.IsBuilt() || b.TeamID() != 0) return null;
+            string why = CellInfo.OutputLine(b, withTitle: false);
+            return string.IsNullOrEmpty(why) ? null : why;
         }
 
         /// <summary>What the bubble is over: the building on the tile, or villagers.</summary>
@@ -59,7 +70,9 @@ namespace KCAccess.Game
                 if (p.Pos.X == x && p.Pos.Z == z) counts[p.Thought] = counts.TryGetValue(p.Thought, out int n) ? n + 1 : 1;
             if (counts.Count == 0) return null;
             if (counts.Count == 1)
-                foreach (var kv in counts) if (kv.Value == 1) return Loc.F("problem: {0}", Thoughts.Meaning(kv.Key));
+                foreach (var kv in counts)
+                    if (kv.Value == 1)
+                        return Loc.F("problem: {0}", kv.Key == "GeneralError" && Reason(new GridPos(x, z)) is string why ? Loc.F("cannot work: {0}", why) : Thoughts.Meaning(kv.Key));
             return Loc.F("problems: {0}", Thoughts.Summary(counts));
         }
 

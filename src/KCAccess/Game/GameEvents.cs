@@ -179,6 +179,24 @@ namespace KCAccess.Game
         private static readonly List<string> built = new List<string>();
         private static GridPos? builtAt;
         private static float builtQuietAt, builtLatestAt;
+        private static readonly List<string> builtNotes = new List<string>();
+        private static float builtNotesAt;
+
+        /// <summary>
+        /// What a finished building shows floating up from it (a granary's extra food storage). It comes a moment before
+        /// the building counts as finished and is said after the construction announcement it belongs to.
+        /// </summary>
+        internal static void OnBuiltNote(string note)
+        {
+            if (builtNotes.Count == 0) builtNotesAt = Time.unscaledTime + 1f;
+            builtNotes.Add(note);
+        }
+
+        private static void SayBuiltNotes()
+        {
+            if (Plugin.CfgAnnounceLog.Value) foreach (var n in builtNotes) A.SayQueued(n);
+            builtNotes.Clear();
+        }
 
         /// <summary>One of the player's buildings finished construction (Patch_ConstructionDone).</summary>
         internal static void OnBuilt(Building b)
@@ -196,6 +214,7 @@ namespace KCAccess.Game
 
         private static void FlushBuilt()
         {
+            if (built.Count == 0 && builtNotes.Count > 0 && Time.unscaledTime > builtNotesAt) SayBuiltNotes(); // no announcement came
             if (built.Count == 0 || (Time.unscaledTime < builtQuietAt && Time.unscaledTime < builtLatestAt)) return;
             var counts = new Dictionary<string, int>();
             var order = new List<string>();
@@ -209,6 +228,7 @@ namespace KCAccess.Game
             GridPos? where = built.Count == 1 ? builtAt : null;
             built.Clear();
             OnDone(Loc.F("Construction finished: {0}", string.Join("; ", parts.ToArray())), where);
+            SayBuiltNotes();
         }
 
         private static void OnThreatWarning(string text)

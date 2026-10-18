@@ -886,6 +886,18 @@ namespace KCAccess
                             Plugin.Log.LogInfo("[dbg] " + (vc != null ? "added " + count + " villagers at " + at : "no cell at the cursor"));
                             break;
                         }
+                        case "pile":
+                        {
+                            // Developer only: "pile <resource> <n>" drops loose resources at the cursor as a demolished
+                            // building or disbanded army does ("pile Tree 12").
+                            var at = Game.MapController.Inst.CursorPos;
+                            var pc = World.inst.GetCellData(at.X, at.Z);
+                            if (pc == null || parts.Length < 3) break;
+                            var type = (FreeResourceType)Enum.Parse(typeof(FreeResourceType), parts[1], true);
+                            FreeResourceManager.inst.AddOrMakeAutoStackFor(type, int.Parse(parts[2]), pc.Center);
+                            Plugin.Log.LogInfo("[dbg] pile of " + parts[2] + " " + type + " at " + at);
+                            break;
+                        }
                         case "creative":
                             // Developer only: "creative BuildForFree off" switches a creative mode option (the test world
                             // builds for free, so costs and construction waiting for materials cannot be heard otherwise).

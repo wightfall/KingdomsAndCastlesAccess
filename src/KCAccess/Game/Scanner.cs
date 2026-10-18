@@ -139,7 +139,7 @@ namespace KCAccess.Game
                         bool enemy = a.teamId != 0 && w.RelationBetween(0, a.teamId) == World.Relations.Enemy;
                         if (mine ? a.teamId != 0 : !enemy) continue;
                         Vector3 p = a.GetPos();
-                        found.Add(new Item { Label = CellInfo.Units_ArmyName(a), Pos = new GridPos((int)p.x, (int)p.z) });
+                        found.Add(new Item { Label = CellInfo.Units_ArmyName(a) + CellInfo.HealthPart(a), Pos = new GridPos((int)p.x, (int)p.z) });
                     }
                     var ships = ShipSystem.inst.ships;
                     for (int i = 0; i < ships.Count; i++)
@@ -151,7 +151,7 @@ namespace KCAccess.Game
                         bool enemy = !merchant && team != 0 && w.RelationBetween(0, team) == World.Relations.Enemy;
                         if (mine ? (team != 0 && !merchant) : !enemy) continue;
                         Vector3 p = s.GetPos();
-                        found.Add(new Item { Label = CellInfo.ShipName(s), Pos = new GridPos((int)p.x, (int)p.z) });
+                        found.Add(new Item { Label = CellInfo.ShipName(s) + CellInfo.HealthPart(s.life, s.maxLife), Pos = new GridPos((int)p.x, (int)p.z) });
                     }
                     // Siege catapults: yours from the siege workshop, the vikings' as threats.
                     var catapults = SiegeCatapultSystem.siegeCatapults;
@@ -163,7 +163,7 @@ namespace KCAccess.Game
                         bool enemy = team != 0 && w.RelationBetween(0, team) == World.Relations.Enemy;
                         if (mine ? team != 0 : !enemy) continue;
                         Vector3 p = sc.GetPos();
-                        found.Add(new Item { Label = CellInfo.CatapultName(sc), Pos = new GridPos((int)p.x, (int)p.z) });
+                        found.Add(new Item { Label = CellInfo.CatapultName(sc) + CellInfo.HealthPart(sc), Pos = new GridPos((int)p.x, (int)p.z) });
                     }
                     // Dragons: your own (dragon nest) are not threats.
                     var dragons = DragonSpawn.inst != null ? DragonSpawn.inst.currentDragons : null;
@@ -174,7 +174,7 @@ namespace KCAccess.Game
                         bool enemy = d.teamId != 0 && w.RelationBetween(0, d.teamId) == World.Relations.Enemy;
                         if (mine ? d.teamId != 0 : !enemy) continue;
                         Vector3 p = d.transform.position;
-                        found.Add(new Item { Label = CellInfo.DragonName(d), Pos = new GridPos((int)p.x, (int)p.z) });
+                        found.Add(new Item { Label = CellInfo.DragonName(d) + CellInfo.HealthPart(d), Pos = new GridPos((int)p.x, (int)p.z) });
                     }
                     if (mine && CartSystem.inst != null)
                     {
@@ -192,7 +192,7 @@ namespace KCAccess.Game
                             var m = SiegeMonster.monsters.data[i];
                             if (m == null) continue;
                             Vector3 p = m.GetPos();
-                            found.Add(new Item { Label = Loc.T("ogre"), Pos = new GridPos((int)p.x, (int)p.z) });
+                            found.Add(new Item { Label = Loc.T("ogre") + CellInfo.HealthPart(m), Pos = new GridPos((int)p.x, (int)p.z) });
                         }
                         // Wolves chasing or attacking someone (wandering ones stay near their den, listed below).
                         for (int i = 0; i < WolfDen.wolves.Count; i++)

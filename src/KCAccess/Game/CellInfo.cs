@@ -383,7 +383,7 @@ namespace KCAccess.Game
                     if (a == null) continue;
                     Vector3 p = a.GetPos();
                     if ((int)p.x != c.x || (int)p.z != c.z) continue;
-                    result.Add(Units_ArmyName(a));
+                    result.Add(Units_ArmyName(a) + HealthPart(a));
                 }
             }
             if (ShipSystem.inst != null && ShipSystem.inst.unitPosGrid != null) // the grid is rebuilt for a few frames after a load
@@ -393,7 +393,7 @@ namespace KCAccess.Game
                 {
                     var s = ships.data[i];
                     if (s == null) continue;
-                    result.Add(ShipName(s));
+                    result.Add(ShipName(s) + HealthPart(s.life, s.maxLife));
                 }
             }
             for (int i = 0; i < SiegeMonster.monsters.Count; i++)
@@ -401,7 +401,7 @@ namespace KCAccess.Game
                 var m = SiegeMonster.monsters.data[i];
                 if (m == null) continue;
                 Vector3 p = m.GetPos();
-                if ((int)p.x == c.x && (int)p.z == c.z) result.Add(Loc.T("ogre"));
+                if ((int)p.x == c.x && (int)p.z == c.z) result.Add(Loc.T("ogre") + HealthPart(m));
             }
             foreach (var puppet in RestingDragons(c)) result.Add(UnitName(puppet) + ", " + Loc.T("resting"));
             if (DragonSpawn.inst != null)
@@ -412,7 +412,7 @@ namespace KCAccess.Game
                     var d = dragons.data[i];
                     if (d == null) continue;
                     Vector3 p = d.transform.position;
-                    if ((int)p.x == c.x && (int)p.z == c.z) result.Add(DragonName(d));
+                    if ((int)p.x == c.x && (int)p.z == c.z) result.Add(DragonName(d) + HealthPart(d));
                 }
             }
             // Siege catapults (yours from the siege workshop, and the vikings') were never mentioned.
@@ -422,7 +422,7 @@ namespace KCAccess.Game
                 var sc = catapults.data[i];
                 if (sc == null || !sc.ValidToSelect()) continue; // dead, or carried on a ship
                 Vector3 p = sc.GetPos();
-                if ((int)p.x == c.x && (int)p.z == c.z) result.Add(CatapultName(sc));
+                if ((int)p.x == c.x && (int)p.z == c.z) result.Add(CatapultName(sc) + HealthPart(sc));
             }
             if (CartSystem.inst != null)
             {
@@ -444,6 +444,25 @@ namespace KCAccess.Game
             }
             if (wolves > 0) result.Add(Loc.P(wolves, "{0} wolf", "{0} wolves") + (hunting > 0 ? ", " + Loc.T("hunting") : string.Empty));
             return result;
+        }
+
+        /// <summary>
+        /// ", 40 percent health" while a unit's health bar is down (soldiers lose men, ships, ogres, dragons and siege
+        /// catapults show a bar over them), otherwise empty.
+        /// </summary>
+        internal static string HealthPart(float current, float max) =>
+            max > 0f && current < max * 0.995f ? ", " + Loc.F("{0} health", TextUtil.Percent(Mathf.Clamp01(current / max))) : string.Empty;
+
+        internal static string HealthPart(IMoveableUnit u)
+        {
+            try
+            {
+                return u != null ? HealthPart(u.CurrHealth(), u.MaxHealth()) : string.Empty;
+            }
+            catch (System.Exception)
+            {
+                return string.Empty;
+            }
         }
 
         private static bool Enemy(int team) => team != 0 && World.inst.RelationBetween(0, team) == World.Relations.Enemy;
@@ -581,6 +600,8 @@ namespace KCAccess.Game
             if (map != null) parts.Add(map);
             if (c.TreeAmount > 0 && GameUI.inst != null && GameUI.inst.GetClearCutterJob(c) != null) parts.Add(Loc.T("marked for chopping"));
             if (verbose && !IsWater(c) && c.Type == ResourceType.None) parts.Add(Fertility(c)); // soil only matters on open ground
+            string piles = Piles(c);
+            if (piles != null) parts.Add(piles);
             int villagers = VillagerCount(c);
             if (villagers > 0)
             {
@@ -600,6 +621,29 @@ namespace KCAccess.Game
             parts.Add(Owner(c));
             if (Plugin.CfgCoordinates.Value) parts.Add(c.x + ", " + c.z);
             return TextUtil.Join(", ", parts);
+        }
+
+        /// <summary>
+        /// Loose resources lying on the tile for villagers to carry to storage (dropped when a building is demolished or
+        /// soldiers disband, or put there with the creative brush): "wood 12 lying here".
+        /// </summary>
+        internal static string Piles(Cell c)
+        {
+            try
+            {
+                var grid = Assets.Code.ResourceStackAutoManager.stackGrid;
+                int i = c.z * World.inst.GridWidth + c.x;
+                if (grid == null || i < 0 || i >= grid.Length || grid[i] == null || grid[i].Count == 0) return null;
+                var amount = default(ResourceAmount);
+                foreach (var pile in grid[i])
+                    if (pile != null && pile.stack != null) amount.Add(pile.stack.StackType, pile.stack.Count());
+                string list = Amounts(amount);
+                return list != null ? Loc.F("{0} lying here", list) : null;
+            }
+            catch (System.Exception)
+            {
+                return null;
+            }
         }
 
         /// <summary>Everything about a tile (I key).</summary>

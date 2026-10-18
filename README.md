@@ -201,10 +201,18 @@ added as "(have 3)").
 The game warns with small pictures over villagers and buildings (thought bubbles). The mod reads them:
 the **Problems** scanner category lists each one ("villager at Farm: hungry", "Hovel: problems: 2 hungry"),
 I on a tile says them, K gives a summary, and critical ones (starving, bad plague, unpaid soldiers,
-unburied bodies, rats) are announced when they appear. Water tiles say how many fish swim there, the
-**Fishing grounds** category finds them for fishing huts, and O counts them. Sick villagers are mentioned
-on their tile and in the villager description. Heavy rain (farms may flood) and thunderstorms (fires) are
-announced, as are newly unlocked achievements. Stacked castle blocks are read as "stacked 4 high".
+unburied bodies, rats) are announced when they appear. A building that "cannot work" says why, from the red
+line of its panel ("Large Quarry: cannot work: No tools available to prepare stone"). Water tiles say how many
+fish swim there, the **Fishing grounds** category finds them for fishing huts, and O counts them. Sick
+villagers are mentioned on their tile and in the villager description. Heavy rain (farms may flood) and
+thunderstorms (fires) are announced, as are newly unlocked achievements. Stacked castle blocks are read as
+"stacked 4 high".
+
+Soldiers, ships, ogres, dragons and siege catapults that are hurt say how much health they have left, as their
+health bar shows it ("your soldiers, 88 percent health"), on the tile and in the scanner lists. Loose resources
+lying on the ground for villagers to carry away (from a demolished building or disbanded soldiers) are read on
+their tile ("wood 12 lying here"). A finished granary, produce storage or fishmonger says how much food storage it
+added ("Granary: + 450 Food Storage").
 
 **Viking thieves** take up to 100 gold (200 in survival) from your Treasure Room or Dragon Roost and run to
 their ship: the theft is announced, the tile says "thieves carrying 100 gold", killing them on land says the gold
@@ -729,7 +737,8 @@ controls), `thieves sink`, `findmethod <name>` (buttons calling a game method), 
 (where the game accepts the held building), `lqspot`, `wreck` (the building at the cursor falls into rubble),
 `witch [greedy|spells]`, `levelup [outpost]`, `survival intro|success`, `demowarn`, `spritelabels <sprite>`,
 `creative <option> on|off` (a creative mode option, for example `creative BuildForFree off`), `villagers <n>`
-(peasants at the cursor, so new workplaces get workers), and `audit` (in a panel opened with F6: logs every
+(peasants at the cursor, so new workplaces get workers), `pile <resource> <n>` (loose resources at the cursor,
+for example `pile Tree 12`), and `audit` (in a panel opened with F6: logs every
 visible text and tooltip line that no item of the panel says).
 
 ## License
