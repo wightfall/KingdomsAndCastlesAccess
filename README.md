@@ -15,7 +15,10 @@ SAPI and other screen readers automatically.
   tiles of the footprint are blocked. Water buildings (water wheel, aqueduct, reservoirs, bath house) say on
   every tile what they would connect to, fountains whether the land is irrigated, and once built whether they
   got water.
-* With several kingdoms on the map, viking and dragon attacks are announced for each island on its own.
+* With several kingdoms on the map, attacks (vikings, dragons, other kingdoms' armies) are announced for each
+  island on its own, and what you would see happening in the AI kingdoms (fires, a new island claimed) too;
+  three check boxes in the mod settings switch these groups on and off. Wars, peace and alliances are announced,
+  though the game changes them without a message.
 * Every building says what it is for, what its panel shows at a glance (workers, output, the problem it shows
   in red) and what the map shows only as pictures: crops and orchards growing, harvest waiting, a gate shut
   against enemies, a construction site waiting for materials. While a building is selected you hear it work
@@ -244,8 +247,31 @@ mode says when an area has no rubble or when rubble could not be rebuilt for lac
 "Vikings are attacking!" and "Dragons are attacking!" banners do not say who is attacked, so each island is
 announced on its own with its direction: "Vikings landed on Halsbeck kingdom, 53 tiles west", "Dragons are
 attacking Longvale, your island", and when they are gone "The vikings on Halsbeck kingdom are gone" or "The
-dragons left Longvale, your island". Attacks on your islands play the danger sound, those on AI kingdoms the
+dragons left Longvale, your island". The game shows no banner at all when an AI kingdom at war lands an army:
+"An army of Halsbeck landed on Longvale, your island", later "The army of Halsbeck no longer attacks Longvale, your island" (gone, beaten or at peace)
+(envoys and settlers are not counted). Attacks on your islands play the danger sound, those on AI kingdoms the
 news sound; all are in the notification history (L).
+
+**Events in other kingdoms:** what a sighted player sees happening in the AI kingdoms is announced too: a fire
+breaking out on their explored land ("Fire in Halsbeck kingdom, at Farm"; not under the fog, where nobody sees it)
+and a kingdom claiming another island ("Halsbeck claimed a new island", with the direction to it).
+
+**Wars, peace and alliances** change without any message in the game: a sighted player only sees the ruler's face
+turn grumpy and the docks close. An aggressive kingdom whose envoys you keep ignoring declares war on you this way,
+and allying with one kingdom sets it against your enemies. The mod says every change: "Halsbeck is now at war with
+you" (danger sound), "Halsbeck is now at peace with you", "Halsbeck is now your ally", whenever notifications are
+on; between two AI kingdoms ("Halsbeck and Stot are now at war") with the other events below.
+
+Three separate check boxes in the mod settings (Ctrl+Shift+O, Speech) choose what you hear; each switches only
+its own messages, and the notification history (L) keeps everything either way:
+
+* **Say which of your islands is attacked**: off gives only the game's banners ("Vikings are attacking!"), as
+  before version 1.25.0.
+* **Announce attacks on other kingdoms**: vikings, dragons and armies on the AI kingdoms' islands.
+* **Announce other events seen in other kingdoms**: fires there, newly claimed islands, and wars, peace and
+  alliances between two AI kingdoms.
+
+All of them are quiet when **Announce notifications** is off.
 
 **Fires** are announced when they break out in your kingdom ("Fire at Hovel", with the direction; the fire
 spreading to the next tiles is not repeated) and when the last one is out; the game itself only reports a
@@ -348,7 +374,8 @@ coloured markers. With the mod:
 A **Noria** (water wheel, build menu Food, on a river bank with its wheel in fresh water) pumps water once all
 its workers are there. **Aqueduct** pieces carry it to **reservoirs** (they irrigate the land around them),
 the **Bath House** and the dragon bath. Pieces only link when they touch side by side, not corner to corner,
-and every piece weakens the water, so a long chain may need a second water wheel. **Fountains** work only on
+and every piece weakens the water, so a long chain may need a second water wheel. A **Dragon Roost** is part of
+the chain too: a pipe beside one is fed through it. **Fountains** work only on
 land a reservoir with water irrigates. The game shows all this as pipes and water only; the mod says it:
 
 * **While placing** one of them, every tile says what it would connect to and whether it has water, as a farm
@@ -528,7 +555,9 @@ Page Down jump between the groups (you hear when you reach the first or last gro
   [Languages](#languages)). It changes right away and is said in the new language. Below it, **game texts in
   the mod language too** (on by default): the game's own texts also appear in the mod's language where that
   language has a game text file (see [Translating the game's own texts](#translating-the-games-own-texts)).
-* **Speech:** announce notifications, announce seasons and new years, detailed tile descriptions while
+* **Speech:** announce notifications, announce seasons and new years, say which of your islands is attacked,
+  announce attacks on other kingdoms, announce other events seen in other kingdoms (see
+  [Problems, fish, plague and weather](#problems-fish-plague-and-weather)), detailed tile descriptions while
   moving, speak coordinates after each tile, hints for new players, **say what buildings are for** in the
   build menu and when you select one (on by default), **announce what the selected building makes or loses**
   ("+5 stone"; on by default), and **say the position in menus and lists** ("Load, 4 of 19"; off by default,
@@ -684,6 +713,9 @@ Every sound can be previewed: Shift+F1, End, then Up through the sounds and pres
 | Map / WalkSpeed | 2 | Auto-walk speed: 1 slow, 2 normal, 3 fast |
 | Speech / AnnounceNotifications | true | Speak kingdom notifications automatically |
 | Speech / LogSpeech | true | Write everything spoken to `BepInEx\LogOutput.log` |
+| Speech / AnnounceYourIslandAttacks | true | With several kingdoms: say which of your islands vikings, dragons or another kingdom's army attack (off: only the game's banners) |
+| Speech / AnnounceOtherKingdomAttacks | true | Say attacks on the AI kingdoms' islands |
+| Speech / AnnounceOtherKingdomEvents | true | Say fires on the AI kingdoms' explored land, islands they claim, and wars, peace and alliances between two AI kingdoms (those with you are always said) |
 | Speech / AnnounceSeasons | true | Speak the start of every summer, winter and new year (and heavy rain / thunderstorms) |
 | Speech / Hints | true | Short hints for new players |
 | Speech / BuildingPurpose | true | Say what a building is for (the game's description) in the build menu and when you select it |
@@ -774,7 +806,7 @@ and Ctrl+Shift+F12 writes the live UI hierarchy to `BepInEx\kcaccess_ui_dump.txt
 situations for testing at the cursor: `devbuild <name> [any] [clear]` (place a finished building), `army
 knight|archer|settler|envoy`, `dragon [mama]`, `nest egg|hatch|mature|happy|bond`, `fire`, `ogre`, `viking
 [elite]`, `plague [cure]`, `weather none|rain|heavy|storm|snow`, `twitch show|connect|vote <name> <n>|chat <name>
-<text>|end|hide` (Twitch voting without Twitch), `log <text>`, `threatyears`, `buildnow`, `tracespeech <words>`, and for diplomacy `visit`, `convo <name>`
+<text>|end|hide` (Twitch voting without Twitch), `log <text>`, `threatyears`, `buildnow`, `claim <team> <island>` (a kingdom takes an island; `ai` lists teams and islands), `relation <team> <team> war|peace|ally`, `bbox` (a building's box and tiles, for water links), `tracespeech <words>`, and for diplomacy `visit`, `convo <name>`
 (GoldDemand, AIGift ...), `dialogue` (the current line's conversation and entry ids), `viking thief` (a thief heading for your Treasure
 Room), `thieves kill|escape`, `mission start|done|fail` (a request of the first AI kingdom), `masontarget` (the
 selected mason's target becomes the building at the cursor), `gold <n>`, `probe <name>` (size and state of

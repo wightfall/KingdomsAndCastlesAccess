@@ -44,6 +44,8 @@ namespace KCAccess.Game
                 built.Clear();
                 raidedIslands.Clear();
                 dragonIslands.Clear();
+                armyIslands.Clear();
+                OtherKingdoms.Reset();
                 WaterWatch.Reset();
                 EnvoyWatch.Reset();
                 ShipWatch.Reset();
@@ -67,6 +69,7 @@ namespace KCAccess.Game
             TrackIslandAttacks();
             FlushBuilt();
             WaterWatch.Tick();
+            OtherKingdoms.Tick();
             ShipWatch.Tick();
             FireWatch.Tick();
             PileWatch.Tick();
@@ -176,19 +179,23 @@ namespace KCAccess.Game
                         Note(dragon.transform.position, dragons);
                     }
                 }
-                bool announce = Plugin.CfgAnnounceLog.Value && KingdomCount() > 1;
+                // Always tracked, so switching a setting on in the middle of an attack does not announce it as new.
+                bool several = KingdomCount() > 1;
                 raidedIslands.Update(raided, now, started, ended);
-                if (announce)
+                if (several)
                 {
-                    foreach (int lm in started) OnIslandAttack(lm, Loc.F("Vikings landed on {0}.", Island(lm)));
-                    foreach (int lm in ended) OnInfo(Loc.F("The vikings on {0} are gone.", Island(lm)));
+                    foreach (int lm in started) OnIslandAttack(lm, Loc.F("Vikings landed on {0}.", Island(lm)), true);
+                    foreach (int lm in ended) OnIslandAttack(lm, Loc.F("The vikings on {0} are gone.", Island(lm)), false);
                 }
                 dragonIslands.Update(dragons, now, started, ended);
-                if (announce)
+                if (several)
                 {
-                    foreach (int lm in started) OnIslandAttack(lm, Loc.F("Dragons are attacking {0}.", Island(lm)));
-                    foreach (int lm in ended) OnInfo(Loc.F("The dragons left {0}.", Island(lm)));
+                    foreach (int lm in started) OnIslandAttack(lm, Loc.F("Dragons are attacking {0}.", Island(lm)), true);
+                    foreach (int lm in ended) OnIslandAttack(lm, Loc.F("The dragons left {0}.", Island(lm)), false);
                 }
+                // A war declared this second is said before the landing it makes an attack.
+                OtherKingdoms.CheckStances();
+                TrackArmies(now);
             }
             catch (System.Exception e)
             {
@@ -222,14 +229,69 @@ namespace KCAccess.Game
             return IslandAttacks.Describe(name, Player.inst.LandMassIsAPlayerLandMass(lm), World.GetLandmassOwner(lm) != null);
         }
 
-        /// <summary>An attack on the player's own island is a danger; on an AI kingdom's island it is news.</summary>
-        private static void OnIslandAttack(int lm, string text)
+        /// <summary>
+        /// An attack starting (<paramref name="start"/>) or ending on an island. On the player's own island it is a
+        /// danger, on an AI kingdom's island news; each is said only when its setting allows it (the history keeps both).
+        /// </summary>
+        private static void OnIslandAttack(int lm, string text, bool start)
         {
             bool mine = Player.inst.LandMassIsAPlayerLandMass(lm);
-            GridPos? where = seenAt.TryGetValue(lm, out var p) ? p : (GridPos?)null;
-            Log.Add(text, mine ? Severity.Danger : Severity.Info, Player.inst.CurrYear, where);
-            A.Cue(mine ? Cue.Alert : Cue.Notify);
+            GridPos? where = start && seenAt.TryGetValue(lm, out var p) ? p : (GridPos?)null;
+            text = TextUtil.Capitalize(text);
+            Log.Add(text, start && mine ? Severity.Danger : Severity.Info, Player.inst.CurrYear, where);
+            if (!Plugin.CfgAnnounceLog.Value || !KingdomNews.AnnounceAttack(mine, Plugin.CfgYourIslandAttacks.Value, Plugin.CfgOtherKingdomAttacks.Value)) return;
+            A.Cue(start && mine ? Cue.Alert : Cue.Notify);
             A.SayQueued(TextUtil.WithPlace(text, where.HasValue ? Directions.Relative(MapController.Inst.CursorPos, where.Value) : null));
+        }
+
+        // Armies of AI kingdoms on another kingdom's island (an invasion; the game shows no banner for it), one tracker
+        // per attacking kingdom.
+        private static readonly Dictionary<int, IslandAttacks> armyIslands = new Dictionary<int, IslandAttacks>();
+
+        private static void TrackArmies(double now)
+        {
+            if (UnitSystem.inst == null) return;
+            var byTeam = new Dictionary<int, List<int>>();
+            var armies = UnitSystem.inst.armies;
+            for (int i = 0; i < armies.Count; i++)
+            {
+                var a = armies.data[i];
+                if (a == null || a.IsInvalid() || a.teamId == 0) continue;
+                // Envoys and settlers are armies too, but peaceful (an envoy waits at your keep).
+                if (a.armyType != UnitSystem.ArmyType.Default && a.armyType != UnitSystem.ArmyType.Archer && a.armyType != UnitSystem.ArmyType.Elite) continue;
+                var owner = World.GetLandmassOwnerByTeamId(a.teamId);
+                if (owner == null || owner == Player.inst.PlayerLandmassOwner) continue;
+                var c = World.inst.GetCellDataClamped(a.GetPos());
+                if (c == null || c.landMassIdx < 0 || CellInfo.IsWater(c)) continue;
+                var target = World.GetLandmassOwner(c.landMassIdx);
+                if (target == null || target == owner) continue; // at home or on unclaimed land: not an attack
+                // Only an enemy's island is invaded (Intention_ManageInvasion); allies and neutral kingdoms' troops visit.
+                if (World.inst.RelationBetween(a.teamId, target.teamId) != World.Relations.Enemy) continue;
+                if (!byTeam.TryGetValue(a.teamId, out var list)) byTeam[a.teamId] = list = new List<int>();
+                list.Add(c.landMassIdx);
+                if (!seenAt.ContainsKey(c.landMassIdx)) seenAt[c.landMassIdx] = new GridPos(c.x, c.z);
+            }
+            foreach (var team in byTeam.Keys)
+                if (!armyIslands.ContainsKey(team)) armyIslands[team] = new IslandAttacks(10.0);
+            foreach (var kv in armyIslands)
+            {
+                kv.Value.Update(byTeam.TryGetValue(kv.Key, out var seen) ? seen : null, now, started, ended);
+                if (started.Count == 0 && ended.Count == 0) continue;
+                string kingdom = KingdomName(World.GetLandmassOwnerByTeamId(kv.Key));
+                foreach (int lm in started) OnIslandAttack(lm, KingdomNews.ArmyLanded(kingdom, Island(lm)), true);
+                foreach (int lm in ended) OnIslandAttack(lm, KingdomNews.ArmyLeft(kingdom, Island(lm)), false);
+            }
+        }
+
+        /// <summary>A kingdom by the name of its first island ("Halsbeck"), or "a foreign kingdom".</summary>
+        internal static string KingdomName(LandmassOwner owner)
+        {
+            if (owner != null && owner.ownedLandMasses != null && owner.ownedLandMasses.Count > 0)
+            {
+                int lm = owner.ownedLandMasses.data[0];
+                if (lm >= 0 && lm < Player.inst.LandMassNames.Count && TextUtil.HasContent(Player.inst.LandMassNames[lm])) return Player.inst.LandMassNames[lm];
+            }
+            return Loc.T("a foreign kingdom");
         }
 
         internal static void OnNotification(string id, string message, KingdomLog.LogStatus status, Vector3? pos)

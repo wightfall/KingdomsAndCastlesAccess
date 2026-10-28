@@ -60,43 +60,88 @@ namespace KCAccess.Game
         }
 
         /// <summary>
-        /// Water buildings side by side with the footprint, as IrrigationManager links them: the tiles around it without the
-        /// corners. A water wheel's wheel tiles in the river do not link.
+        /// The water buildings linked with the held one as IrrigationManager passes water on (WaterText.InReach, from each
+        /// building to the ones in its reach): for a water wheel the ones it would feed, for anything else the ones that
+        /// would feed it, a dragon roost included.
         /// </summary>
-        private static List<WaterText.Neighbour> Touching(Building b, HashSet<GridPos> tiles)
+        private static List<WaterText.Neighbour> Touching(Building held, HashSet<GridPos> tiles)
         {
+            held.CalculateBoundingFootprint(out int minX, out int minZ, out int maxX, out int maxZ);
+            int midX = (minX + maxX) / 2, midZ = (minZ + maxZ) / 2;
+            bool source = IsSource(held);
             var found = new List<WaterText.Neighbour>();
             var seen = new HashSet<Building>();
-            var mid = Middle(tiles);
-            foreach (var t in tiles)
-            {
-                foreach (var d in new[] { new GridPos(1, 0), new GridPos(-1, 0), new GridPos(0, 1), new GridPos(0, -1) })
+            // The largest water buildings are 3 by 3, so every candidate stands within 4 tiles of the held box.
+            for (int x = minX - 4; x <= maxX + 4; x++)
+                for (int z = minZ - 4; z <= maxZ + 4; z++)
                 {
-                    var p = new GridPos(t.X + d.X, t.Z + d.Z);
-                    if (tiles.Contains(p)) continue;
-                    var c = World.inst.GetCellData(p.X, p.Z);
-                    if (c == null) continue;
-                    var o = c.StructureFind<IWaterSystemUser>();
-                    if (o == null || o == b || !seen.Add(o) || OnWheelTile(o, c)) continue;
+                    var c = World.inst.GetCellData(x, z);
+                    var o = c != null ? c.StructureFind<IWaterSystemUser>() : null;
+                    if (o == null || o == held || !seen.Add(o)) continue;
+                    o.GetBoundingFootprint(out int oMinX, out int oMinZ, out int oMaxX, out int oMaxZ);
+                    if (source ? !Covers(o, minX, minZ, maxX, maxZ) : !AnyInReach(tiles, oMinX, oMinZ, oMaxX, oMaxZ)) continue;
                     var w = o.GetComponent<IWaterSystemUser>();
                     found.Add(new WaterText.Neighbour
                     {
                         Name = o.FriendlyName,
-                        Direction = Directions.Compass8(p.X - mid.X, p.Z - mid.Z),
+                        Direction = Directions.Compass8((oMinX + oMaxX) / 2 - midX, (oMinZ + oMaxZ) / 2 - midZ),
                         State = !o.IsBuilt() ? WaterText.Link.Unbuilt : w.HasWater ? WaterText.Link.Water : WaterText.Link.Dry
                     });
                 }
-            }
             return found;
         }
 
-        /// <summary>A cell under a water wheel's wheel (Aqueduct.ShouldConnect does not link those).</summary>
-        private static bool OnWheelTile(Building o, Cell c)
+        /// <summary>Whether <paramref name="o"/> stands on a tile the given box reaches.</summary>
+        private static bool Covers(Building o, int minX, int minZ, int maxX, int maxZ)
         {
-            var noria = o.GetComponent<Noria>();
-            if (noria == null || noria.waterPos == null) return false;
-            foreach (var t in noria.waterPos)
-                if (t != null && World.inst.GetCellDataClamped(t.position) == c) return true;
+            bool hit = false;
+            o.ForEachTileInBounds((x, z, c) => { if (WaterText.InReach(x, z, minX, minZ, maxX, maxZ)) hit = true; });
+            return hit;
+        }
+
+        private static bool AnyInReach(HashSet<GridPos> tiles, int minX, int minZ, int maxX, int maxZ)
+        {
+            foreach (var t in tiles) if (WaterText.InReach(t.X, t.Z, minX, minZ, maxX, maxZ)) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Whether a water wheel with all its workers reaches the building: IrrigationManager floods from every built
+        /// wheel to the built water buildings in its reach, and on from theirs.
+        /// </summary>
+        private static bool ChainPumps(Building target)
+        {
+            var wheels = Player.inst.GetBuildingList("noria");
+            for (int i = 0; wheels != null && i < wheels.Count; i++)
+            {
+                var wheel = wheels.data[i];
+                var noria = wheel != null ? wheel.GetComponent<Noria>() : null;
+                if (noria == null || !wheel.IsBuilt() || !noria.ShouldIrrigate()) continue;
+                if (wheel == target || Reaches(wheel, target)) return true;
+            }
+            return false;
+        }
+
+        private static bool Reaches(Building from, Building target)
+        {
+            var seen = new HashSet<Building> { from };
+            var queue = new Queue<Building>();
+            queue.Enqueue(from);
+            while (queue.Count > 0 && seen.Count < 5000)
+            {
+                var b = queue.Dequeue();
+                b.GetBoundingFootprint(out int minX, out int minZ, out int maxX, out int maxZ);
+                for (int x = minX - 1; x <= maxX + 1; x++)
+                    for (int z = minZ - 1; z <= maxZ + 1; z++)
+                    {
+                        if (!WaterText.InReach(x, z, minX, minZ, maxX, maxZ)) continue;
+                        var c = World.inst.GetCellData(x, z);
+                        var o = c != null ? c.StructureFind<IWaterSystemUser>() : null;
+                        if (o == null || !o.IsBuilt() || !seen.Add(o)) continue;
+                        if (o == target) return true;
+                        queue.Enqueue(o);
+                    }
+            }
             return false;
         }
 
@@ -167,9 +212,18 @@ namespace KCAccess.Game
                         }
                         continue;
                     }
-                    int wet = 0;
-                    foreach (var b in g) if (Works(b)) wet++;
-                    A.SayQueued(WaterText.BuiltMany(name, g.Count, wet));
+                    int wet = 0, linked = 0;
+                    var connected = new List<Building>();
+                    foreach (var b in g)
+                    {
+                        if (Works(b)) wet++;
+                        var w = b.GetComponent<IWaterSystemUser>();
+                        if (w != null && w.IsConnected) { linked++; connected.Add(b); }
+                    }
+                    // Why connected pieces are dry: their own chain's wheel, or the distance.
+                    bool pumping = false;
+                    if (wet == 0) foreach (var b in connected) if (ChainPumps(b)) { pumping = true; break; }
+                    A.SayQueued(WaterText.BuiltMany(name, g.Count, wet, linked, pumping));
                 }
             }
             catch (System.Exception e)
@@ -194,19 +248,9 @@ namespace KCAccess.Game
             if (fountain != null) return WaterText.FountainBuilt(b.FriendlyName, fountain.hasIrrigation);
             var w = b.GetComponent<IWaterSystemUser>();
             if (w == null) return null;
-            return WaterText.Built(b.FriendlyName, IsSource(b), w.IsConnected, w.HasWater, Pumping(b.LandMass()));
-        }
-
-        /// <summary>A water wheel on the island has all its workers (IrrigationManager gives it pressure only then).</summary>
-        private static bool Pumping(int lm)
-        {
-            var list = lm >= 0 ? Player.inst.GetBuildingListForLandMass(lm) : null;
-            for (int i = 0; list != null && i < list.Count; i++)
-            {
-                var noria = list.data[i] != null ? list.data[i].GetComponent<Noria>() : null;
-                if (noria != null && noria.ShouldIrrigate()) return true;
-            }
-            return false;
+            // Only looked up when it matters: connected and dry, because of its own chain's wheel or the distance.
+            bool pumping = !w.IsConnected || w.HasWater || ChainPumps(b);
+            return WaterText.Built(b.FriendlyName, IsSource(b), w.IsConnected, w.HasWater, pumping);
         }
     }
 }

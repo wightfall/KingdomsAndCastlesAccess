@@ -356,7 +356,7 @@ namespace KCAccess.Game
         }
 
         /// <summary>A land tile near the middle of a landmass.</summary>
-        private static GridPos? LandmassCentre(int lm)
+        internal static GridPos? LandmassCentre(int lm)
         {
             var w = World.inst;
             long sx = 0, sz = 0, n = 0;

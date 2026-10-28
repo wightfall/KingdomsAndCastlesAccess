@@ -52,6 +52,10 @@ namespace KCAccess.Game
             Header(Loc.N("Speech"));
             Toggle(Loc.N("Announce notifications"), Plugin.CfgAnnounceLog);
             Toggle(Loc.N("Announce seasons and new years"), Plugin.CfgAnnounceSeasons);
+            // Three separate groups of messages; none switches another.
+            Toggle(Loc.N("Say which of your islands is attacked (off: only the attack banners, as before)"), Plugin.CfgYourIslandAttacks);
+            Toggle(Loc.N("Announce attacks on other kingdoms"), Plugin.CfgOtherKingdomAttacks);
+            Toggle(Loc.N("Announce other events seen in other kingdoms (fires, new islands, their wars and alliances)"), Plugin.CfgOtherKingdomEvents);
             Toggle(Loc.N("Detailed tile descriptions while moving (fertility and road coverage)"), Plugin.CfgVerboseCells);
             Toggle(Loc.N("Speak cursor coordinates after each tile"), Plugin.CfgCoordinates);
             Toggle(Loc.N("Hints for new players"), Plugin.CfgHints);

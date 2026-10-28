@@ -51,6 +51,9 @@ namespace KCAccess.Game
                     var c = World.inst.GetCellDataClamped(p);
                     var b = c.TopMostStructure;
                     string text = b != null ? Loc.F("Fire at {0}", b.FriendlyName) : Loc.T("Fire");
+                    // With more than one island of your own, which one ("Fire at Hovel, Longvale, your island").
+                    var own = Player.inst.PlayerLandmassOwner;
+                    if (own != null && own.ownedLandMasses != null && own.ownedLandMasses.Count > 1) text += ", " + GameEvents.Island(c.landMassIdx);
                     var where = new GridPos(c.x, c.z);
                     GameEvents.Log.Add(text, Severity.Danger, Player.inst.CurrYear, where);
                     A.Cue(Cue.Alert);

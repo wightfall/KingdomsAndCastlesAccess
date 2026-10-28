@@ -72,6 +72,72 @@ namespace KCAccess.Tests
         }
     }
 
+    public class KingdomNewsTests
+    {
+        [Theory]
+        // mine, your islands setting, other kingdoms setting, said
+        [InlineData(true, true, true, true)]
+        [InlineData(true, false, true, false)]
+        [InlineData(true, true, false, true)]
+        [InlineData(false, true, true, true)]
+        [InlineData(false, true, false, false)]
+        [InlineData(false, false, true, true)]
+        [InlineData(false, false, false, false)]
+        public void EachSettingOnlySwitchesItsOwnIslands(bool mine, bool yours, bool others, bool said)
+        {
+            Assert.Equal(said, KingdomNews.AnnounceAttack(mine, yours, others));
+        }
+
+        [Fact]
+        public void NewIslandsAreFoundAfterTheFirstLook()
+        {
+            var known = new Dictionary<int, HashSet<int>>();
+            // Loading: every kingdom's islands are known, nothing is new.
+            Assert.Empty(KingdomNews.NewIslands(known, new Dictionary<int, IEnumerable<int>> { { 3, new[] { 1 } }, { 4, new[] { 2 } } }));
+            Assert.Empty(KingdomNews.NewIslands(known, new Dictionary<int, IEnumerable<int>> { { 3, new[] { 1 } }, { 4, new[] { 2 } } }));
+            var found = KingdomNews.NewIslands(known, new Dictionary<int, IEnumerable<int>> { { 3, new[] { 5, 1, 0 } }, { 4, new[] { 2 } } });
+            Assert.Equal(new[] { new KeyValuePair<int, int>(3, 0), new KeyValuePair<int, int>(3, 5) }, found);
+            // Losing an island is not news; a kingdom appearing later starts as known.
+            Assert.Empty(KingdomNews.NewIslands(known, new Dictionary<int, IEnumerable<int>> { { 3, new[] { 1 } }, { 7, new[] { 6 } } }));
+            Assert.Equal(new[] { new KeyValuePair<int, int>(7, 8) }, KingdomNews.NewIslands(known, new Dictionary<int, IEnumerable<int>> { { 7, new[] { 6, 8 } } }));
+        }
+
+        [Fact]
+        public void StanceChangesAfterTheFirstLook()
+        {
+            var known = new Dictionary<long, KingdomNews.Stance>();
+            long youA = KingdomNews.PairKey(0, 2), ab = KingdomNews.PairKey(3, 2);
+            Assert.Equal(KingdomNews.PairKey(2, 3), ab);
+            KingdomNews.PairTeams(ab, out int a, out int b);
+            Assert.Equal(2, a);
+            Assert.Equal(3, b);
+            // Loading: known, nothing announced; unchanged: nothing.
+            var now = new Dictionary<long, KingdomNews.Stance> { { youA, KingdomNews.Stance.Peace }, { ab, KingdomNews.Stance.Peace } };
+            Assert.Empty(KingdomNews.StanceChanges(known, now));
+            Assert.Empty(KingdomNews.StanceChanges(known, now));
+            now = new Dictionary<long, KingdomNews.Stance> { { youA, KingdomNews.Stance.War }, { ab, KingdomNews.Stance.Alliance } };
+            Assert.Equal(new[] { new KeyValuePair<long, KingdomNews.Stance>(youA, KingdomNews.Stance.War), new KeyValuePair<long, KingdomNews.Stance>(ab, KingdomNews.Stance.Alliance) },
+                KingdomNews.StanceChanges(known, now));
+            Assert.Empty(KingdomNews.StanceChanges(known, now));
+        }
+
+        [Fact]
+        public void Texts()
+        {
+            Assert.Equal("Halsbeck is now at war with you.", KingdomNews.StanceWithYou("Halsbeck", KingdomNews.Stance.War));
+            Assert.Equal("Halsbeck is now at peace with you.", KingdomNews.StanceWithYou("Halsbeck", KingdomNews.Stance.Peace));
+            Assert.Equal("Halsbeck is now your ally.", KingdomNews.StanceWithYou("Halsbeck", KingdomNews.Stance.Alliance));
+            Assert.Equal("Halsbeck and Stot are now at war.", KingdomNews.StanceBetween("Halsbeck", "Stot", KingdomNews.Stance.War));
+            Assert.Equal("Halsbeck and Stot are now allies.", KingdomNews.StanceBetween("Halsbeck", "Stot", KingdomNews.Stance.Alliance));
+            Assert.Equal("Halsbeck and Stot are now at peace.", KingdomNews.StanceBetween("Halsbeck", "Stot", KingdomNews.Stance.Peace));
+            Assert.Equal("An army of Halsbeck landed on Longvale, your island.", KingdomNews.ArmyLanded("Halsbeck", "Longvale, your island"));
+            Assert.Equal("The army of Halsbeck no longer attacks Stot kingdom.", KingdomNews.ArmyLeft("Halsbeck", "Stot kingdom"));
+            Assert.Equal("Fire in Stot kingdom, at Hovel", KingdomNews.FireIn("Stot kingdom", "Hovel"));
+            Assert.Equal("Fire in Stot kingdom", KingdomNews.FireIn("Stot kingdom", null));
+            Assert.Equal("Halsbeck claimed a new island.", KingdomNews.Claimed("Halsbeck"));
+        }
+    }
+
     public class WaterTextTests
     {
         private static WaterText.Neighbour N(string name, string dir, WaterText.Link state) =>
@@ -109,11 +175,30 @@ namespace KCAccess.Tests
         }
 
         [Fact]
+        public void ReachIsTheBoxGrownByOneWithoutCorners()
+        {
+            // Tested in the game: a water wheel's box 81,73 to 82,73 (base, then the wheel in the river).
+            Assert.True(WaterText.InReach(81, 72, 81, 73, 82, 73));  // south of the base
+            Assert.True(WaterText.InReach(80, 73, 81, 73, 82, 73));  // west of the base
+            Assert.True(WaterText.InReach(83, 73, 81, 73, 82, 73));  // east of the wheel
+            Assert.False(WaterText.InReach(80, 72, 81, 73, 82, 73)); // corner to corner
+            Assert.False(WaterText.InReach(81, 71, 81, 73, 82, 73)); // two tiles away
+            // ... and the dragon roost beside it, 76,71 to 80,75: a pipe at 81,71 was fed through the roost.
+            Assert.True(WaterText.InReach(81, 71, 76, 71, 80, 75));
+            Assert.False(WaterText.InReach(81, 70, 76, 71, 80, 75)); // corner
+            // A 1 by 1 pipe: its four sides only.
+            Assert.True(WaterText.InReach(5, 6, 5, 5, 5, 5));
+            Assert.False(WaterText.InReach(6, 6, 5, 5, 5, 5));
+        }
+
+        [Fact]
         public void PiecesAndFountains()
         {
             Assert.Equal("Aqueduct: all 5 pieces have water.", WaterText.BuiltMany("Aqueduct", 5, 5));
             Assert.Equal("Aqueduct: 2 of 5 pieces have water.", WaterText.BuiltMany("Aqueduct", 5, 2));
-            Assert.StartsWith("Aqueduct: none of the 5 pieces has water.", WaterText.BuiltMany("Aqueduct", 5, 0));
+            Assert.Equal("Aqueduct: none of the 5 pieces has water. Connect them to a water wheel.", WaterText.BuiltMany("Aqueduct", 5, 0));
+            Assert.StartsWith("Aqueduct: none of the 5 pieces has water yet: no water wheel pumps", WaterText.BuiltMany("Aqueduct", 5, 0, connected: 2, pumping: false));
+            Assert.StartsWith("Aqueduct: none of the 5 pieces has water: the water is too weak", WaterText.BuiltMany("Aqueduct", 5, 0, connected: 2, pumping: true));
             Assert.Equal("Fountain is on irrigated land and works.", WaterText.FountainBuilt("Fountain", true));
             Assert.StartsWith("Fountain is not on irrigated land", WaterText.FountainBuilt("Fountain", false));
             Assert.StartsWith("irrigated land", WaterText.FountainPlacing(true));

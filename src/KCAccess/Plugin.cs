@@ -15,7 +15,7 @@ namespace KCAccess
     {
         public const string Guid = "kcaccess.screenreader";
         public const string Name = "KCAccess";
-        public const string Version = "1.25.0";
+        public const string Version = "1.26.0";
 
         internal static Plugin Instance;
 
@@ -41,6 +41,9 @@ namespace KCAccess
         internal static ConfigFile ConfigRef;
         internal static ConfigEntry<string> CfgBindings;
         internal static ConfigEntry<bool> CfgAnnounceSeasons;
+        internal static ConfigEntry<bool> CfgYourIslandAttacks;
+        internal static ConfigEntry<bool> CfgOtherKingdomAttacks;
+        internal static ConfigEntry<bool> CfgOtherKingdomEvents;
         internal static ConfigEntry<int> CfgWalkSpeed;
         internal static ConfigEntry<bool> CfgHints;
         internal static ConfigEntry<bool> CfgPositions;
@@ -80,6 +83,9 @@ namespace KCAccess
             CfgKeyFallback = Config.Bind("Keyboard", "WindowsKeyFallback", true, "When Windows reports a key press the game did not receive (seen on some Windows 11 machines, with NVDA Remote or Steam Input), deliver it anyway. Turn off only if keys start acting twice.");
             CfgBindings = Config.Bind("Keyboard", "Bindings", "", "Changed mod keys as Action=Key pairs separated by semicolons, e.g. Survey=Y;Settings=Ctrl+Shift+P. Empty means all defaults. Easier to change in the game: Ctrl+Shift+O.");
             CfgAnnounceSeasons = Config.Bind("Speech", "AnnounceSeasons", true, "Speak the start of every summer, winter and new year.");
+            CfgYourIslandAttacks = Config.Bind("Speech", "AnnounceYourIslandAttacks", true, "On maps with more than one kingdom: say which of your islands vikings, dragons or another kingdom's army attack, and when they are gone. Off: only the game's banners (\"Vikings are attacking!\"), as before version 1.25.0.");
+            CfgOtherKingdomAttacks = Config.Bind("Speech", "AnnounceOtherKingdomAttacks", true, "Say when vikings, dragons or another kingdom's army attack an AI kingdom's island, and when they are gone.");
+            CfgOtherKingdomEvents = Config.Bind("Speech", "AnnounceOtherKingdomEvents", true, "Say what can be seen happening in AI kingdoms besides attacks: fires breaking out on their explored land, a kingdom claiming a new island, and wars, peace and alliances between two AI kingdoms (those with you are always said).");
             CfgWalkSpeed = Config.Bind("Map", "WalkSpeed", 2, new ConfigDescription("Auto-walk speed: 1 slow, 2 normal, 3 fast.", new AcceptableValueRange<int>(1, 3)));
             CfgHints = Config.Bind("Speech", "Hints", true, "Speak short hints for new players (for example how to use a target after choosing it).");
             CfgBuildingPurpose = Config.Bind("Speech", "BuildingPurpose", true, "Say what a building is for (the game's description of it) while moving through the build menu and when you select a building.");

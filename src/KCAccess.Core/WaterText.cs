@@ -53,6 +53,19 @@ namespace KCAccess.Core
             return text;
         }
 
+        /// <summary>
+        /// The tiles IrrigationManager looks at from a water building to pass water on: its bounding box grown by one tile,
+        /// without the four corners (the inside included), so side by side links and corner to corner does not. The water
+        /// goes from each building to the ones standing there. A dragon roost is part of the system too: a pipe beside one
+        /// is fed through it.
+        /// </summary>
+        public static bool InReach(int x, int z, int minX, int minZ, int maxX, int maxZ)
+        {
+            if (x < minX - 1 || x > maxX + 1 || z < minZ - 1 || z > maxZ + 1) return false;
+            bool cornerX = x == minX - 1 || x == maxX + 1, cornerZ = z == minZ - 1 || z == maxZ + 1;
+            return !(cornerX && cornerZ);
+        }
+
         /// <summary>Said on every tile while a fountain is held.</summary>
         public static string FountainPlacing(bool irrigated) =>
             irrigated ? Loc.T("irrigated land, the fountain will work here") : Loc.T("not irrigated, the fountain needs land a reservoir with water irrigates");
@@ -70,10 +83,17 @@ namespace KCAccess.Core
         }
 
         /// <summary>Said after several pieces of one kind (a line of aqueduct) finished together.</summary>
-        public static string BuiltMany(string name, int count, int withWater)
+        /// <param name="connected">Pieces linked to a water wheel (with or without water).</param>
+        /// <param name="pumping">A water wheel of the island has all its workers.</param>
+        public static string BuiltMany(string name, int count, int withWater, int connected = 0, bool pumping = true)
         {
             if (withWater >= count) return Loc.F("{0}: all {1} pieces have water.", name, count);
-            if (withWater <= 0) return Loc.F("{0}: none of the {1} pieces has water. Connect them to a water wheel.", name, count);
+            if (withWater <= 0)
+            {
+                if (connected <= 0) return Loc.F("{0}: none of the {1} pieces has water. Connect them to a water wheel.", name, count);
+                if (!pumping) return Loc.F("{0}: none of the {1} pieces has water yet: no water wheel pumps, a water wheel needs all its workers.", name, count);
+                return Loc.F("{0}: none of the {1} pieces has water: the water is too weak to reach them. Connect another water wheel or shorten the pipes.", name, count);
+            }
             return Loc.F("{0}: {1} of {2} pieces have water.", name, withWater, count);
         }
 

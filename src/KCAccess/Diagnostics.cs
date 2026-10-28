@@ -617,6 +617,37 @@ namespace KCAccess
                             for (int lmi = 0; lmi < World.inst.NumLandMasses; lmi++) lsb.Append(" [" + lmi + ":" + (lmi < Player.inst.LandMassNames.Count ? Player.inst.LandMassNames[lmi] : "?") + " owner=" + (World.GetLandmassOwner(lmi)?.teamId.ToString() ?? "none") + " keeps=" + Player.inst.GetBuildingListForLandMass(lmi, World.keepHash).Count + "]");
                             Plugin.Log.LogInfo(lsb.ToString());
                             break;
+                        case "claim":
+                        {
+                            // Developer only: "claim <team> <island>" gives an island to a kingdom the way the game does
+                            // (LandmassOwner.TakeOwnership), to test the "claimed a new island" announcement.
+                            var claimer = parts.Length > 2 ? World.GetLandmassOwnerByTeamId(int.Parse(parts[1])) : null;
+                            if (claimer != null) claimer.TakeOwnership(int.Parse(parts[2]));
+                            Plugin.Log.LogInfo("[dbg] claim " + (claimer != null ? "done" : "no such kingdom"));
+                            break;
+                        }
+                        case "bbox":
+                        {
+                            // Developer only: the bounding footprint and covered tiles of the building at the cursor (water links).
+                            var bp = Game.MapController.Inst.CursorPos;
+                            var bb = World.inst.GetCellData(bp.X, bp.Z)?.TopMostStructure;
+                            if (bb == null) { Plugin.Log.LogInfo("[dbg] bbox: no building"); break; }
+                            bb.GetBoundingFootprint(out int x0, out int z0, out int x1, out int z1);
+                            var covered = new StringBuilder();
+                            bb.ForEachTileInBounds((x, z, c) => covered.Append(" " + x + "," + z));
+                            Plugin.Log.LogInfo("[dbg] bbox " + bb.UniqueName + " box " + x0 + "," + z0 + " to " + x1 + "," + z1 + " tiles" + covered);
+                            break;
+                        }
+                        case "relation":
+                            // Developer only: "relation <team> <team> war|peace|ally" sets a relation the way the game's
+                            // diplomacy does (World.SetRelations, with its side effects), to test the announcement.
+                            if (parts.Length > 3)
+                            {
+                                var rel = parts[3] == "war" ? World.Relations.Enemy : parts[3] == "ally" ? World.Relations.Allies : World.Relations.Neutral;
+                                World.inst.SetRelations(int.Parse(parts[1]), int.Parse(parts[2]), rel);
+                                Plugin.Log.LogInfo("[dbg] relation " + parts[1] + " " + parts[2] + " " + World.inst.RelationBetween(int.Parse(parts[1]), int.Parse(parts[2])));
+                            }
+                            break;
                         case "invoke":
                             var cur = AccessController.Inst.Nav.Current;
                             var btn = cur != null ? cur.Go.GetComponent<UnityEngine.UI.Button>() : null;
