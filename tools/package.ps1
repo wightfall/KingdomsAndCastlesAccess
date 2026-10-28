@@ -55,6 +55,9 @@ function New-Zip([string]$source, [string]$zipPath) {
         }
     } finally { $zip.Dispose(); $fs.Dispose() }
 }
+# The read me in the game folder too: the updater installs this zip when BepInEx is there, so without it that copy
+# kept the version of the first install.
+Copy-Item README.md (Join-Path $stage "KCAccess-README.md")
 $modZip = Join-Path $dist "KCAccess-v$version.zip"
 New-Zip $stage $modZip
 
