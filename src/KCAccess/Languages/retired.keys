@@ -9,6 +9,7 @@ Opinion of you: {0}, the best there is
 Opinion of you: {0}, {1} percent of the way to {2}
 Placing a building. Move with the arrow keys, the building follows the cursor and you hear whether the spot is valid. Enter places it. R rotates. {Validity} reads why the spot is invalid. For roads, walls and fields press Shift Enter to mark a start point, move to the end point, then press Enter to build the whole line or area. Escape cancels placement.
 Press Enter on gold, food, a material, happiness or health for the detailed report. F6 from the map reaches the kingdom overview panel with the tax buttons.
+This setup contains KCAccess {0} and you have {1}. Install it now?
 allowed {0} of {1}
 favorable
 must be against rock

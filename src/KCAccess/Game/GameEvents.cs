@@ -42,6 +42,9 @@ namespace KCAccess.Game
                 Log.Clear();
                 lastWeather = null;
                 built.Clear();
+                raidedIslands.Clear();
+                dragonIslands.Clear();
+                WaterWatch.Reset();
                 EnvoyWatch.Reset();
                 ShipWatch.Reset();
                 FireWatch.Reset();
@@ -61,7 +64,9 @@ namespace KCAccess.Game
         internal static void Tick()
         {
             TrackAttacks();
+            TrackIslandAttacks();
             FlushBuilt();
+            WaterWatch.Tick();
             ShipWatch.Tick();
             FireWatch.Tick();
             PileWatch.Tick();
@@ -130,6 +135,101 @@ namespace KCAccess.Game
             {
                 // announcement only
             }
+        }
+
+        // With several kingdoms (the player's islands and AI kingdoms) one banner does not say who is attacked: each
+        // island's attack is announced on its own when the attackers reach it and when they are gone.
+        private static readonly IslandAttacks raidedIslands = new IslandAttacks(5.0);
+        private static readonly IslandAttacks dragonIslands = new IslandAttacks(20.0);
+        private static readonly List<int> started = new List<int>(), ended = new List<int>();
+        private static readonly Dictionary<int, GridPos> seenAt = new Dictionary<int, GridPos>();
+        private static float nextIslandCheck;
+
+        private static void TrackIslandAttacks()
+        {
+            if (Time.unscaledTime < nextIslandCheck) return;
+            nextIslandCheck = Time.unscaledTime + 1f;
+            try
+            {
+                if (World.inst == null || Player.inst == null || !GameState.inst.IsPlayMode()) return;
+                double now = Time.time; // game time: a paused game does not end an attack
+                seenAt.Clear();
+                var raided = new List<int>();
+                if (RaiderSystem.inst != null)
+                    foreach (var d in RaiderSystem.inst.unitData)
+                    {
+                        var u = d != null ? d.unit : null;
+                        if (u == null || u.IsBeingCarried()) continue;
+                        if (u is UnitSystem.Army army && army.IsInvalid()) continue;
+                        if (u is SiegeMonster ogre && ogre.IsInvalid()) continue;
+                        Note(u.GetPos(), raided);
+                    }
+                var dragons = new List<int>();
+                if (DragonSpawn.inst != null)
+                {
+                    var list = DragonSpawn.inst.currentDragons;
+                    for (int i = 0; i < list.Count; i++)
+                    {
+                        var dragon = list.data[i];
+                        if (dragon == null || dragon.currSlot != null || dragon.teamId == 0) continue;
+                        if (dragon.dragonController != null && dragon.dragonController.GetState() == DragonController.DragonState.Dead) continue;
+                        Note(dragon.transform.position, dragons);
+                    }
+                }
+                bool announce = Plugin.CfgAnnounceLog.Value && KingdomCount() > 1;
+                raidedIslands.Update(raided, now, started, ended);
+                if (announce)
+                {
+                    foreach (int lm in started) OnIslandAttack(lm, Loc.F("Vikings landed on {0}.", Island(lm)));
+                    foreach (int lm in ended) OnInfo(Loc.F("The vikings on {0} are gone.", Island(lm)));
+                }
+                dragonIslands.Update(dragons, now, started, ended);
+                if (announce)
+                {
+                    foreach (int lm in started) OnIslandAttack(lm, Loc.F("Dragons are attacking {0}.", Island(lm)));
+                    foreach (int lm in ended) OnInfo(Loc.F("The dragons left {0}.", Island(lm)));
+                }
+            }
+            catch (System.Exception e)
+            {
+                Plugin.Log.LogWarning("Island attacks: " + e.Message);
+            }
+        }
+
+        /// <summary>The island under a position (land only), remembered with the first position seen on it.</summary>
+        private static void Note(Vector3 p, List<int> islands)
+        {
+            var c = World.inst.GetCellDataClamped(p);
+            if (c == null || c.landMassIdx < 0 || CellInfo.IsWater(c)) return;
+            islands.Add(c.landMassIdx);
+            if (!seenAt.ContainsKey(c.landMassIdx)) seenAt[c.landMassIdx] = new GridPos(c.x, c.z);
+        }
+
+        /// <summary>Islands owned by any kingdom: the player's and the AI kingdoms'.</summary>
+        private static int KingdomCount()
+        {
+            int n = 0;
+            var owners = World.LandMassOwners;
+            for (int i = 0; i < owners.Count; i++)
+                if (owners.data[i] != null && owners.data[i].ownedLandMasses != null) n += owners.data[i].ownedLandMasses.Count;
+            return n;
+        }
+
+        /// <summary>"Longvale, your island", "Stot kingdom", "unclaimed island".</summary>
+        internal static string Island(int lm)
+        {
+            string name = lm >= 0 && lm < Player.inst.LandMassNames.Count ? Player.inst.LandMassNames[lm] : null;
+            return IslandAttacks.Describe(name, Player.inst.LandMassIsAPlayerLandMass(lm), World.GetLandmassOwner(lm) != null);
+        }
+
+        /// <summary>An attack on the player's own island is a danger; on an AI kingdom's island it is news.</summary>
+        private static void OnIslandAttack(int lm, string text)
+        {
+            bool mine = Player.inst.LandMassIsAPlayerLandMass(lm);
+            GridPos? where = seenAt.TryGetValue(lm, out var p) ? p : (GridPos?)null;
+            Log.Add(text, mine ? Severity.Danger : Severity.Info, Player.inst.CurrYear, where);
+            A.Cue(mine ? Cue.Alert : Cue.Notify);
+            A.SayQueued(TextUtil.WithPlace(text, where.HasValue ? Directions.Relative(MapController.Inst.CursorPos, where.Value) : null));
         }
 
         internal static void OnNotification(string id, string message, KingdomLog.LogStatus status, Vector3? pos)
@@ -212,6 +312,7 @@ namespace KCAccess.Game
             }
             built.Add(b.FriendlyName);
             builtQuietAt = Time.unscaledTime + 3f;
+            WaterWatch.OnBuilt(b);
         }
 
         private static void FlushBuilt()

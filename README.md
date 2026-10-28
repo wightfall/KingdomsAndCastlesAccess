@@ -12,7 +12,10 @@ SAPI and other screen readers automatically.
   chopping and demolishing all work exactly like they do with a mouse.
 * An accessible **build menu** with costs, sizes, availability and the reason a building is locked.
 * Placement feedback: sound cues for valid / invalid spots, the reason a spot is invalid and which
-  tiles of the footprint are blocked.
+  tiles of the footprint are blocked. Water buildings (water wheel, aqueduct, reservoirs, bath house) say on
+  every tile what they would connect to, fountains whether the land is irrigated, and once built whether they
+  got water.
+* With several kingdoms on the map, viking and dragon attacks are announced for each island on its own.
 * Every building says what it is for, what its panel shows at a glance (workers, output, the problem it shows
   in red) and what the map shows only as pictures: crops and orchards growing, harvest waiting, a gate shut
   against enemies, a construction site waiting for materials. While a building is selected you hear it work
@@ -47,7 +50,9 @@ reader (Prism falls back to Windows speech if none is running).
 
 The window is made of standard Windows controls: the status text box has focus when it opens,
 Tab moves on to the language list, the two check boxes and the buttons, and questions are Yes / No
-message boxes.
+message boxes. When an update is available, an **Update available** window asks whether to install it: the
+focus starts in a read-only **What's new** box with the release notes in full, which you read line by line
+with the arrow keys; Tab moves to the **Yes** and **No** buttons right after it (Enter is Yes, Escape is No).
 
 * **Language** (Alt+L): the setup speaks the mod's language (your setting in the mod, otherwise the Windows
   display language). The list has every language the mod has, including languages you added yourself in the
@@ -160,7 +165,7 @@ replaces the mouse drag), Left / Right change the limit, from 0 up to the job po
 | Shift+N | Target beacon on / off: pings panned to the target's side, higher pitch north, lower south, faster when closer, a chime on arrival |
 | Alt+1 … 9 | Make a bookmark the navigation target |
 | Any arrow / Escape | Stop an auto-walk |
-| V | While placing: why the spot is (in)valid; for towers also their shooting range, which grows with every castle level they stand on; for buildings with a working area what it reaches there (houses and happiness of churches, taverns, gardens and wells, buildings a well protects from fire, trees and open land of a forester, fish of a fishing hut, land a reservoir irrigates, farms next to a windmill). Selecting such a building says the same |
+| V | While placing: why the spot is (in)valid; for towers also their shooting range, which grows with every castle level they stand on; for buildings with a working area what it reaches there (houses and happiness of churches, taverns, gardens and wells, buildings a well protects from fire, trees and open land of a forester, fish of a fishing hut, land a reservoir irrigates, farms next to a windmill). Selecting such a building says the same. For water buildings also what they connect to there or, when nothing, the nearest water building; for fountains whether the land is irrigated (see [Water system](#water-system)) |
 | Shift+Page Up / Shift+Page Down | Castle blocks (stone and wooden walls): build more / fewer levels on top of each other with each Enter or Shift+Enter line (1 to 10). The mod repeats the placement at the same tiles until the levels are built or the game refuses (for example wooden walls reach their height limit), then says how many levels and pieces were built. Enter or Escape stops early |
 | M | Send the selected soldiers (also siege catapults, your dragons, troop and exploration ships) to the cursor. With soldiers, settlers or an envoy selected and the cursor on your troop ship: board it. With a loaded troop ship selected and the cursor on land: unload there. On a route stop in a ship or cart panel: move the stop to the cursor |
 | Ctrl+E | Respond to the nearest alert (the game's exclamation marks): advisor news at the keep, a foreign envoy waiting to speak, a stopped transport cart, a ship needing orders |
@@ -234,6 +239,13 @@ building; Enter moves the cursor there.
 **Rubble** says what stood there ("Rubble of Well") on the tile, when selected and in its panel; the Rebuild
 button gives the cost ("Rebuild Well, cost wood 10 (have 4)") and rebuilding is announced. The toolbar's rebuild
 mode says when an area has no rubble or when rubble could not be rebuilt for lack of resources.
+
+**Attacks on each kingdom:** when the map has more than one kingdom (your own islands and AI kingdoms), the
+"Vikings are attacking!" and "Dragons are attacking!" banners do not say who is attacked, so each island is
+announced on its own with its direction: "Vikings landed on Halsbeck kingdom, 53 tiles west", "Dragons are
+attacking Longvale, your island", and when they are gone "The vikings on Halsbeck kingdom are gone" or "The
+dragons left Longvale, your island". Attacks on your islands play the danger sound, those on AI kingdoms the
+news sound; all are in the notification history (L).
 
 **Fires** are announced when they break out in your kingdom ("Fire at Hovel", with the direction; the fire
 spreading to the next tiles is not repeated) and when the last one is out; the game itself only reports a
@@ -330,6 +342,26 @@ coloured markers. With the mod:
    drop off nothing". Press **M** on a stop to move it to the cursor. The add buttons at the start and end of the
    list add stops, "Remove stop" deletes one, and the pick up / drop off check boxes choose the cargo; on a checked
    one, **Shift+Enter** opens the amounts again for changes.
+
+### Water system
+
+A **Noria** (water wheel, build menu Food, on a river bank with its wheel in fresh water) pumps water once all
+its workers are there. **Aqueduct** pieces carry it to **reservoirs** (they irrigate the land around them),
+the **Bath House** and the dragon bath. Pieces only link when they touch side by side, not corner to corner,
+and every piece weakens the water, so a long chain may need a second water wheel. **Fountains** work only on
+land a reservoir with water irrigates. The game shows all this as pipes and water only; the mod says it:
+
+* **While placing** one of them, every tile says what it would connect to and whether it has water, as a farm
+  says the soil: "can build, connects to Noria to the north, no water. No water reaches it yet", or "not
+  connected to the water system". **V** adds the nearest water building when nothing is next to it ("nearest
+  water building: Noria, 4 tiles north"). A fountain says "irrigated land, the fountain will work here" or that
+  the land is not irrigated.
+* **When it is finished**, after "Construction finished" you hear whether it works: "Reservoir has water and
+  works", "Aqueduct is connected, but no water wheel pumps yet: a water wheel needs all its workers", "… the water
+  is too weak to reach it. Connect another water wheel or shorten the pipes", or "… is not connected to a water
+  wheel". A line of pieces finishing together is said once ("Aqueduct: 4 of 6 pieces have water").
+* A selected water building or fountain reads the game's red problem line (not connected, water too weak, land
+  must be irrigated) like any other building.
 
 ### Islands, exploration ships and settlers
 

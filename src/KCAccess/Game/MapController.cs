@@ -1479,14 +1479,18 @@ namespace KCAccess.Game
                 string range = always ? CellInfo.RangeText(held, placed: true) : null;
                 // Wells, foresters, fishing huts, reservoirs, windmills and happiness buildings: their area is coloured only.
                 string reach = always ? Reach.Text(held) : null;
-                if (always) A.Say(TextUtil.Join(", ", Loc.T("Can build here"), level, range, reach), force: true);
-                else if (changed) A.SayQueued(Loc.T("can build") + (level != null ? ", " + level : string.Empty));
-                else if (level != null) A.SayQueued(level);
+                // Water buildings and fountains: what they connect to here, on every tile as a farm's soil (V adds the
+                // nearest water building when nothing is next to it).
+                string water = WaterWatch.PlacingHint(held, withNearest: always);
+                if (always) A.Say(TextUtil.Join(", ", Loc.T("Can build here"), level, range, reach, water), force: true);
+                else if (changed) A.SayQueued(TextUtil.Join(", ", Loc.T("can build"), level, water));
+                else if (level != null || water != null) A.SayQueued(TextUtil.Join(", ", level, water));
             }
             else
             {
                 A.Cue(Cue.PlaceInvalid);
-                if (always || changed) A.SayQueued(Explain(r.Value, nearest: always));
+                if (always) A.SayQueued(TextUtil.Join(". ", Explain(r.Value, nearest: true), WaterWatch.PlacingHint(held, withNearest: true)));
+                else if (changed) A.SayQueued(Explain(r.Value, nearest: false));
             }
             int count = GameUI.inst.CurrPlacementMode.PlacementCount();
             if (count > 1)

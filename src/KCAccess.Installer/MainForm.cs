@@ -12,7 +12,7 @@ namespace KCAccess.Installer
     /// <summary>
     /// The setup / updater window. Built from standard Windows controls so screen readers can read it:
     /// a read-only status box (focused on start), the language list, two check boxes and buttons with Alt shortcuts.
-    /// Questions use Yes/No message boxes.
+    /// Questions use Yes/No message boxes; an available update shows its notes in UpdateDialog.
     /// </summary>
     public sealed class MainForm : Form
     {
@@ -266,31 +266,21 @@ namespace KCAccess.Installer
             if (latest != null && Versions.IsNewer(latest.Version, best))
             {
                 string have = installed == null ? Loc.T("KCAccess is not installed yet") : Loc.F("you have {0}", Versions.Show(installed));
-                var answer = MessageBox.Show(this,
-                    Loc.F("KCAccess {0} is available ({1}).", Versions.Show(latest.Version), have) + "\n\n" + Shorten(latest.Body) + "\n\n" + Loc.T("Download and install it now?"),
-                    Loc.T("Update available"), MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                if (answer == DialogResult.Yes) await InstallAsync();
+                // What is new goes in a read-only box of its own window, not into the question.
+                if (UpdateDialog.Ask(this, Loc.F("KCAccess {0} is available ({1}).", Versions.Show(latest.Version), have), latest.Body)) await InstallAsync();
                 else ShowStatus(Loc.T("Update postponed. Run this program again any time to install it."));
             }
             else if (installed != null && Versions.IsNewer(EmbeddedVersion, installed))
             {
-                var answer = MessageBox.Show(this, Loc.F("This setup contains KCAccess {0} and you have {1}. Install it now?", Versions.Show(EmbeddedVersion), Versions.Show(installed)),
-                    Loc.T("Update available"), MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                if (answer == DialogResult.Yes) await InstallAsync();
+                // The notes of the built-in version when GitHub has them.
+                string body = latest != null && Versions.Normalize(latest.Version) == EmbeddedVersion ? latest.Body : null;
+                if (UpdateDialog.Ask(this, Loc.F("This setup contains KCAccess {0} and you have {1}.", Versions.Show(EmbeddedVersion), Versions.Show(installed)), body)) await InstallAsync();
             }
             else if (interactive)
             {
                 MessageBox.Show(this, installed == null ? Loc.T("KCAccess is not installed. Press Install or update.") : Loc.F("You have the newest version, {0}.", Versions.Show(installed)),
                     Loc.T("No updates"), MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
-        }
-
-        private static string Shorten(string notes)
-        {
-            if (string.IsNullOrEmpty(notes)) return string.Empty;
-            notes = notes.Replace("**", "").Replace("`", "").Replace("\r", "");
-            notes = System.Text.RegularExpressions.Regex.Replace(notes, @"(?m)^#+\s*", "");
-            return notes.Length > 600 ? notes.Substring(0, 600) + "…" : notes;
         }
 
         // ------------------------------------------------------------------ install
