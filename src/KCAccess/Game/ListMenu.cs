@@ -120,6 +120,31 @@ namespace KCAccess.Game
         /// <summary>Override for menu specific keys. Return true when handled.</summary>
         protected virtual bool HandleExtraKeys() => false;
 
+        /// <summary>
+        /// Page Up / Page Down: to the previous or next group start in <paramref name="headers"/> (a key section, a
+        /// paragraph). True when one of the two keys was pressed.
+        /// </summary>
+        protected bool JumpBetweenGroups(System.Collections.Generic.ICollection<Entry> headers)
+        {
+            if (!KInput.Plain(KeyCode.PageDown) && !KInput.Plain(KeyCode.PageUp)) return false;
+            int dir = KInput.Down(KeyCode.PageDown) ? 1 : -1;
+            int i = List.Index;
+            for (int n = 0; n < List.Count; n++)
+            {
+                i += dir;
+                if (i < 0 || i >= List.Count) break;
+                if (headers.Contains(List.Items[i]))
+                {
+                    List.SelectIndex(i);
+                    Speak(NavResult.Moved);
+                    return true;
+                }
+            }
+            A.Cue(Cue.Edge);
+            A.Say(dir > 0 ? Loc.T("No more groups, this is the last") : Loc.T("No more groups, this is the first"));
+            return true;
+        }
+
         protected void Speak(NavResult r)
         {
             if (r == NavResult.Empty)

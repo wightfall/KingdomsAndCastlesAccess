@@ -336,8 +336,11 @@ namespace KCAccess
             panel = null; // a dialog replaces any panel focus (the panel usually closes behind it)
             Nav.TypeAheadEnabled = next.TypeAhead;
             A.Cue(Cue.Open);
-            Nav.SetRoot(next.Root, next.Title, announce: !next.ReadAllOnOpen, next.Intro, next.InitialFocus);
+            // The credits roll past and the game hides every line outside their window: they are read as a list.
+            bool credits = next.Id == "Credits" && next.Root != null && next.Root.GetComponentInChildren<CreditsUI>() != null;
+            Nav.SetRoot(next.Root, next.Title, announce: !next.ReadAllOnOpen && !credits, next.Intro, next.InitialFocus);
             if (next.ReadAllOnOpen) Nav.ReadAll();
+            if (credits) Game.TextReader.OpenCredits(next.Root.GetComponentInChildren<CreditsUI>());
         }
 
         /// <summary>Escape on menus without their own Escape handling: press a Back / Close / No button.</summary>

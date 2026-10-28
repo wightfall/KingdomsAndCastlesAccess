@@ -37,30 +37,8 @@ namespace KCAccess.Game
             }
         }
 
-        protected override bool HandleExtraKeys()
-        {
-            if (KInput.Plain(KeyCode.PageDown) || KInput.Plain(KeyCode.PageUp))
-            {
-                // Jump to the next group header (a key section or the sound section).
-                int dir = KInput.Down(KeyCode.PageDown) ? 1 : -1;
-                int i = List.Index;
-                for (int n = 0; n < List.Count; n++)
-                {
-                    i += dir;
-                    if (i < 0 || i >= List.Count) break;
-                    if (headers.Contains(List.Items[i]))
-                    {
-                        List.SelectIndex(i);
-                        Speak(NavResult.Moved);
-                        return true;
-                    }
-                }
-                A.Cue(Cue.Edge);
-                A.Say(dir > 0 ? Loc.T("No more groups, this is the last") : Loc.T("No more groups, this is the first"));
-                return true;
-            }
-            return false;
-        }
+        // Page Up / Page Down jump to the next group header (a key section or the sound section).
+        protected override bool HandleExtraKeys() => JumpBetweenGroups(headers);
 
         protected override void OnClosed()
         {

@@ -33,6 +33,16 @@ namespace KCAccess.UI
         /// <summary>Children of t in the order they should be read, or null for hierarchy order.</summary>
         internal static List<Transform> OrderedChildren(Transform t)
         {
+            // A local mod row of the Mods screen: its name and description before its folder button (the game lays the
+            // button out first).
+            var folder = t.Find("FolderButton");
+            if (folder != null && t.parent != null && t.GetComponentInParent<GameWorkshopUI>() is GameWorkshopUI mods && t.parent == mods.localModItemContainer)
+            {
+                var row = new List<Transform>();
+                foreach (Transform c in t) if (c != folder) row.Add(c);
+                row.Add(folder);
+                return row;
+            }
             var ui = DecreeUI.inst;
             if (ui == null || t != ui.ContentContainer || ui.prioritized == null) return null;
             var list = new List<Transform>();
@@ -44,6 +54,14 @@ namespace KCAccess.UI
             // Anything not driven by a layout row keeps its place at the end.
             foreach (Transform c in t) if (!list.Contains(c)) list.Add(c);
             return list;
+        }
+
+        /// <summary>The title text of a local mod row ("( MyMod ) My mod").</summary>
+        private static string ModRowTitle(Transform row)
+        {
+            var title = row != null ? row.Find("Title") : null;
+            var tmp = title != null ? title.GetComponent<TMPro.TMP_Text>() : null;
+            return tmp != null ? TextUtil.Clean(UIText.TextOf(tmp)) : string.Empty;
         }
 
         /// <summary>Advisor portraits live in containers named after their field.</summary>
@@ -331,6 +349,9 @@ namespace KCAccess.UI
         internal static bool Exclude(GameObject go)
         {
             if (DragonBondCaption(go)) return true;
+            // A Workshop subscription row's background is a button without any action (the row only highlights on a
+            // click), read as "Black BG".
+            if (go.name == "BlackBG" && go.GetComponent<Button>() != null && go.GetComponentInParent<WorkshopItem>() != null) return true;
             // A unit panel tab with a button: the button names the tab and its count, the bare count is not needed.
             if (UnitTabCount(go) && go.transform.parent.GetComponentInChildren<Button>() != null) return true;
             // Stockpile and dock order forms: the "current" and "desired" column captions; each row says both already.
@@ -408,6 +429,26 @@ namespace KCAccess.UI
                 case "Turkish": return cl.turkishButton;
                 default: return null;
             }
+        }
+
+        /// <summary>Livery <paramref name="index"/>'s banner as a sighted player sees it: colour and emblem (BannerLooks).</summary>
+        internal static string BannerLook(int index)
+        {
+            var sets = World.inst != null ? World.inst.liverySets : null;
+            if (sets == null || index < 0 || index >= sets.Count) return null;
+            var tex = sets[index].banners;
+            return BannerLooks.Describe(tex != null ? tex.name : null, LiveryColour(index));
+        }
+
+        /// <summary>The banner chosen now, for the name screen's banner button.</summary>
+        private static string CurrentBanner()
+        {
+            var p = Player.inst;
+            if (p == null || p.PlayerLandmassOwner == null) return null;
+            if (p.usingCustomBanner) return Loc.T("now your custom banner");
+            int idx = p.PlayerLandmassOwner.bannerIdx;
+            string look = BannerLook(idx);
+            return look != null ? Loc.F("now banner {0}, {1}", idx + 1, look) : null;
         }
 
         /// <summary>The colour of kingdom livery <paramref name="index"/> (banners, kingdom colours) as a word, or null.</summary>
@@ -753,7 +794,14 @@ namespace KCAccess.UI
             var row = RowFor(item.Go);
             if (row != null && item.Control == row.DisableToggle) return PriorityRow(row);
             if (item.Control is Button && item.Go.GetComponentInParent<PickNameUI>() != null && UIText.LabelOf(item.Control) == UIText.Unlabelled)
-                return Loc.T("Choose banner, button");
+                return TextUtil.Join(", ", Loc.T("Choose banner, button"), CurrentBanner());
+            // Mods screen: a local mod's folder button (an icon, read "Externallinkicon") and a Workshop subscription's
+            // unsubscribe button (read "Abort").
+            if (item.IsControl && item.Go.name == "FolderButton" && item.Go.transform.parent != null
+                && item.Go.GetComponentInParent<GameWorkshopUI>() is GameWorkshopUI modsUi && item.Go.transform.parent.parent == modsUi.localModItemContainer)
+                return Loc.F("Open the folder of {0}, button", ModRowTitle(item.Go.transform.parent));
+            if (item.IsControl && item.Go.GetComponentInParent<WorkshopItem>() is WorkshopItem sub && item.Control == sub.unsubButton)
+                return Loc.F("Unsubscribe from {0}, button", sub.title != null ? TextUtil.Clean(UIText.TextOf(sub.title)) : string.Empty);
             if (item.IsControl && StreamerUI.inst != null && item.Go.transform.IsChildOf(StreamerUI.inst.transform) && UIText.LabelOf(item.Control) == "Toggle Visible")
                 return Game.Twitch.SettingsVisible ? Loc.T("Hide the Twitch voting settings, button") : Loc.T("Show the Twitch voting settings, button");
             // Route panel: the run / pause toggles have no text (the status next to them, "Waiting", was read as their name),
@@ -992,7 +1040,7 @@ namespace KCAccess.UI
                 bool selected = ui != null && ui.highlightedTile == tile;
                 string banner = ui != null && parent == ui.customBannerContainer ? Loc.F("Custom banner {0} of {1}", idx, count)
                     : ui != null && parent == ui.workshopBannerContainer ? Loc.F("Workshop banner {0} of {1}", idx, count)
-                    : TextUtil.Join(", ", Loc.F("Banner {0} of {1}", idx, count), LiveryColour(tile.transform.GetSiblingIndex()));
+                    : TextUtil.Join(", ", Loc.F("Banner {0} of {1}", idx, count), BannerLook(tile.transform.GetSiblingIndex()));
                 return banner + (selected ? ", " + Loc.T("selected") : string.Empty) + ". " + Loc.T("Enter selects it, then choose Accept");
             }
             // A custom banner's kingdom colours: plain coloured squares (the colour index chooses the kingdom's livery).

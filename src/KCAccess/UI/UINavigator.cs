@@ -366,6 +366,9 @@ namespace KCAccess.UI
             if (!item.IsControl)
             {
                 string t = UIText.JoinTexts(item.Texts);
+                // A very long text (the main menu's news: the whole patch history) is not read in one go: its first
+                // line and how to read it line by line.
+                if (t.Length > LongText.SummaryLength && LongText.Summary(RawText(item)) is string summary) return summary;
                 if (IsNumberish(t))
                 {
                     string res = Special.ResourceIconName(item.Go.transform);
@@ -396,6 +399,19 @@ namespace KCAccess.UI
         }
 
         public UIItem Current => list.Current;
+
+        /// <summary>The text of a text item as shown, line breaks kept (for the long text reader).</summary>
+        internal static string RawText(UIItem item)
+        {
+            if (item == null || item.Texts == null) return string.Empty;
+            var parts = new List<string>();
+            foreach (var c in item.Texts)
+            {
+                string t = UIText.TextOf(c);
+                if (TextUtil.HasContent(t)) parts.Add(t);
+            }
+            return string.Join("\n", parts.ToArray());
+        }
 
         public IReadOnlyList<UIItem> AllItems => list.Items;
 
@@ -619,6 +635,9 @@ namespace KCAccess.UI
         {
             if (!item.IsControl)
             {
+                // A long text opens in the reader, line by line.
+                string raw = RawText(item);
+                if (LongText.WorthReading(raw) && Game.TextReader.OpenText(Loc.T("Text reader"), raw)) return;
                 // Some texts are clickable without a Button (DLC Available, Wishlist our next game): click them.
                 if (ClickText(item.Go)) return;
                 A.Cue(Cue.Edge);

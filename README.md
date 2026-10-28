@@ -29,6 +29,8 @@ SAPI and other screen readers automatically.
   a route villagers can walk (N), walk in a straight line, jump, or follow a stereo **audio beacon**.
 * **O** surveys the area around the cursor (fertile soil, forest, stone, iron, water) to choose where to build.
 * **F1** on every screen tells you what you can do there.
+* Long texts (the main menu's news, the credits) are read one line at a time, and the game's own mods work next
+  to the mod (the game could not compile them with BepInEx installed).
 * The mod speaks 19 languages, and the game's own texts (menus, windows, tooltips, buildings, events, places,
   diplomacy dialogue) can be translated for languages the game lacks: **Thai** is shipped complete, see
   [Translating the game's own texts](#translating-the-games-own-texts).
@@ -122,6 +124,12 @@ Press **F1** at any time for help about the current screen: what it is and only 
 | Ctrl+R | Read the whole screen |
 | F5 | Repeat the current item with its position |
 | Escape | Back / close / cancel |
+
+**Long texts** (300 characters or more, or three lines and more): Enter opens them in the **text reader**: Up /
+Down read one line at a time (a long line is split at its sentences), Page Up / Page Down jump between groups
+(paragraphs), Home / End go to the first and last line, letters jump to a line starting with them, Ctrl+R reads
+everything, Escape returns to the text. A very long text (over 2000 characters) is not read whole when you reach it:
+you hear its first line and how many lines it has ("Long text, 604 lines. Enter reads it line by line").
 
 **Text fields** (kingdom name, map seed): press Enter to start editing, type (each character is
 echoed, Backspace says what was deleted), Enter to confirm, Escape to cancel. Up, Down or F2 read
@@ -304,6 +312,20 @@ change it in the mod settings (Ctrl+Shift+O, group **Streaming**).
 * K also lists **active effects** with their time left (Twitch vote results, witch blessings and curses,
   Chamber of War orders), which the game shows only as icons.
 
+### News, credits and mods
+
+* **News** (check box at the top of the main menu) loads the game's patch notes from the internet: the news text
+  is about 600 lines, so it says its first line and opens in the text reader with Enter ("5/11/2025 - version
+  123r4 - Dragon Taming", Page Down to the next part: "Dragon Nest", "Dragon Bath").
+* **Credits** roll past on screen and the game hides every line outside its window; the mod reads them as a list
+  in the text reader as soon as the screen opens: the team with their roles ("Peter Angstadt, Design, Programming,
+  Art"), the translators by language ("German, 29 names") and every backer tier, about 5000 lines in 27 groups.
+  Page Down jumps to the next title, Escape returns to the main menu.
+* **Mods**: local mods (folders in `KingdomsAndCastles_Data\mods`) are read with their name, description and an
+  "Open the folder of …" button; Steam Workshop subscriptions with their title, description, "Unsubscribe from …"
+  button and state (Loaded, Restart to load, Incompatible). With BepInEx installed the game could not compile any mod
+  (see [Game bugs fixed by the mod](#game-bugs-fixed-by-the-mod)); it can now.
+
 ### Leaving the game
 
 The main menu's Discord, Twitter and Twitch buttons, news links, the shop and "open folder" buttons open your
@@ -478,8 +500,10 @@ tile and what blocks the others, and repeats the nearest spot.
 ### Starting a new game
 
 1. New → Standard Mode Accept → choose a region (difficulty) with Previous / Next → Accept.
-2. Kingdom name (Enter to edit) → Choose banner opens the banner list as its own window: the six banners are read with
-   their colour ("Banner 2 of 6, yellow"), PNG files in the custom banner folder follow ("Open custom banner folder"),
+2. Kingdom name (Enter to edit) → Choose banner (it says the banner chosen now: "now banner 1, blue, a white crowned
+   lion's head") opens the banner list as its own window: the six banners are read with their colour and emblem
+   ("Banner 2 of 6, yellow, a black sword with two dragons"; the two blue ones differ by the orange diagonal band of
+   banner 6), PNG files in the custom banner folder follow ("Open custom banner folder"),
    and a custom banner gets a kingdom colour ("Kingdom colour 4 of 6, green"); Enter says what is selected, Accept
    returns (Upload to Workshop opens its own window; Escape cancels it) → Accept.
 3. Map setup: size, type and rivers; New Map generates another map. **Ctrl+M** lets you explore the
@@ -743,6 +767,11 @@ Every sound can be previewed: Shift+F1, End, then Up through the sounds and pres
 * **Holding End made every AI kingdom plan a farm at your cursor.** A developer test left in the AI's
   update adds a "build a farm at the pointer" job each frame End is held; End is the mod's "jump to the
   selected building" key. That test job now ends at once without doing anything.
+* **No mod of the game loaded with BepInEx installed**, neither local mods nor Steam Workshop subscriptions. The
+  game compiles mods against its own `0Harmony.dll` by path and against "0Harmony.dll" by name, which then means
+  BepInEx's Harmony: a second assembly called 0Harmony, so the compiler refused every mod (and the game's loader
+  crashed while logging the error, which has no source file, so `mods\log.txt` only said "Object reference not set
+  to an instance of an object"). The name-only reference is now dropped when the same file is referenced by its path.
 
 ## Troubleshooting
 
@@ -806,7 +835,7 @@ and Ctrl+Shift+F12 writes the live UI hierarchy to `BepInEx\kcaccess_ui_dump.txt
 situations for testing at the cursor: `devbuild <name> [any] [clear]` (place a finished building), `army
 knight|archer|settler|envoy`, `dragon [mama]`, `nest egg|hatch|mature|happy|bond`, `fire`, `ogre`, `viking
 [elite]`, `plague [cure]`, `weather none|rain|heavy|storm|snow`, `twitch show|connect|vote <name> <n>|chat <name>
-<text>|end|hide` (Twitch voting without Twitch), `log <text>`, `threatyears`, `buildnow`, `claim <team> <island>` (a kingdom takes an island; `ai` lists teams and islands), `relation <team> <team> war|peace|ally`, `bbox` (a building's box and tiles, for water links), `tracespeech <words>`, and for diplomacy `visit`, `convo <name>`
+<text>|end|hide` (Twitch voting without Twitch), `log <text>`, `threatyears`, `buildnow`, `claim <team> <island>` (a kingdom takes an island; `ai` lists teams and islands), `fakeworkshop [loaded|restart|invalid|remove]` (a made-up Workshop row on the Mods screen, no Steam call), `modcompile [folder]` (the game's mod compiler with its messages), `bannerpng`, `relation <team> <team> war|peace|ally`, `bbox` (a building's box and tiles, for water links), `tracespeech <words>`, and for diplomacy `visit`, `convo <name>`
 (GoldDemand, AIGift ...), `dialogue` (the current line's conversation and entry ids), `viking thief` (a thief heading for your Treasure
 Room), `thieves kill|escape`, `mission start|done|fail` (a request of the first AI kingdom), `masontarget` (the
 selected mason's target becomes the building at the cursor), `gold <n>`, `probe <name>` (size and state of

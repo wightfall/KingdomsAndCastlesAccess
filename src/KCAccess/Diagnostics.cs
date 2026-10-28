@@ -746,9 +746,119 @@ namespace KCAccess
                             {
                                 var lc = World.inst.liverySets[li].bannerColor;
                                 var lmap = World.inst.liverySets[li].mapColor;
-                                Plugin.Log.LogInfo("[livery] " + li + " banner=" + lc + " map=" + lmap + " => " + Core.ColourNames.Name(lc.r, lc.g, lc.b));
+                                var ls = World.inst.liverySets[li];
+                                Plugin.Log.LogInfo("[livery] " + li + " banner=" + lc + " map=" + lmap + " => " + Core.ColourNames.Name(lc.r, lc.g, lc.b)
+                                    + " texture=" + (ls.banners != null ? ls.banners.name : "-") + " material=" + (ls.bannerMaterial != null ? ls.bannerMaterial.name : "-")
+                                    + " flag=" + (ls.flagMaterial != null ? ls.flagMaterial.name + "/" + (ls.flagMaterial.mainTexture != null ? ls.flagMaterial.mainTexture.name : "-") : "-"));
                             }
                             break;
+                        case "bannerpng":
+                        {
+                            // Developer only: saves each livery's banner picture as BepInEx/kcaccess_banner_<n>.png (to write
+                            // the banner descriptions; delete the files afterwards).
+                            var encode = Type.GetType("UnityEngine.ImageConversion, UnityEngine.ImageConversionModule")?.GetMethod("EncodeToPNG", new[] { typeof(Texture2D) });
+                            for (int bi = 0; encode != null && bi < World.inst.liverySets.Count; bi++)
+                            {
+                                var tex = World.inst.liverySets[bi].banners;
+                                if (tex == null) continue;
+                                var rt = RenderTexture.GetTemporary(tex.width, tex.height, 0, RenderTextureFormat.ARGB32);
+                                Graphics.Blit(tex, rt);
+                                var prev = RenderTexture.active;
+                                RenderTexture.active = rt;
+                                var copy = new Texture2D(tex.width, tex.height, TextureFormat.RGBA32, false);
+                                copy.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
+                                copy.Apply();
+                                RenderTexture.active = prev;
+                                RenderTexture.ReleaseTemporary(rt);
+                                var png = (byte[])encode.Invoke(null, new object[] { copy });
+                                string file = System.IO.Path.Combine(BepInEx.Paths.BepInExRootPath, "kcaccess_banner_" + bi + ".png");
+                                System.IO.File.WriteAllBytes(file, png);
+                                UnityEngine.Object.Destroy(copy);
+                                Plugin.Log.LogInfo("[dbg] bannerpng " + bi + " " + tex.name + " " + tex.width + "x" + tex.height + " -> " + file);
+                            }
+                            break;
+                        }
+                        case "modcompile":
+                        {
+                            // Developer only: "modcompile <folder name>" runs the game's local mod compiler on a folder in
+                            // KingdomsAndCastles_Data/mods and logs its messages and any exception with its stack (the
+                            // game's own loader logs only the message).
+                            string modDir = System.IO.Path.Combine(System.IO.Path.Combine(Application.dataPath, "mods"), parts.Length > 1 ? parts[1] : "KCAccessTestMod");
+                            try
+                            {
+                                var args = new object[] { modDir, new ModCompiler.Log(m => Plugin.Log.LogInfo("[dbg] modcompile: " + m)), false };
+                                var asm = typeof(ModCompiler).GetMethod("LoadMod").Invoke(null, args);
+                                Plugin.Log.LogInfo("[dbg] modcompile result: assembly=" + (asm != null) + " valid=" + args[2]);
+                            }
+                            catch (Exception e)
+                            {
+                                Plugin.Log.LogInfo("[dbg] modcompile exception: " + (e.InnerException ?? e));
+                            }
+                            try
+                            {
+                                // The compiler's own messages (the game's loader crashes on one without a source file).
+                                var domainField = typeof(ModCompiler).GetField("domain", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                                var dom = domainField != null ? domainField.GetValue(null) : null;
+                                var result = dom != null ? dom.GetType().GetProperty("CompileResult").GetValue(dom, null) : null;
+                                var errors = result != null ? result.GetType().GetProperty("Errors").GetValue(result, null) as Array : null;
+                                Plugin.Log.LogInfo("[dbg] modcompile messages: " + (errors != null ? errors.Length : -1));
+                                var service = dom != null ? dom.GetType().GetProperty("RoslynCompilerService").GetValue(dom, null) : null;
+                                var refs = service != null ? service.GetType().GetProperty("References").GetValue(service, null) as System.Collections.IEnumerable : null;
+                                if (refs != null)
+                                    foreach (var r in refs)
+                                        if (r != null && (r.ToString().IndexOf("Harmony", StringComparison.OrdinalIgnoreCase) >= 0 || r.ToString().IndexOf("BepInEx", StringComparison.OrdinalIgnoreCase) >= 0))
+                                            Plugin.Log.LogInfo("[dbg] modcompile reference: " + r + " (" + r.GetType().Name + ")");
+                                var refAsms = service != null ? service.GetType().GetProperty("ReferenceAssemblies").GetValue(service, null) as System.Collections.IEnumerable : null;
+                                if (refAsms != null)
+                                    foreach (var r in refAsms)
+                                        if (r != null && r.ToString().IndexOf("Harmony", StringComparison.OrdinalIgnoreCase) >= 0)
+                                            Plugin.Log.LogInfo("[dbg] modcompile reference assembly: " + r + " (" + r.GetType().Name + ")");
+                                if (dom != null)
+                                    foreach (var m in dom.GetType().GetMethods())
+                                        if (m.Name.StartsWith("Compile", StringComparison.Ordinal))
+                                            Plugin.Log.LogInfo("[dbg] modcompile method: " + m);
+                                if (errors != null)
+                                    foreach (var err in errors)
+                                        Plugin.Log.LogInfo("[dbg] modcompile message: " + err.GetType().GetProperty("Message").GetValue(err, null)
+                                            + " error=" + err.GetType().GetProperty("IsError").GetValue(err, null));
+                            }
+                            catch (Exception e)
+                            {
+                                Plugin.Log.LogInfo("[dbg] modcompile messages failed: " + e.Message);
+                            }
+                            break;
+                        }
+                        case "fakeworkshop":
+                        {
+                            // Developer only: "fakeworkshop [loaded|restart|invalid|remove]" adds a made-up Workshop
+                            // subscription row to the open Mods screen, built like the game's own rows but without any
+                            // Steam call (its buttons only log), to test how a subscribed mod is read; "remove" deletes it.
+                            var wui = UnityEngine.Object.FindObjectOfType<GameWorkshopUI>();
+                            if (wui == null || wui.contentContainer == null) { Plugin.Log.LogInfo("[dbg] fakeworkshop: open the Mods screen first"); break; }
+                            foreach (Transform t in wui.contentContainer)
+                                if (t.name == "KCAccessFakeWorkshopItem") UnityEngine.Object.Destroy(t.gameObject);
+                            if (parts.Length > 1 && parts[1] == "remove") { Plugin.Log.LogInfo("[dbg] fakeworkshop removed"); break; }
+                            string fakeState = parts.Length > 1 ? parts[1] : "loaded";
+                            var row = UnityEngine.Object.Instantiate(wui.workShopItemPrefab, wui.contentContainer);
+                            row.name = "KCAccessFakeWorkshopItem";
+                            row.gameObject.SetActive(true);
+                            row.transform.localScale = Vector3.one;
+                            row.title.text = "KCAccess test mod";
+                            row.description.text = "A made-up subscription to test the Mods screen. It does nothing.";
+                            row.SetClickReturn(w => Plugin.Log.LogInfo("[dbg] fake row clicked"), w => Plugin.Log.LogInfo("[dbg] fake unsubscribe pressed"), w => Plugin.Log.LogInfo("[dbg] fake open item pressed"));
+                            row.SetLoaded(fakeState == "restart" ? null : new GameWorkshopUI.LoadedMod { loaded = fakeState == "loaded", validVersion = fakeState != "invalid", version = 2 });
+                            if (wui.scrollRect != null) wui.scrollRect.gameObject.SetActive(true);
+                            foreach (var b in row.GetComponentsInChildren<Button>(true))
+                            {
+                                var calls = new StringBuilder();
+                                for (int pi = 0; pi < b.onClick.GetPersistentEventCount(); pi++)
+                                    calls.Append(" " + (b.onClick.GetPersistentTarget(pi) != null ? b.onClick.GetPersistentTarget(pi).GetType().Name : "null") + "." + b.onClick.GetPersistentMethodName(pi));
+                                Plugin.Log.LogInfo("[dbg] fakeworkshop button " + b.name + (b == row.unsubButton ? " (unsubButton)" : string.Empty) + (b == row.goToItemButton ? " (goToItemButton)" : string.Empty)
+                                    + " image=" + (b.image != null && b.image.sprite != null ? b.image.sprite.name : "-") + " persistent:" + calls);
+                            }
+                            Plugin.Log.LogInfo("[dbg] fakeworkshop " + fakeState);
+                            break;
+                        }
                         case "probe":
                             // Developer only: "probe <name>" logs every selectable whose object name contains the text: size, scale, state.
                             foreach (var sel in UnityEngine.Object.FindObjectsOfType<Selectable>())
