@@ -81,7 +81,7 @@ namespace KCAccess
             Safe.Run("windows keys", () => OsKeyboard.Tick(Inst.Nav.IsEditing || OverlayOpen));
             Safe.Run("controller", () => { if (!OverlayOpen && !Inst.Nav.IsEditing) ControllerInput.Tick(Inst.OnMapForPad); });
             Safe.Run("keys", () => KInput.BeginFrame());
-            if (Plugin.CfgDebugCommands.Value) Safe.Run("test commands", () => Diagnostics.PollCommands());
+            if (Plugin.CfgDebugCommands.Value) Safe.Run("test commands", () => { Diagnostics.PollCommands(); Safe.MeasureTick(); });
             if (Plugin.CfgLogKeys.Value) Safe.Run("key log", () => Diagnostics.LogKeys());
             Safe.Run("language", () => ModLanguage.Tick());
             Safe.Run("game texts", () => GameTextTranslation.Tick());

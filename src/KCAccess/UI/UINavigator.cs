@@ -150,6 +150,12 @@ namespace KCAccess.UI
 
         public void AnnounceScreen(string intro = null)
         {
+            // After a conversation's first line: only the name of the window, as the focus goes on to the first reply.
+            if (Patch_DialogueSubtitle.ConversationSpeaking)
+            {
+                A.SayQueued(TextUtil.Sentences(Title, intro));
+                return;
+            }
             string current = list.HasCurrent ? Describe(list.Current) : Loc.T("no items");
             // A panel named after its first text (a construction site's "Cottage") says the name once.
             if (string.IsNullOrEmpty(intro) && string.Equals(TextUtil.Clean(current).TrimEnd('.', '!', '?', ':'), TextUtil.Clean(Title).TrimEnd('.', '!', '?', ':'), StringComparison.OrdinalIgnoreCase))
@@ -158,12 +164,19 @@ namespace KCAccess.UI
         }
 
         private Func<GameObject, bool> focusRequest;
+        private bool focusRequestSpeaks;
         private float focusRequestUntil;
 
         /// <summary>Move focus to the first item matching the predicate as soon as it appears (within 3 seconds).</summary>
-        public void RequestFocus(Func<GameObject, bool> match)
+        /// <param name="match">The item to move to, as soon as it is in the list.</param>
+        /// <param name="speak">
+        /// Say the item when it is reached. For a list that opens after instructions: Down would go to the second item and
+        /// Enter would choose an item that was never said.
+        /// </param>
+        public void RequestFocus(Func<GameObject, bool> match, bool speak = false)
         {
             focusRequest = match;
+            focusRequestSpeaks = speak;
             focusRequestUntil = Time.unscaledTime + 3f;
             nextRefresh = 0f;
             // The new focus speaks for the click; texts that appeared with it are not read on top.
@@ -189,6 +202,7 @@ namespace KCAccess.UI
                         list.SelectIndex(i);
                         focusRequest = null;
                         SetHover(go);
+                        if (focusRequestSpeaks) A.SayQueued(Describe(list.Items[i]));
                         break;
                     }
                 }

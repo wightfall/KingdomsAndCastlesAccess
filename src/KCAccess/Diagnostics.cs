@@ -464,10 +464,19 @@ namespace KCAccess
                         }
                         case "army":
                         {
-                            // Developer only: "army knight|archer|settler|envoy [team]" makes that army at the cursor, as the
+                            // Developer only: "army knight|archer|settler|envoy|catapult [team]" makes that army at the cursor, as the
                             // creative brushes do (team 0 = yours).
                             var ap = Game.MapController.Inst.CursorPos;
                             var acell = World.inst.GetCellData(ap.X, ap.Z);
+                            if (parts.Length > 1 && parts[1] == "catapult" && acell != null)
+                            {
+                                // A siege catapult, the way the creative brush makes one.
+                                var machine = UnityEngine.Object.Instantiate(RaiderSystem.inst.siegeCatapultPrefab);
+                                machine.transform.position = acell.Center;
+                                machine.GetComponent<SiegeCatapult>().Init(0);
+                                Plugin.Log.LogInfo("[dbg] catapult made at " + ap);
+                                break;
+                            }
                             var kind = parts.Length > 1 && parts[1] == "archer" ? UnitSystem.ArmyType.Archer
                                 : parts.Length > 1 && parts[1] == "settler" ? UnitSystem.ArmyType.Settler
                                 : parts.Length > 1 && parts[1] == "envoy" ? UnitSystem.ArmyType.Envoy : UnitSystem.ArmyType.Default;
@@ -713,6 +722,29 @@ namespace KCAccess
                             // "gold" adds 5000, "gold 0" sets it (to test what costs gold).
                             if (parts.Length > 1) Player.inst.PlayerLandmassOwner.Gold = int.Parse(parts[1]);
                             else Player.inst.PlayerLandmassOwner.Gold += 5000;
+                            break;
+                        case "confirmshow":
+                            // Developer only: shows a confirmation window of the game, to test that it is found and read.
+                            foreach (var box in Resources.FindObjectsOfTypeAll<Assets.Code.UI.Confirmation>())
+                            {
+                                if (!box.gameObject.scene.IsValid() || box.transform.parent == null || !box.transform.parent.gameObject.activeInHierarchy) continue;
+                                Plugin.Log.LogInfo("[dbg] showing " + PathOf(box.transform));
+                                box.ShowConfirmation(() => Plugin.Log.LogInfo("[dbg] yes pressed"), () => Plugin.Log.LogInfo("[dbg] no pressed"));
+                                break;
+                            }
+                            break;
+                        case "timing":
+                            // Developer only: "timing [seconds]" logs how long each part of the mod takes per frame.
+                            Safe.Measure(parts.Length > 1 ? float.Parse(parts[1]) : 5f);
+                            break;
+                        case "buildings":
+                            // Developer only: every building the game knows, for walking through all their panels.
+                            foreach (var prefab in GameState.inst.internalPrefabs) Plugin.Log.LogInfo("[dbg] building " + prefab.UniqueName + " | " + prefab.CategoryName + " | " + prefab.FriendlyName);
+                            break;
+                        case "achievements":
+                            // Developer only: what each achievement would be called and whether it is unlocked. Unlocks nothing.
+                            foreach (var id in new[] { "first_hamlet", "first_city", "towerofbabel", "allied_ai_kingdom", "destroyed_ai_keep", "claim_kingdom_peacefully", "trade_agreement_with_ai", "give_ai_gift", "declare_war_against_ai", "tame_dragon", "bond_with_dragon", "survive_survival", "tame_many_dragons", "dragon_newborn" })
+                                Plugin.Log.LogInfo("[dbg] " + id + " = " + Patch_Achievement.NameOf(id) + ", unlocked " + (IntegrationManager.inst != null && IntegrationManager.inst.GetAchievement(id)));
                             break;
                         case "hooktest":
                             // Developer only: a hook that throws must not reach the game; an error of the game's own must.

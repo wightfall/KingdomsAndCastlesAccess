@@ -350,8 +350,9 @@ focus on the current language; Enter switches language, Escape closes the list.
   5 wood for 18 gold, 912 gold left" or "Sold 10 wood for 20 gold, you now have 950 gold"; a purchase you
   cannot pay for is refused with "Not enough gold: costs 18, you have 10". You sell what is stored at the
   dock. Some merchants also offer a special upgrade (the Special Item tab, with its cost and your gold).
-* **Diplomacy:** every line an envoy or ruler says is read aloud, followed by the number of replies;
-  focus jumps to the first reply. Up / Down choose, Enter answers. To visit a kingdom, select your envoy
+* **Diplomacy:** every line an envoy or ruler says is read aloud, followed by the Continue button or by the
+  number of replies and the first reply; the focus is already there. Up / Down choose, Enter answers. To visit
+  a kingdom, select your envoy
   (Shift+Enter), put the cursor on the other kingdom's keep and press M: the visit opens when the envoy
   arrives, wherever the camera is. "Opinion of you: neutral, 80 percent of the way to favorable" tells their
   opinion level and how close the next one is; a trade deal needs at least favorable.
@@ -879,8 +880,10 @@ controls), `thieves sink`, `findmethod <name>` (buttons calling a game method), 
 for example `pile Tree 12`), `hurt <percent> [all]` (health of the units on the cursor tile, or of all units),
 `around [radius]` (a text map of the tiles around the cursor), `watchlooks <seconds>` (logs every change of what
 the map shows of the building at the cursor), and `audit` (in a panel opened with F6: logs every
-visible text and tooltip line that no item of the panel says), and `hooktest` (a hook that fails stays away from the
-game, an error of the game's own passes through).
+visible text and tooltip line that no item of the panel says), `hooktest` (a hook that fails stays away from the
+game, an error of the game's own passes through), `timing [seconds]` (how long each part of the mod takes per frame),
+`buildings` (every building the game knows), `achievements` (their names and whether they are unlocked; unlocks
+nothing) and `confirmshow`. `army` also takes `catapult`.
 
 ## License
 

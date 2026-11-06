@@ -63,17 +63,23 @@ namespace KCAccess.Game
         private static bool? lastRaid, lastDragonAttack;
         private static int lastVikingYears = -1, lastDragonYears = -1;
 
+        /// <summary>Each watcher runs on its own: one that a game update broke must not silence the others.</summary>
         internal static void Tick()
         {
-            TrackAttacks();
-            TrackIslandAttacks();
-            FlushBuilt();
-            WaterWatch.Tick();
-            OtherKingdoms.Tick();
-            ShipWatch.Tick();
-            FireWatch.Tick();
-            PileWatch.Tick();
-            MissionWatch.Tick();
+            Safe.Run("attack watch", () => TrackAttacks());
+            Safe.Run("island attack watch", () => TrackIslandAttacks());
+            Safe.Run("finished buildings", () => FlushBuilt());
+            Safe.Run("water watch", () => WaterWatch.Tick());
+            Safe.Run("other kingdoms", () => OtherKingdoms.Tick());
+            Safe.Run("ship watch", () => ShipWatch.Tick());
+            Safe.Run("fire watch", () => FireWatch.Tick());
+            Safe.Run("pile watch", () => PileWatch.Tick());
+            Safe.Run("mission watch", () => MissionWatch.Tick());
+            Safe.Run("season and speed", () => TrackSeasonAndSpeed());
+        }
+
+        private static void TrackSeasonAndSpeed()
+        {
             if (Weather.inst != null)
             {
                 var s = Weather.inst.season;
@@ -104,7 +110,8 @@ namespace KCAccess.Game
                 int speed = TimeManager.inst.speedInUse;
                 if (lastSpeed >= 0 && (paused != lastPaused || speed != lastSpeed) && GameState.inst.IsPlayMode())
                 {
-                    A.Say(Status.SpeedLine());
+                    if (Patch_DialogueSubtitle.ConversationSpeaking) A.SayQueued(Status.SpeedLine());
+                    else A.Say(Status.SpeedLine());
                 }
                 lastPaused = paused;
                 lastSpeed = speed;

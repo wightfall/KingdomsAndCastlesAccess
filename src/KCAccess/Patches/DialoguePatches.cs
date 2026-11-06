@@ -8,13 +8,20 @@ namespace KCAccess
 {
     /// <summary>
     /// Diplomacy and story conversations use the PixelCrushers Dialogue System. Speak every line as it is shown
-    /// and the number of replies, then put the keyboard on the first reply button.
+    /// and the number of replies, then put the keyboard on the Continue button or the first reply, and say it.
     /// </summary>
     [HarmonyPatch(typeof(StandardUISubtitlePanel), nameof(StandardUISubtitlePanel.ShowSubtitle))]
     internal static class Patch_DialogueSubtitle
     {
         internal static string LastLine;
         private static float lastLineAt = -10f;
+
+        /// <summary>
+        /// A conversation is speaking. A window that opens with its first line (an envoy's message) announces itself and
+        /// pauses the game a moment later, on a slow computer seconds later, and what they say must wait or the line is cut
+        /// off unheard.
+        /// </summary>
+        internal static bool ConversationSpeaking => Time.unscaledTime - lastLineAt < 1.5f || DialogueManager.isConversationActive;
 
         private static void Postfix(Subtitle subtitle)
         {
@@ -36,7 +43,7 @@ namespace KCAccess
                 bool generic = string.IsNullOrEmpty(speaker) || speaker == "NPC" || speaker == "Player";
                 A.Say(isPlayer || generic ? text : TextUtil.Join(": ", speaker, text), KCAccess.Core.Priority.High, force: true);
                 // Put the keyboard on the Continue button so Enter moves the conversation on.
-                AccessController.Inst?.Nav.RequestFocus(go => go.name.IndexOf("Continue", StringComparison.OrdinalIgnoreCase) >= 0 && go.GetComponent<UnityEngine.UI.Button>() != null);
+                AccessController.Inst?.Nav.RequestFocus(go => go.name.IndexOf("Continue", StringComparison.OrdinalIgnoreCase) >= 0 && go.GetComponent<UnityEngine.UI.Button>() != null, speak: true);
             }
             catch (Exception e)
             {
@@ -56,7 +63,7 @@ namespace KCAccess
                 int enabled = 0;
                 foreach (var r in responses) if (r != null && r.enabled) enabled++;
                 A.SayQueued(Loc.P(enabled, "{0} reply", "{0} replies") + ". " + Loc.T("Up and Down choose, Enter answers."));
-                AccessController.Inst?.Nav.RequestFocus(go => go.GetComponent<StandardUIResponseButton>() != null);
+                AccessController.Inst?.Nav.RequestFocus(go => go.GetComponent<StandardUIResponseButton>() != null, speak: true);
             }
             catch (Exception e)
             {

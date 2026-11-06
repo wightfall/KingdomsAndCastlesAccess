@@ -99,6 +99,19 @@ namespace KCAccess.Tests
         }
 
         [Fact]
+        public void Join_DropsTheFullStopBeforeAComma()
+        {
+            Assert.Equal("Bath House, Not connected to a Noria, 0 houses in reach.", TextUtil.Join(", ", "Bath House", "Not connected to a Noria.", "0 houses in reach."));
+            Assert.Equal("One. Two.", TextUtil.Join(" ", "One.", "Two."));
+        }
+
+        [Fact]
+        public void Clean_HasNoSpaceBeforeACommaAfterAnIcon()
+        {
+            Assert.Equal("5 per 1 food, 1 charcoal", TextUtil.Clean("5 per 1 <sprite name=icon_food>, 1 <sprite name=icon_charcoal>"));
+        }
+
+        [Fact]
         public void Sentences_AddsPeriodsOnlyWhenMissing()
         {
             Assert.Equal("Title. Body text! Last", TextUtil.Sentences("Title", "Body text!", "", "Last"));

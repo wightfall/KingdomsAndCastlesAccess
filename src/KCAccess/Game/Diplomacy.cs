@@ -210,7 +210,7 @@ namespace KCAccess.Game
             A.Cue(Cue.Open);
             A.Say(Loc.T("Price editor: what they pay for each of your resources. Up and Down choose a resource, Left and Right change its price; lower prices please them, higher ones annoy them. Then choose Propose prices."), force: true);
             var first = editor.GetComponentInChildren<Slider>();
-            if (first != null && AccessController.Inst != null) AccessController.Inst.Nav.RequestFocus(g => g == first.gameObject);
+            if (first != null && AccessController.Inst != null) AccessController.Inst.Nav.RequestFocus(g => g == first.gameObject, speak: true);
         }
     }
 
@@ -251,7 +251,7 @@ namespace KCAccess.Game
             A.Cue(Cue.Open);
             A.Say(Loc.T("Feast: choose the food to serve. Their favourite food pleases them most."), force: true);
             var first = __instance.feastMenu.GetComponentInChildren<Button>();
-            if (first != null && AccessController.Inst != null) AccessController.Inst.Nav.RequestFocus(g => g == first.gameObject);
+            if (first != null && AccessController.Inst != null) AccessController.Inst.Nav.RequestFocus(g => g == first.gameObject, speak: true);
         }
     }
 

@@ -32,10 +32,12 @@ namespace KCAccess
         {
             if (!parts.TryGetValue(name, out var state)) parts[name] = state = new Part();
             if (state.Failures > 0 && Time.unscaledTime < state.RestUntil) return false;
+            long started = measureUntil > 0f ? Stopwatch.GetTimestamp() : 0L;
             try
             {
                 part();
                 state.Failures = 0;
+                if (started != 0L) Add(name, Stopwatch.GetTimestamp() - started);
                 return true;
             }
             catch (Exception e)
@@ -46,6 +48,36 @@ namespace KCAccess
                 if (state.Failures >= FailuresToTell) Tell();
                 return false;
             }
+        }
+
+        private static float measureUntil;
+        private static int measuredFrom;
+        private static readonly Dictionary<string, long> measured = new Dictionary<string, long>();
+
+        private static void Add(string name, long ticks)
+        {
+            measured.TryGetValue(name, out long sum);
+            measured[name] = sum + ticks;
+        }
+
+        /// <summary>Developer test (debug command timing): how long each part takes per frame.</summary>
+        internal static void Measure(float seconds)
+        {
+            measured.Clear();
+            measuredFrom = Time.frameCount;
+            measureUntil = Time.unscaledTime + seconds;
+            Plugin.Log.LogInfo("[dbg] timing for " + seconds + " s");
+        }
+
+        /// <summary>Called once a frame while debug commands are on.</summary>
+        internal static void MeasureTick()
+        {
+            if (measureUntil <= 0f || Time.unscaledTime < measureUntil) return;
+            measureUntil = 0f;
+            int frames = Math.Max(1, Time.frameCount - measuredFrom);
+            Plugin.Log.LogInfo("[dbg] timing: " + frames + " frames");
+            foreach (var part in measured.OrderByDescending(p => p.Value))
+                Plugin.Log.LogInfo("[dbg] timing " + part.Key + ": " + (part.Value * 1000.0 / Stopwatch.Frequency / frames).ToString("0.00") + " ms per frame");
         }
 
         /// <summary>The part fails again and again.</summary>

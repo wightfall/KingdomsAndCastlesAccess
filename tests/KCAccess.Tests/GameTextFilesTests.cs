@@ -15,6 +15,31 @@ namespace KCAccess.Tests
             new GameTerm { Term = "Cost", English = "Costs {0} gold <sprite name=icon_gold>" },
         };
 
+        /// <summary>
+        /// Fails when a game update brought a text Thai does not have. The template comes from the installed game, written
+        /// by the mod at its last start. Names, fonts, thanks and bare numbers stay as they are on purpose.
+        /// </summary>
+        [Fact]
+        public void ThaiHasEveryTextOfTheGame()
+        {
+            string game = Path.Combine(System.Environment.GetEnvironmentVariable("ProgramFiles(x86)") ?? "", "Steam", "steamapps", "common", "Kingdoms and Castles",
+                "BepInEx", "plugins", "KCAccess", "Languages", "game", "template.txt");
+            if (!File.Exists(game)) return;
+            string thai = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(ThisFile()), "..", "..", "src", "KCAccess", "Languages", "game", "th.txt"));
+            var template = LocTable.Parse(File.ReadAllText(game));
+            var shipped = LocTable.Parse(File.ReadAllText(thai));
+            var missing = new List<string>();
+            foreach (string term in template.Keys)
+            {
+                if (term.StartsWith("AVoteOption") || term.StartsWith("CityNamePreset") || term.Contains(" SDF") || term.StartsWith("Fundamental Brigade")
+                    || term.StartsWith("Dialogue System/") || term == "SSAO" || term == "kclogo" || term == "GameTitle" || term == "FigThanks" || term.Contains(" and ")) continue;
+                if (string.IsNullOrEmpty(shipped.Raw(term))) missing.Add(term);
+            }
+            Assert.True(missing.Count == 0, string.Join(", ", missing));
+        }
+
+        private static string ThisFile([System.Runtime.CompilerServices.CallerFilePath] string here = "") => here;
+
         [Fact]
         public void TemplateListsEveryTermWithItsEnglish()
         {

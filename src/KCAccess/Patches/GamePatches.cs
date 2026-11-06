@@ -254,6 +254,12 @@ namespace KCAccess
 
 namespace KCAccess
 {
+    [HarmonyPatch(typeof(Assets.Code.UI.Confirmation), nameof(Assets.Code.UI.Confirmation.ShowConfirmation))]
+    internal static class Patch_ConfirmationShown
+    {
+        private static void Postfix(Assets.Code.UI.Confirmation __instance) => Game.GameScreens.ConfirmationShown(__instance);
+    }
+
     /// <summary>Demolishing (Delete key, the panel's Demolish button, demolish mode) happened silently.</summary>
     [HarmonyPatch(typeof(World), nameof(World.DemolishBuildingByPlayer))]
     internal static class Patch_Demolish
@@ -686,7 +692,7 @@ namespace KCAccess
         /// The achievement's name: the mod's translation, else Steam's name for it (in the Steam language), else the
         /// English name. The game's ids ("first_humblekingdom") were spoken as they are.
         /// </summary>
-        private static string NameOf(string id)
+        internal static string NameOf(string id)
         {
             Names.TryGetValue(id, out var english);
             var table = KCAccess.Core.Loc.Table;
@@ -898,7 +904,7 @@ namespace KCAccess
                 var first = container != null ? container.GetComponentInChildren<TMPro.TMP_InputField>() : null;
                 if (first == null || AccessController.Inst == null) return;
                 A.Say(KCAccess.Core.Loc.T("Gift: type an amount for each resource, then Make Gift."), force: true);
-                AccessController.Inst.Nav.RequestFocus(g => g == first.gameObject);
+                AccessController.Inst.Nav.RequestFocus(g => g == first.gameObject, speak: true);
             }
             catch
             {

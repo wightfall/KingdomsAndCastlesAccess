@@ -48,11 +48,36 @@ namespace KCAccess.Game
             if (Is(ui.researchUI, out s, "Research", Loc.T("Research"))) return s;
             if (ui.generalLargeUI != null && Is(ui.generalLargeUI, out s, "General", Loc.T("General"))) return s;
             // Confirmations shown on top of anything in play mode.
-            foreach (var c in Object.FindObjectsOfType<Assets.Code.UI.Confirmation>())
+            foreach (var c in Confirmations())
             {
-                if (UIText.IsVisible(c.gameObject)) return new ScreenInfo { Id = "Confirm", Title = ScreenDetector.ConfirmTitle(c), Root = c.transform, Modal = true };
+                if (c != null && UIText.IsVisible(c.gameObject)) return new ScreenInfo { Id = "Confirm", Title = ScreenDetector.ConfirmTitle(c), Root = c.transform, Modal = true };
             }
             return null;
+        }
+
+        private static Assets.Code.UI.Confirmation[] confirmations;
+        private static float confirmationsChecked = float.MinValue;
+
+        /// <summary>
+        /// The game's confirmation windows, shown or hidden. They are a dozen objects that stay in the scene. Searching all
+        /// the game's objects for them 10 times a second took a third of the frame time on a large map on a slow PC.
+        /// </summary>
+        private static Assets.Code.UI.Confirmation[] Confirmations()
+        {
+            bool gone = confirmations == null || Time.unscaledTime - confirmationsChecked > 30f;
+            for (int i = 0; !gone && i < confirmations.Length; i++) gone = confirmations[i] == null; // a new game replaced them
+            if (gone)
+            {
+                confirmations = Resources.FindObjectsOfTypeAll<Assets.Code.UI.Confirmation>();
+                confirmationsChecked = Time.unscaledTime;
+            }
+            return confirmations;
+        }
+
+        /// <summary>A window that was made after the last search is found as soon as it is shown, not 30 seconds later.</summary>
+        internal static void ConfirmationShown(Assets.Code.UI.Confirmation shown)
+        {
+            if (confirmations != null && System.Array.IndexOf(confirmations, shown) < 0) confirmations = null;
         }
 
         private static bool Is(Component c, out ScreenInfo info, string id, string title)

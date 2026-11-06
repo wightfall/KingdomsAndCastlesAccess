@@ -146,6 +146,11 @@ Status legend: `[x]` done and verified in the running game · `[~]` implemented,
 - Fire risk bar read as "Low High" → reads the risk level; advisor portraits' captions and duplicate resident names removed; camera-only "find villagers" glass hidden.
 - Saving from the save screen is confirmed ("Game saved"); F5 no longer repeats a tooltip equal to the label.
 - Game text bug: some strings show "<!-Missing Translation [text]-!>" (e.g. the demolish warning) → the marker is removed before speaking.
+- Lists that open after instructions (conversation replies, the Continue button, price editor, feast menu, gift amounts) landed on their first item in silence: Down skipped it, Enter chose it unheard → `RequestFocus(speak: true)` says the item on arrival.
+- An envoy's first line was cut off: the window opens with it, so "paused" and the window's announcement (both interrupting speech) came a frame later. The speech log hides this, as it lists what was cut off too → `Patch_DialogueSubtitle.ConversationSpeaking` makes both wait.
+- Game sentences joined with commas read "Not connected to a Noria., 0 houses", icons before a comma "1 food , 1 charcoal" → `TextUtil.Join` and `Clean` tidy both.
+- Screen detection searched every object of the game each frame for a confirmation window (55–60 ms a frame on an Extra Large map) → the list is cached, refreshed every 30 s and when a new game replaced it.
+- All event watchers ran as one part, so one failure silenced the others → each runs on its own (`Safe.Run`).
 
 ## Game update of 6 November 2026 (game 124r2s, v1.28.0)
 - [x] Cause of the silence: `ArrayExt.Count` became a property, so nearly every compiled method of 1.27.0 failed with MissingFieldException; the first one in `EnsureTick` stopped the whole frame.
@@ -154,6 +159,7 @@ Status legend: `[x]` done and verified in the running game · `[~]` implemented,
 - [x] Self-repair (`SelfRepair`, `Compat`), parts isolated (`Safe`), hooks guarded (`PatchGuard`), plain screen reader for unknown windows (`GenericScreen`). Proven in the game: the real 1.27.0 dll repaired loads a save and reads tiles, damaged builds start with speech, with the game's state gone menus are still read.
 - [x] Found by that test: a copy loaded from memory lost prism.dll (no folder to look in), so the copy names native libraries by full path.
 - [x] Removed the patch for the End key: the game deleted that developer test itself.
+- [x] v1.28.1, tested on the new game in play: every building (`audit.sh`, 95 names in two passes; a building forced where the game refuses it breaks the game's own construction list, so `devbuild outpost any` and a second keep spoil the world), Extra Large maps with save and load, diplomacy, water, merchants, an exploration ship and outpost, dragon roost, research, taxes, witch, pop-up windows, colour maps, bookmarks, help, mod settings. Not reached: finished Iron Mine and Large Iron Mine (no legal spot in the test world), achievements (not unlocked: permanent on Steam).
 
 ## Notes / decisions
 - Map directions are absolute: North = +Z (top of the map), East = +X. A building's cursor tile is its south west corner.

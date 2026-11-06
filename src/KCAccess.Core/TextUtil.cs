@@ -33,7 +33,7 @@ namespace KCAccess.Core
             s = s.Replace("\\n", "\n");
             s = Newlines.Replace(s.Trim(), ". ");
             s = Spaces.Replace(s, " ");
-            s = s.Replace(" .", ".");
+            s = s.Replace(" .", ".").Replace(" ,", ",");
             s = RepeatedStops.Replace(s, ".");
             s = s.Replace(":.", ":").Replace("!.", "!").Replace("?.", "?").Replace(",.", ",");
             s = Spaces.Replace(s, " ");
@@ -62,15 +62,23 @@ namespace KCAccess.Core
             return Loc.T(n.Replace('_', ' ')); // most are resource names ("wood", "stone") that have a translation
         }
 
-        /// <summary>Joins non-empty cleaned parts with the given separator.</summary>
+        /// <summary>
+        /// Joins non-empty cleaned parts with the given separator. A part can be a whole sentence of the game, and its full
+        /// stop has no place before a comma ("Not connected to a Noria., 0 houses in reach").
+        /// </summary>
         public static string Join(string separator, IEnumerable<string> parts)
         {
+            bool commas = separator.StartsWith(",", System.StringComparison.Ordinal);
             var sb = new StringBuilder();
             foreach (var p in parts)
             {
                 var c = Clean(p);
                 if (c.Length == 0) continue;
-                if (sb.Length > 0) sb.Append(separator);
+                if (sb.Length > 0)
+                {
+                    if (commas && sb[sb.Length - 1] == '.') sb.Length--;
+                    sb.Append(separator);
+                }
                 sb.Append(c);
             }
             return sb.ToString();
