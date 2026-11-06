@@ -105,7 +105,7 @@ namespace KCAccess.Game
             World.inst.ForEachTileTouchingRadius(b.Center(), forester.Radius, (x, z, c) =>
             {
                 if (c == null) return;
-                if (c.TreeAmount > 0) trees++;
+                if (c.Trees() > 0) trees++;
                 else if (TreeGrowth.IsValidForTreePlanting(c)) open++;
             });
             return Loc.P(trees, "{0} tile with trees in reach", "{0} tiles with trees in reach") + ", " + Loc.P(open, "{0} open tile to plant", "{0} open tiles to plant");

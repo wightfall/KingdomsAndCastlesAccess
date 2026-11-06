@@ -35,6 +35,10 @@ SAPI and other screen readers automatically.
   diplomacy dialogue) can be translated for languages the game lacks: **Thai** is shipped complete, see
   [Translating the game's own texts](#translating-the-games-own-texts).
 * Procedurally generated sound cues (no audio files needed), each with its own volume in the mod settings.
+* **A game update does not lock you out:** the mod checks itself against the game when it starts, repairs itself
+  for the new version and tells you what is limited, see [When the game updates](#when-the-game-updates).
+
+Tested with game version **124r2s** (Steam build 26392486, 6 November 2026).
 
 ## Installation
 
@@ -396,7 +400,8 @@ coloured markers. With the mod:
 A **Noria** (water wheel, build menu Food, on a river bank with its wheel in fresh water) pumps water once all
 its workers are there. **Aqueduct** pieces carry it to **reservoirs** (they irrigate the land around them),
 the **Bath House** and the dragon bath. Pieces only link when they touch side by side, not corner to corner,
-and every piece weakens the water, so a long chain may need a second water wheel. A **Dragon Roost** is part of
+and every piece weakens the water: the water stops at the piece where it runs out, and every piece after that stays
+dry, so a long chain may need a second water wheel. A **Dragon Roost** is part of
 the chain too: a pipe beside one is fed through it. **Fountains** work only on
 land a reservoir with water irrigates. The game shows all this as pipes and water only; the mod says it:
 
@@ -410,7 +415,8 @@ land a reservoir with water irrigates. The game shows all this as pipes and wate
   is too weak to reach it. Connect another water wheel or shorten the pipes", or "… is not connected to a water
   wheel". A line of pieces finishing together is said once ("Aqueduct: 4 of 6 pieces have water").
 * A selected water building or fountain reads the game's red problem line (not connected, water too weak, land
-  must be irrigated) like any other building.
+  must be irrigated) like any other building. Since the game's November 2026 update the game calls everything its
+  water does not reach "not connected", so for pieces that are linked the mod puts the true reason in that line.
 
 ### Islands, exploration ships and settlers
 
@@ -506,7 +512,7 @@ tile and what blocks the others, and repeats the nearest spot.
    banner 6), PNG files in the custom banner folder follow ("Open custom banner folder"),
    and a custom banner gets a kingdom colour ("Kingdom colour 4 of 6, green"); Enter says what is selected, Accept
    returns (Upload to Workshop opens its own window; Escape cancels it) → Accept.
-3. Map setup: size, type and rivers; New Map generates another map. **Ctrl+M** lets you explore the
+3. Map setup: size (small, medium, large, extra large or random), type and rivers; New Map generates another map. **Ctrl+M** lets you explore the
    generated map with the arrow keys and the scanner before you start; Ctrl+M again returns. AI kingdoms
    (optional, maps with several islands): Add AI kingdom, then on its name **I** / **Shift+I** choose the island it
    starts on ("Halsbeck starts on an island of 3265 tiles in the north of the map, around 52, 110"); by default
@@ -764,14 +770,35 @@ Every sound can be previewed: Shift+F1, End, then Up through the sounds and pres
   Ctrl+key also triggered the plain key's action. Modifiers are now checked as held.
 * **Ctrl+C silently switched the game into creative mode** during normal play (a developer shortcut
   outside the cheat check). It now only works when cheats are enabled.
-* **Holding End made every AI kingdom plan a farm at your cursor.** A developer test left in the AI's
-  update adds a "build a farm at the pointer" job each frame End is held; End is the mod's "jump to the
-  selected building" key. That test job now ends at once without doing anything.
 * **No mod of the game loaded with BepInEx installed**, neither local mods nor Steam Workshop subscriptions. The
   game compiles mods against its own `0Harmony.dll` by path and against "0Harmony.dll" by name, which then means
   BepInEx's Harmony: a second assembly called 0Harmony, so the compiler refused every mod (and the game's loader
   crashed while logging the error, which has no source file, so `mods\log.txt` only said "Object reference not set
   to an instance of an object"). The name-only reference is now dropped when the same file is referenced by its path.
+
+## When the game updates
+
+A Steam update can rename or change what the mod reads from the game. Version 1.27.0 fell silent that way on 6
+November 2026, and that must not happen again, so since 1.28.0:
+
+* **At every start the mod compares itself with the game.** On the game version a release was tested with, it
+  does nothing and you hear nothing extra. On any other version it checks everything it uses from the game, in about
+  a second, and repairs a copy of itself in memory: what moved is used in its new place, what is gone reads as
+  zero or nothing, so one lost fact costs that fact and not the whole feature. Nothing on disk changes.
+* **You are told, once it is said where you are:** "Kingdoms and Castles was updated after this version of KCAccess
+  came out", then how many things are not available until KCAccess is updated, and how to look for a new version
+  (`KCAccess-Updater.exe` in the game folder). If nothing is lost you hear this once for that game version; if
+  something is lost, at every start.
+* **One failing part cannot stop the rest.** Speech, the keyboard, menus and the map each run on their own: a part
+  that fails is logged, rests for a moment and is tried again, and you hear "Part of KCAccess stopped working" once.
+  A list that stops answering closes rather than holding the keyboard, and the keyboard goes back to the game.
+* **The mod's hooks cannot break the game.** An error in a hook is kept away from the game's own code.
+* **If the game's screens can no longer be told apart,** whatever window shows buttons is read as a plain list
+  ("Menu"), with the arrow keys, Enter and F1, so you can still reach Load, Settings and Quit.
+
+This keeps you playing; it does not replace an update: new game features are only read properly after one, and the
+repair cannot see a change of meaning, only of names. Details are in `BepInEx\LogOutput.log`, in the lines
+starting with `[compat]`: please attach it to a bug report after a game update.
 
 ## Troubleshooting
 
@@ -823,10 +850,14 @@ If the game is not installed in the default Steam folder pass `-p:GameDir="D:\pa
 Project layout:
 
 * `src/KCAccess.Core` – game-independent logic (text cleaning, navigation lists, grid cursor and
-  directions, sound synthesis, help texts, notification log …), fully unit tested.
+  directions, sound synthesis, help texts, notification log, self-repair …), fully unit tested.
 * `src/KCAccess` – the BepInEx plugin: Prism speech, UI navigator, screen detection, map controller,
   build menu, Harmony patches.
-* `tests/KCAccess.Tests` – xUnit tests for the Core library.
+* `tests/KCAccess.Tests` – xUnit tests for the Core library. `SelfRepairTests` compiles a small game twice and a
+  mod against the first version, repairs the mod for the second and runs it. Three tests guard a release against the
+  installed game: `ReleaseIsTestedOnTheInstalledGame` (when the game updates, test it, then set
+  `CompatState.TestedGameBuild` to the new `Assembly-CSharp.dll` module id), `ReleaseFitsTheGame` and
+  `EveryHookFindsItsGameMethod`.
 * `PLAN.md` – the implementation plan and progress tracker.
 
 Developer helpers: with `[Debug] CommandFile = true` in the config the mod reads test commands from
@@ -848,7 +879,8 @@ controls), `thieves sink`, `findmethod <name>` (buttons calling a game method), 
 for example `pile Tree 12`), `hurt <percent> [all]` (health of the units on the cursor tile, or of all units),
 `around [radius]` (a text map of the tiles around the cursor), `watchlooks <seconds>` (logs every change of what
 the map shows of the building at the cursor), and `audit` (in a panel opened with F6: logs every
-visible text and tooltip line that no item of the panel says).
+visible text and tooltip line that no item of the panel says), and `hooktest` (a hook that fails stays away from the
+game, an error of the game's own passes through).
 
 ## License
 

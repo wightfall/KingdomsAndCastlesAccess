@@ -670,7 +670,7 @@ namespace KCAccess.Game
                 // The game's chop shortcut works on the selected tile and stays silent when it cannot.
                 var sel = ui.GetCellSelected();
                 if (sel == null) A.Say(KeyHelp.Resolve(Loc.T("Select a forest tile with Enter first, then press C. For a large area use chop trees mode, {ChopMode}.")));
-                else if (sel.TreeAmount == 0) A.Say(Loc.T("No trees on the selected tile"));
+                else if (sel.Trees() == 0) A.Say(Loc.T("No trees on the selected tile"));
             }
             if (KInput.Pressed("BuildMenu"))
             {
@@ -892,7 +892,7 @@ namespace KCAccess.Game
                     for (int x = minX; x < maxX; x++)
                     {
                         var c = World.inst.GetCellData(x, z);
-                        if (c != null && c.TreeAmount > 0) trees++;
+                        if (c != null && c.Trees() > 0) trees++;
                     }
                 A.Say(trees == 0 ? Loc.F("No trees in this {0} area", size)
                     : mode is ChopCursorMode ? Loc.P(trees, "{0} tile of trees marked for chopping in {1}", "{0} tiles of trees marked for chopping in {1}", size)
@@ -1212,7 +1212,7 @@ namespace KCAccess.Game
                 if (problems.Count >= 3 || c == null) return;
                 string what = null;
                 if (c.Type != ResourceType.None) what = CellInfo.Terrain(c);
-                else if (c.TreeAmount > 0) what = Loc.T("trees");
+                else if (c.Trees() > 0) what = Loc.T("trees");
                 else if (TreeSystem.inst != null && TreeSystem.inst.AnimCount(c) > 0) what = Loc.T("a tree growing or being felled");
                 else if (c.OccupyingStructure.Count > 0 && c.TopMostStructure != null) what = c.TopMostStructure.FriendlyName;
                 if (what == null) return;
@@ -1247,7 +1247,7 @@ namespace KCAccess.Game
                             for (int fz = 0; fz < sz && ok; fz++)
                             {
                                 var f = w.GetCellData(c.x + fx, c.z + fz);
-                                ok = f != null && f.Type == ResourceType.None && f.TreeAmount <= 0 && f.OccupyingStructure.Count == 0
+                                ok = f != null && f.Type == ResourceType.None && f.Trees() <= 0 && f.OccupyingStructure.Count == 0
                                     && (path ? f.RoadConnectCoverage > 0 : f.RoadCoverage > 0);
                             }
                         if (!ok) continue;
@@ -1336,7 +1336,7 @@ namespace KCAccess.Game
                 if (problems.Count >= 3 || c == null || c == mid) return;
                 string what = null;
                 if (c.Type != ResourceType.None) what = CellInfo.Terrain(c);
-                else if (c.TreeAmount > 0) what = Loc.T("trees");
+                else if (c.Trees() > 0) what = Loc.T("trees");
                 else if (TreeSystem.inst != null && TreeSystem.inst.AnimCount(c) > 0) what = Loc.T("a tree growing or being felled");
                 else if (!LargeMineMayCover(c, deposit) && c.TopMostStructure != null) what = c.TopMostStructure.FriendlyName;
                 if (what != null) problems.Add(what + " " + Directions.Offset(x - origin.X, z - origin.Z));
@@ -1396,7 +1396,7 @@ namespace KCAccess.Game
                         for (int dx = -half; dx <= half && fits; dx++)
                         {
                             var c = w.GetCellData(mx + dx, mz + dz);
-                            fits = c != null && (c == mid || c.Type == ResourceType.None) && c.TreeAmount <= 0 && !c.wolfTerritory
+                            fits = c != null && (c == mid || c.Type == ResourceType.None) && c.Trees() <= 0 && !c.wolfTerritory
                                 && (TreeSystem.inst == null || TreeSystem.inst.AnimCount(c) == 0) && LargeMineMayCover(c, deposit);
                             inCoverage &= c != null && c.RoadCoverage > 0;
                         }
@@ -1432,7 +1432,7 @@ namespace KCAccess.Game
             {
                 var c = w.GetCellData(x, z);
                 if (c == null || c.Type != ResourceType.None || c.landMassIdx < 0 || World.GetLandmassOwner(c.landMassIdx) != null) return false;
-                if (c.OccupyingStructure.Count > 0 || c.TreeAmount > 0) return false;
+                if (c.OccupyingStructure.Count > 0 || c.Trees() > 0) return false;
                 float dx = x + 0.5f - sp.x, dz = z + 0.5f - sp.z;
                 return dx * dx + dz * dz <= r * r;
             }

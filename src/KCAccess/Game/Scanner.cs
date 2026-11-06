@@ -249,11 +249,11 @@ namespace KCAccess.Game
                     break;
                 case "Fertile land":
                     // Open fertile ground where farms can go (no trees, rock, water or buildings).
-                    AddClusters(found, c => c.Type == ResourceType.None && c.TreeAmount == 0 && c.OccupyingStructure.Count == 0 && c.GetEffectiveFertility() >= 1 && CellInfo.Explored(c),
+                    AddClusters(found, c => c.Type == ResourceType.None && c.Trees() == 0 && c.OccupyingStructure.Count == 0 && c.GetEffectiveFertility() >= 1 && CellInfo.Explored(c),
                         n => Loc.T("open fertile land") + ", " + Loc.P(n, "{0} tile", "{0} tiles"), minSize: 4);
                     break;
                 case "Forests":
-                    AddClusters(found, c => c.TreeAmount > 0 && c.OccupyingStructure.Count == 0 && CellInfo.Explored(c), n => Loc.T("forest") + ", " + Loc.P(n, "{0} tile", "{0} tiles"), minSize: 3);
+                    AddClusters(found, c => c.Trees() > 0 && c.OccupyingStructure.Count == 0 && CellInfo.Explored(c), n => Loc.T("forest") + ", " + Loc.P(n, "{0} tile", "{0} tiles"), minSize: 3);
                     break;
                 case "Fresh water":
                     AddClusters(found, c => c.Type == ResourceType.Water && !c.saltWater && CellInfo.Explored(c), n => Loc.T("fresh water") + ", " + Loc.P(n, "{0} tile", "{0} tiles"));

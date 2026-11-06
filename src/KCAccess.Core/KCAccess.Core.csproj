@@ -8,4 +8,9 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Self-repair reads and rewrites the mod's own code. BepInEx brings these along, so nothing new is deployed. -->
+    <Reference Include="Mono.Cecil"><HintPath>$(BepInExDir)\core\Mono.Cecil.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Mono.Cecil.Rocks"><HintPath>$(BepInExDir)\core\Mono.Cecil.Rocks.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
 </Project>

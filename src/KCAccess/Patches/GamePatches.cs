@@ -138,7 +138,7 @@ namespace KCAccess
         private static void Prefix(TileInfoUI __instance, out int __state)
         {
             var c = GameUI.inst != null ? GameUI.inst.GetCellSelected() : null;
-            if (c == null || c.TreeAmount == 0) { __state = 0; return; }
+            if (c == null || c.Trees() == 0) { __state = 0; return; }
             __instance.UpdateChopStatus();
             __state = __instance.clearCutter == null ? 1 : 2;
         }
@@ -638,6 +638,24 @@ namespace KCAccess
 
 namespace KCAccess
 {
+    /// <summary>See WaterWatch.LinkedButDry. The panel's red line shows this text too, and only the panels read it.</summary>
+    [HarmonyPatch]
+    internal static class Patch_WaterProblemLine
+    {
+        private static IEnumerable<System.Reflection.MethodBase> TargetMethods()
+        {
+            yield return AccessTools.Method(typeof(Aqueduct), nameof(Aqueduct.GetError));
+            yield return AccessTools.Method(typeof(Reservoir), nameof(Reservoir.GetError));
+            yield return AccessTools.Method(typeof(Bathhouse), "IOutputInfo.GetError");
+            yield return AccessTools.Method(typeof(DragonBath), "IOutputInfo.GetError");
+        }
+
+        private static void Postfix(MonoBehaviour __instance, ref string __result)
+        {
+            __result = Game.WaterWatch.LinkedButDry(__instance) ?? __result;
+        }
+    }
+
     /// <summary>Steam shows unlocked achievements as a picture pop-up; say it when one is newly unlocked.</summary>
     [HarmonyPatch(typeof(Assets.Achievements), "Try")]
     internal static class Patch_Achievement

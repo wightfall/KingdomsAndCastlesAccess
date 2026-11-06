@@ -196,7 +196,7 @@ namespace KCAccess.Game
             if (GameState.inst != null && GameState.inst.IsPlayMode())
             {
                 var pc = World.inst.GetPathCell(c);
-                return pc != null && PathCell.GetFootPathCost(pc, 0) < BlockedCost;
+                return pc != null && PathCell.GetFootPathCost(pc, 0, c.landMassIdx) < BlockedCost;
             }
             if (c.Type == ResourceType.Water && c.deepWater) return false;
             if (c.Type == ResourceType.Stone || c.Type == ResourceType.UnusableStone || c.Type == ResourceType.IronDeposit) return false;
@@ -209,9 +209,9 @@ namespace KCAccess.Game
             if (GameState.inst != null && GameState.inst.IsPlayMode())
             {
                 var pc = World.inst.GetPathCell(c);
-                return pc != null ? System.Math.Max(1, PathCell.GetFootPathCost(pc, 0)) : 1;
+                return pc != null ? System.Math.Max(1, PathCell.GetFootPathCost(pc, 0, c.landMassIdx)) : 1;
             }
-            return c.TreeAmount > 0 ? 2 : 1;
+            return c.Trees() > 0 ? 2 : 1;
         }
 
         /// <summary>

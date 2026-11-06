@@ -147,6 +147,14 @@ Status legend: `[x]` done and verified in the running game · `[~]` implemented,
 - Saving from the save screen is confirmed ("Game saved"); F5 no longer repeats a tooltip equal to the label.
 - Game text bug: some strings show "<!-Missing Translation [text]-!>" (e.g. the demolish warning) → the marker is removed before speaking.
 
+## Game update of 6 November 2026 (game 124r2s, v1.28.0)
+- [x] Cause of the silence: `ArrayExt.Count` became a property, so nearly every compiled method of 1.27.0 failed with MissingFieldException; the first one in `EnsureTick` stopped the whole frame.
+- [x] Decompiled the new game and compared it with the old one and the old UI dump. Moved to the new form: tree counts (`TreeSystem.ItemAmount`), fish (`FishCell.owners`), `GetFootPathCost`. New irrigation flood: `IsConnected` no longer means linked, the mod works that out itself.
+- [x] Screens: main menu, Mods, new game flow, map setup with Extra Large walked with `nav` and `audit`.
+- [x] Self-repair (`SelfRepair`, `Compat`), parts isolated (`Safe`), hooks guarded (`PatchGuard`), plain screen reader for unknown windows (`GenericScreen`). Proven in the game: the real 1.27.0 dll repaired loads a save and reads tiles, damaged builds start with speech, with the game's state gone menus are still read.
+- [x] Found by that test: a copy loaded from memory lost prism.dll (no folder to look in), so the copy names native libraries by full path.
+- [x] Removed the patch for the End key: the game deleted that developer test itself.
+
 ## Notes / decisions
 - Map directions are absolute: North = +Z (top of the map), East = +X. A building's cursor tile is its south west corner.
 - The camera follows the keyboard cursor so sighted helpers can see what the player is doing.

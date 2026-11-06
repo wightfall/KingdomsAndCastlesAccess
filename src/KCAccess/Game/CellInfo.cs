@@ -35,7 +35,7 @@ namespace KCAccess.Game
                     if (c.deepWater) return c.saltWater ? Loc.T("deep sea") : Loc.T("deep water");
                     return c.saltWater ? Loc.T("shallow sea") : Loc.T("shallow water");
                 case ResourceType.Wood:
-                    return c.TreeAmount > 0 ? Loc.T("forest") : Loc.T("grass");
+                    return c.Trees() > 0 ? Loc.T("forest") : Loc.T("grass");
                 case ResourceType.Stone: return Loc.T("stone deposit");
                 case ResourceType.UnusableStone: return Loc.T("rock");
                 case ResourceType.IronDeposit: return Loc.T("iron deposit");
@@ -43,7 +43,7 @@ namespace KCAccess.Game
                 case ResourceType.WolfDen: return Loc.T("wolf den");
                 case ResourceType.WitchHut: return Loc.T("witch hut");
                 default:
-                    if (c.TreeAmount > 0) return Loc.T("forest");
+                    if (c.Trees() > 0) return Loc.T("forest");
                     if (TreeSystem.inst != null && TreeSystem.inst.AnimCount(c) > 0) return Loc.T("grass, tree growing or falling");
                     return Loc.T("grass");
             }
@@ -200,7 +200,13 @@ namespace KCAccess.Game
                     // A lived-in house's panel starts with its happiness ("Happiness: 60 in home").
                     if (home.Residents.Count > 0) parts.Add(Loc.Format(I2.Loc.ScriptLocalization.HomeTitle, home.GetHappiness()));
                 }
-                if (!brief && own) parts.Add(OutputLine(b, withTitle: selected));
+                if (!brief && own)
+                {
+                    // A sentence that opens with the building's name (WaterWatch.LinkedButDry) takes the name's place.
+                    string output = OutputLine(b, withTitle: selected);
+                    if (output != null && output.StartsWith(b.FriendlyName + " ", System.StringComparison.Ordinal)) parts[0] = output;
+                    else parts.Add(output);
+                }
                 if (selected && own) parts.Add(Looks(b));
             }
             if (!brief && b.IsBuilt())
@@ -591,14 +597,14 @@ namespace KCAccess.Game
             var structures = Structures(c);
             parts.AddRange(structures);
             string terrain = Terrain(c);
-            if (c.Type == ResourceType.Wood || c.TreeAmount > 0)
+            if (c.Type == ResourceType.Wood || c.Trees() > 0)
             {
-                if (c.TreeAmount > 0) terrain = Loc.T("forest") + ", " + Loc.P(c.TreeAmount, "{0} tree", "{0} trees");
+                if (c.Trees() > 0) terrain = Loc.T("forest") + ", " + Loc.P(c.Trees(), "{0} tree", "{0} trees");
             }
             if (structures.Count == 0 || c.Type != ResourceType.None) parts.Add(terrain);
             string map = Overlays.TileText(c);
             if (map != null) parts.Add(map);
-            if (c.TreeAmount > 0 && GameUI.inst != null && GameUI.inst.GetClearCutterJob(c) != null) parts.Add(Loc.T("marked for chopping"));
+            if (c.Trees() > 0 && GameUI.inst != null && GameUI.inst.GetClearCutterJob(c) != null) parts.Add(Loc.T("marked for chopping"));
             if (verbose && !IsWater(c) && c.Type == ResourceType.None) parts.Add(Fertility(c)); // soil only matters on open ground
             string piles = Piles(c);
             if (piles != null) parts.Add(piles);
@@ -715,7 +721,7 @@ namespace KCAccess.Game
                 var fc = FishSystem.inst != null ? FishSystem.inst.fishCells : null;
                 if (c == null || fc == null || !IsWater(c)) return 0; // fish swim over the shoreline; only water tiles count
                 int i = c.z * World.inst.GridWidth + c.x;
-                return i >= 0 && i < fc.Length && fc[i] != null ? fc[i].fish.Count : 0;
+                return i >= 0 && i < fc.Length && fc[i] != null ? fc[i].owners.Count : 0;
             }
             catch (System.Exception)
             {
@@ -767,9 +773,9 @@ namespace KCAccess.Game
                     else if (c.Type == ResourceType.IronDeposit) s.Iron++;
                     int fert = c.GetEffectiveFertility();
                     if (fert >= 2) s.VeryFertile++; else if (fert == 1) s.Fertile++;
-                    if (c.TreeAmount > 0) s.Forest++;
+                    if (c.Trees() > 0) s.Forest++;
                     if (c.OccupyingStructure.Count > 0) s.Buildings++;
-                    else if (c.TreeAmount == 0 && c.Type == ResourceType.None) s.Open++;
+                    else if (c.Trees() == 0 && c.Type == ResourceType.None) s.Open++;
                 }
             if (s.Stone == 0) s.NearestStone = Nearest(at, radius, c => c.Type == ResourceType.Stone);
             if (s.Iron == 0) s.NearestIron = Nearest(at, radius, c => c.Type == ResourceType.IronDeposit);

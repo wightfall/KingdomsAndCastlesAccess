@@ -122,6 +122,23 @@ namespace KCAccess.Game
             return false;
         }
 
+        /// <summary>
+        /// Whether pieces side by side link the building to any built water wheel. The game's own IsConnected no longer
+        /// says this: since the November 2026 update its flood skips wheels without all their workers and stops where
+        /// the pressure runs out, so linked pieces beyond that read as not connected.
+        /// </summary>
+        private static bool Linked(Building target)
+        {
+            var wheels = Player.inst.GetBuildingList("noria");
+            for (int i = 0; wheels != null && i < wheels.Count; i++)
+            {
+                var wheel = wheels.data[i];
+                if (wheel == null || !wheel.IsBuilt()) continue;
+                if (wheel == target || Reaches(wheel, target)) return true;
+            }
+            return false;
+        }
+
         private static bool Reaches(Building from, Building target)
         {
             var seen = new HashSet<Building> { from };
@@ -218,7 +235,7 @@ namespace KCAccess.Game
                     {
                         if (Works(b)) wet++;
                         var w = b.GetComponent<IWaterSystemUser>();
-                        if (w != null && w.IsConnected) { linked++; connected.Add(b); }
+                        if (w != null && (w.IsConnected || Linked(b))) { linked++; connected.Add(b); }
                     }
                     // Why connected pieces are dry: their own chain's wheel, or the distance.
                     bool pumping = false;
@@ -240,6 +257,18 @@ namespace KCAccess.Game
             return w != null && w.HasWater;
         }
 
+        /// <summary>
+        /// The true reason for a selected piece the game calls "Not connected to a Noria" although it is linked to one, or
+        /// null. Since the November 2026 update the game says that of everything its water does not reach.
+        /// </summary>
+        internal static string LinkedButDry(MonoBehaviour piece)
+        {
+            var w = piece as IWaterSystemUser;
+            var b = piece != null ? piece.GetComponent<Building>() : null;
+            if (w == null || b == null || w.IsConnected || !b.IsBuilt() || !Linked(b)) return null;
+            return WaterText.Built(b.FriendlyName, false, true, false, ChainPumps(b));
+        }
+
         /// <summary>Whether a water building or fountain works, or null for other buildings.</summary>
         internal static string Status(Building b)
         {
@@ -249,8 +278,9 @@ namespace KCAccess.Game
             var w = b.GetComponent<IWaterSystemUser>();
             if (w == null) return null;
             // Only looked up when it matters: connected and dry, because of its own chain's wheel or the distance.
-            bool pumping = !w.IsConnected || w.HasWater || ChainPumps(b);
-            return WaterText.Built(b.FriendlyName, IsSource(b), w.IsConnected, w.HasWater, pumping);
+            bool connected = w.IsConnected || Linked(b);
+            bool pumping = !connected || w.HasWater || ChainPumps(b);
+            return WaterText.Built(b.FriendlyName, IsSource(b), connected, w.HasWater, pumping);
         }
     }
 }

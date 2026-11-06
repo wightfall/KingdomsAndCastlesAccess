@@ -75,29 +75,33 @@ namespace KCAccess
         {
             if (tickedFrame == Time.frameCount) return;
             tickedFrame = Time.frameCount;
-            SteamOverlay.Ensure();
-            OsKeyboard.Tick(Nav.IsEditing || SteamOverlay.Active);
-            if (!SteamOverlay.Active && !Nav.IsEditing) ControllerInput.Tick(OnMapForPad);
-            KInput.BeginFrame();
-            Diagnostics.PollCommands();
-            if (Plugin.CfgLogKeys.Value) Diagnostics.LogKeys();
-            try
+            // Each part on its own: a part the game no longer fits must not take speech and the keyboard down with it. The
+            // lambdas stay free of captures so this allocates nothing, and a method that no longer loads fails inside Run.
+            Safe.Run("steam overlay", () => SteamOverlay.Ensure());
+            Safe.Run("windows keys", () => OsKeyboard.Tick(Inst.Nav.IsEditing || OverlayOpen));
+            Safe.Run("controller", () => { if (!OverlayOpen && !Inst.Nav.IsEditing) ControllerInput.Tick(Inst.OnMapForPad); });
+            Safe.Run("keys", () => KInput.BeginFrame());
+            if (Plugin.CfgDebugCommands.Value) Safe.Run("test commands", () => Diagnostics.PollCommands());
+            if (Plugin.CfgLogKeys.Value) Safe.Run("key log", () => Diagnostics.LogKeys());
+            Safe.Run("language", () => ModLanguage.Tick());
+            Safe.Run("game texts", () => GameTextTranslation.Tick());
+            // The frame failed somewhere deep: the keyboard goes back to the game rather than stay shut.
+            if (!Safe.Run("main", () => Inst.Tick())) InputGate.BlockGameKeys = false;
+        }
+
+        private static bool OverlayOpen
+        {
+            get
             {
-                ModLanguage.Tick();
-                GameTextTranslation.Tick();
-                Tick();
-            }
-            catch (Exception e)
-            {
-                Plugin.Log.LogError("KCAccess update error: " + e);
+                try { return SteamOverlay.Active; }
+                catch (Exception) { return false; }
             }
         }
 
         private void Tick()
         {
-            if (SteamOverlay.Active) return; // the Steam overlay has the keyboard; keys are not meant for the game
-            Patch_Demolish.Flush();
-            Patch_RubbleRebuild.Flush();
+            if (OverlayOpen) return; // the Steam overlay has the keyboard; keys are not meant for the game
+            Safe.Run("demolish notes", () => { Patch_Demolish.Flush(); Patch_RubbleRebuild.Flush(); });
             if (ActiveMenu is Game.ModSettingsMenu ms && ms.Capturing)
             {
                 InputGate.BlockGameKeys = true;
@@ -111,14 +115,20 @@ namespace KCAccess
                 return;
             }
             if (GlobalKeys()) return;
-            if (GameState.inst == null || World.inst == null) return;
-            KeyboardGuard.Tick(Nav, modal == null && panel == null && ActiveMenu == null);
+            if (GameState.inst == null || World.inst == null)
+            {
+                // At the very start of the game, for a moment. On a game version the mod does not know, this may instead
+                // be for good, because the game's state is no longer found: the screens are then read in the plain way.
+                if (CompatState.UntestedGame) GenericTick();
+                return;
+            }
+            Safe.Run("keyboard guard", () => KeyboardGuard.Tick(Inst.Nav, Inst.modal == null && Inst.panel == null && Inst.ActiveMenu == null));
 
             bool playing = GameState.inst.IsPlayMode();
             if (playing != wasPlaying)
             {
                 wasPlaying = playing;
-                if (playing) Game.GameEvents.OnEnterPlayMode();
+                if (playing) Safe.Run("start of game", () => Game.GameEvents.OnEnterPlayMode());
                 else
                 {
                     panel = null;
@@ -131,16 +141,16 @@ namespace KCAccess
                 // (LoadSave.OpenSaveFromRepo). Without this the mod kept the previous kingdom's state and said nothing.
                 panel = null;
                 if (ActiveMenu != null) ActiveMenu = null;
-                Game.GameEvents.OnEnterPlayMode();
+                Safe.Run("start of game", () => Game.GameEvents.OnEnterPlayMode());
             }
             if (playing)
             {
-                Game.GameEvents.Tick();
-                Game.Alerts.Tick();
-                Game.Problems.Tick();
-                Game.Twitch.Tick();
+                Safe.Run("game events", () => Game.GameEvents.Tick());
+                Safe.Run("alerts", () => Game.Alerts.Tick());
+                Safe.Run("problems", () => Game.Problems.Tick());
+                Safe.Run("twitch", () => Game.Twitch.Tick());
             }
-            Game.StreamStatusFile.Tick(playing);
+            Safe.Run("stream file", () => Game.StreamStatusFile.Tick(Inst.wasPlaying));
 
             if (ActiveMenu != null)
             {
@@ -157,14 +167,25 @@ namespace KCAccess
                     helpId = ActiveMenu.HelpId;
                     InputGate.BlockGameKeys = true;
                     InputGate.EscapePassThrough = false;
-                    ActiveMenu.HandleInput();
+                    if (!Safe.Run("menu", () => Inst.ActiveMenu.HandleInput()))
+                    {
+                        // Back to the map or the game's screen instead of a list that takes every key and answers none.
+                        ActiveMenu = null;
+                        InputGate.BlockGameKeys = false;
+                    }
                     return;
                 }
             }
             InputGate.BlockGameKeys = false;
             InputGate.EscapePassThrough = false;
 
-            DetectModal();
+            Safe.Run("screens", () => Inst.DetectModal());
+            if (Safe.Failing("screens") && CompatState.UntestedGame)
+            {
+                GenericTick();
+                return;
+            }
+            TellAboutGameUpdate();
             // Exploring the map belongs to the map setup screen only: any other screen or a confirmation on top of it
             // (back to the main menu, an error) must get the keyboard, not the map cursor.
             if (!playing && Game.MapController.Inst.MenuMapMode && (modal == null || modal.Id != "NewMap"))
@@ -180,7 +201,7 @@ namespace KCAccess
                 if (Nav.IsEditing)
                 {
                     InputGate.BlockGameKeys = true;
-                    Nav.HandleInput();
+                    Safe.Run("text edit", () => Inst.Nav.HandleInput());
                     return;
                 }
                 if (!playing && modal.Id == "NewMap" && KInput.Down(KeyCode.M) && KInput.Ctrl && !Game.MapController.Inst.MenuMapMode)
@@ -194,7 +215,7 @@ namespace KCAccess
                 bool mapInMenu = !playing && Game.MapController.Inst.MenuMapMode;
                 if (!mapInMenu)
                 {
-                    HandleNavigatorKeys();
+                    Safe.Run("navigation", () => Inst.HandleNavigatorKeys());
                     return;
                 }
             }
@@ -207,27 +228,69 @@ namespace KCAccess
                     A.Cue(Cue.Close);
                     return;
                 }
-                UpdatePanel();
+                Safe.Run("panels", () => Inst.UpdatePanel());
                 if (panel != null)
                 {
                     helpId = "Panel";
+                    InputGate.BlockGameKeys = true;
                     if (Nav.IsEditing)
                     {
-                        InputGate.BlockGameKeys = true;
-                        Nav.HandleInput();
+                        Safe.Run("text edit", () => Inst.Nav.HandleInput());
                         return;
                     }
-                    InputGate.BlockGameKeys = true;
-                    HandleNavigatorKeys();
+                    Safe.Run("navigation", () => Inst.HandleNavigatorKeys());
                     return;
                 }
             }
 
             if (playing || Game.MapController.Inst.MenuMapMode)
             {
-                Game.MapController.Inst.Tick();
+                Safe.Run("map", () => Game.MapController.Inst.Tick());
                 helpId = Game.MapController.Inst.HelpId;
             }
+        }
+
+        private bool toldAboutGameUpdate;
+        private float genericNext;
+
+        /// <summary>Once per session, when the first screen has been said: the game is not the build this release knows.</summary>
+        private void TellAboutGameUpdate()
+        {
+            if (toldAboutGameUpdate || !CompatState.UntestedGame || (modal == null && Time.realtimeSinceStartup < 30f)) return;
+            toldAboutGameUpdate = true;
+            string notice = CompatState.Notice();
+            if (notice == null) return;
+            A.SayQueued(notice);
+            Compat.Remember();
+        }
+
+        /// <summary>
+        /// The last line of defence on a game version the mod does not know, when the game's own screens can no longer be
+        /// told apart: whatever window shows buttons is read as a plain list, so menus, loading and quitting stay reachable.
+        /// </summary>
+        private void GenericTick()
+        {
+            InputGate.BlockGameKeys = false;
+            InputGate.EscapePassThrough = false;
+            if (Time.unscaledTime >= genericNext)
+            {
+                genericNext = Time.unscaledTime + 0.25f;
+                var next = ScreenDetector.GenericScreen();
+                if (next == null)
+                {
+                    if (modal != null) Nav.Clear();
+                    modal = null;
+                }
+                else if (!next.SameAs(modal))
+                {
+                    modal = next;
+                    panel = null;
+                    A.Cue(Cue.Open);
+                    Nav.SetRoot(next.Root, next.Title, announce: true);
+                }
+            }
+            TellAboutGameUpdate();
+            if (modal != null) Safe.Run("navigation", () => Inst.HandleNavigatorKeys());
         }
 
         private void HandleNavigatorKeys()
@@ -312,6 +375,8 @@ namespace KCAccess
             if (Time.unscaledTime < nextDetect && modalOk) return;
             nextDetect = Time.unscaledTime + 0.1f;
             ScreenInfo next = ScreenDetector.DetectMainMenu() ?? Game.GameScreens.Detect();
+            // No known screen outside the map on a game version the mod does not know: its windows may have changed.
+            if (next == null && CompatState.UntestedGame && !GameState.inst.IsPlayMode()) next = ScreenDetector.GenericScreen();
             if (next == null)
             {
                 if (modal != null)
@@ -347,7 +412,7 @@ namespace KCAccess
         private bool TryGoBack()
         {
             if (modal == null || modal.Root == null) return false;
-            if (GameState.inst.IsMainMenuMode())
+            if (GameState.inst != null && GameState.inst.IsMainMenuMode())
             {
                 var st = GameState.inst.mainMenuMode.GetState();
                 if (modal.Id != "Confirm" && (st == MainMenuMode.State.PauseMenu || st == MainMenuMode.State.SettingsMenu)) return false; // game handles Escape

@@ -15,7 +15,7 @@ namespace KCAccess
     {
         public const string Guid = "kcaccess.screenreader";
         public const string Name = "KCAccess";
-        public const string Version = "1.27.0";
+        public const string Version = "1.28.0";
 
         internal static Plugin Instance;
 
@@ -70,6 +70,15 @@ namespace KCAccess
         {
             Instance = this;
             Log = Logger;
+            // Before anything that touches the game: on a game version this release does not know, a copy of the mod
+            // repaired for that version takes over from here.
+            if (Compat.HandedOver(this, Logger)) return;
+            StartMod();
+        }
+
+        /// <summary>Everything that needs the game. On its own so Compat has run before this method is even compiled.</summary>
+        private void StartMod()
+        {
             ConfigRef = Config;
             CfgCues = Config.Bind("Audio", "SoundCues", true, "Play sound cues for navigation, placement and alerts.");
             CfgCueVolume = Config.Bind("Audio", "CueVolume", 0.5f, new ConfigDescription("Volume of the sound cues.", new AcceptableValueRange<float>(0f, 1f)));
@@ -140,6 +149,8 @@ namespace KCAccess
                 }
             }
             if (failed > 0) Log.LogWarning(failed + " Harmony patch classes failed, the others are active.");
+            CompatState.FailedHooks = failed;
+            PatchGuard.Protect(harmony);
 
             var root = new GameObject("KCAccess");
             DontDestroyOnLoad(root);

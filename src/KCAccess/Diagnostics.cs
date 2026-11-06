@@ -714,6 +714,10 @@ namespace KCAccess
                             if (parts.Length > 1) Player.inst.PlayerLandmassOwner.Gold = int.Parse(parts[1]);
                             else Player.inst.PlayerLandmassOwner.Gold += 5000;
                             break;
+                        case "hooktest":
+                            // Developer only: a hook that throws must not reach the game; an error of the game's own must.
+                            PatchGuard.SelfTest();
+                            break;
                         case "canvases":
                             // Developer only: every active canvas with visible controls, and whether the current screen's root is inside it.
                             var navRoot = AccessController.Inst.Nav.Root;
@@ -1066,7 +1070,7 @@ namespace KCAccess
                                     var ships = c != null ? ShipSystem.inst.GetShipsAt(x, z) : null;
                                     char ch = c == null ? ' ' : x == at.X && z == at.Z ? '@' : ships != null && ships.Count > 0 ? 'S'
                                         : c.OccupyingStructure.Count > 0 || c.SubStructure.Count > 0 ? 'B' : c.Type == ResourceType.Water ? (c.deepWater ? '#' : '~')
-                                        : c.TreeAmount > 0 ? 'T' : '.';
+                                        : c.Trees() > 0 ? 'T' : '.';
                                     row.Append(ch);
                                 }
                                 Plugin.Log.LogInfo("[around] " + row);

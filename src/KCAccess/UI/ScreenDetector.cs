@@ -55,6 +55,26 @@ namespace KCAccess.UI
             { MainMenuMode.State.KingdomShareFromGame, Loc.N("Kingdom share") },
         };
 
+        /// <summary>
+        /// The topmost window with buttons, whatever it is: used only on a game version the mod does not know, when the
+        /// game's own screens are no longer recognised.
+        /// </summary>
+        internal static ScreenInfo GenericScreen()
+        {
+            Canvas best = null;
+            foreach (var canvas in Object.FindObjectsOfType<Canvas>())
+            {
+                if (!canvas.isActiveAndEnabled || canvas.rootCanvas != canvas || (best != null && canvas.sortingOrder < best.sortingOrder)) continue;
+                foreach (var control in canvas.GetComponentsInChildren<UnityEngine.UI.Selectable>(false))
+                {
+                    if (!control.interactable || !UIText.IsVisible(control.gameObject)) continue;
+                    best = canvas;
+                    break;
+                }
+            }
+            return best != null ? new ScreenInfo { Id = "Generic", Title = Loc.T("Menu"), Root = best.transform, TypeAhead = true } : null;
+        }
+
         internal static ScreenInfo DetectMainMenu()
         {
             var mm = GameState.inst != null ? GameState.inst.mainMenuMode : null;
