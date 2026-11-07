@@ -141,7 +141,7 @@ Last round: 1.28.2. Game 124r2s, Steam build 26392486.
 
 ## Extra Large
 - [x] Generate, AI kingdoms, explore, keep, scan, walk, save, load
-- [x] A long game: many years with a built city, no errors, speed stays fine
+- [x] A long game: many years with a built city, no errors, speed stays fine (Extra Large: years 1 to 20, 39 buildings, about 50 people; run just after publishing 1.28.2, when the first tick turned out to rest on a medium map)
 
 ## Kingdom share
 The game's server cannot delete an upload, so these run against the private test server (`tools/share-test-server.py`, `sharelocal`); nothing goes online.
