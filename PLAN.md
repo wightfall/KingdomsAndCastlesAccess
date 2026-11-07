@@ -151,6 +151,22 @@ Status legend: `[x]` done and verified in the running game · `[~]` implemented,
 - Game sentences joined with commas read "Not connected to a Noria., 0 houses", icons before a comma "1 food , 1 charcoal" → `TextUtil.Join` and `Clean` tidy both.
 - Screen detection searched every object of the game each frame for a confirmation window (55–60 ms a frame on an Extra Large map) → the list is cached, refreshed every 30 s and when a new game replaced it.
 - All event watchers ran as one part, so one failure silenced the others → each runs on its own (`Safe.Run`).
+- Check boxes wired to the mouse click itself (a ship's pick up and drop off, with an EventTrigger) were only flipped, so their amounts never opened → they get a real click.
+- A button that goes away with its click left the keyboard on whatever came next, in silence: after a route's Confirm and Remove stop that was Destroy Ship, which the game does not confirm → the navigator says where the keyboard landed, route actions focus the stop, and Destroy Ship asks for a second Enter.
+- "Editing Windowbg" (rename a building), "- / -" read literally (a mine without workers), the totals under the job priorities read as lone numbers, "Pickup, Image" for the food pictures in cargo amounts, a read-only bar answering Enter with its object name.
+- The 11 new achievements had no translations: they were read from Steam, in Steam's language.
+- The game's own 17 languages lack the 3 texts of its November 2026 update (Envoys, Siege Catapults, Extra Large): debug `gametexts` shows it, and small game text files fill them. Own merchant ships read as "merchant ship" and could not be reached when a foreign one shared the tile. An envoy or a transport ship sent to an enemy building said "Attacking". "Editing Enter Share Code:" and "Packaging up your kingdom" after it was done.
+- Kingdom Share is tested against `tools/share-test-server.py` with debug `sharelocal`: the game's server has no delete, and merely opening the Share window asks it for a code.
+- Answering an alert left the previous selection's panel in the way of the new one (F6 reached the old cart, not the merchant).
+- Ctrl+E on an alert while a route was open opened the route over itself: `SetVisible(true)` shuts the cursor mode down, which empties its orders, and from then on `DockRouteCursorMode.Tick` threw every frame and Escape could not leave the mode. The alert now closes the open route first.
+- K and the Problems category counted the whole map: `Player.Homeless` and the thought bubbles include AI kingdoms ("Population 5, 10 homeless", "Problem: 4 starving, 69 tiles south").
+- The mod said "transport ship" for the Cargo Ship; in the game that name belongs to the troop ship. Now the key is `cargo ship`, with the game's own word in each language.
+- Escape on the demolish warning went nowhere in the mod's screen handling (no Back button recognised).
+- `LoadSave.Save` throws before its thread starts when the save folder cannot be written: silent until a finalizer said "Saving failed". Tested by denying write access to the Saves folder.
+- The main menu's Discord, Twitter and Twitch buttons have no listeners since the game update; the mod calls `OnClickedDiscord` and the others itself.
+- Map editor: Increase and Decrease Radius gave no feedback; now "Brush size 3".
+- "Research complete" is the game's own log line: do not add one. It seemed missing because a Great Library without workers never advances.
+- Real Shift and Ctrl in the log that no test sent are the user at the keyboard (NVDA silencing): check before blaming a stuck key.
 
 ## Game update of 6 November 2026 (game 124r2s, v1.28.0)
 - [x] Cause of the silence: `ArrayExt.Count` became a property, so nearly every compiled method of 1.27.0 failed with MissingFieldException; the first one in `EnsureTick` stopped the whole frame.

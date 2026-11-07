@@ -337,10 +337,14 @@ namespace KCAccess.Game
             useGUILayout = false;
         }
 
+        /// <summary>Developer test (debug command captions).</summary>
+        internal static int Repaints;
+
         private void OnGUI()
         {
             try
             {
+                if (Event.current.type == EventType.Repaint) Repaints++;
                 if (Plugin.CfgCaptions == null || !Plugin.CfgCaptions.Value)
                 {
                     if (Lines.Count > 0) Lines.Clear();

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Assets.Code;
+using HarmonyLib;
 using KCAccess.Core;
 using KCAccess.UI;
 using UnityEngine;
@@ -222,7 +223,75 @@ namespace KCAccess.Game
             A.Say(StopText(row) ?? Loc.T("Stop moved"), force: true);
         }
 
+        /// <summary>The ship panel's Destroy Ship button: one click sinks the ship, the game does not ask.</summary>
+        internal static bool DestroysTheShip(Selectable s)
+        {
+            if (!(s is Button b)) return false;
+            for (int i = 0; i < b.onClick.GetPersistentEventCount(); i++)
+                if (b.onClick.GetPersistentMethodName(i) == nameof(ShipLogisticsUI.OnDestroyShip)) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Puts the keyboard on a stop and says it. The button that was used goes away, and the list would otherwise land on
+        /// Destroy Ship with nothing said.
+        /// </summary>
+        internal static void FocusStop(bool last)
+        {
+            var t = Transport;
+            var orders = t != null ? t.GetOrders() : null;
+            if (orders == null || orders.Count == 0) return;
+            var order = orders[last ? orders.Count - 1 : 0];
+            AccessController.Inst?.Nav.RequestFocus(go =>
+            {
+                var row = go.GetComponentInParent<LogisticsDestUI>();
+                return row != null && row.logisticOrder == order && go == row.HeaderDockTrack.gameObject;
+            }, speak: true);
+        }
+
         internal static string Help(LogisticsDestUI row) => row == null ? null : KeyHelp.Resolve(Loc.T(
             "On a route stop: {MoveSoldiers} moves the stop to the dock, building or tile under the map cursor. On the pick up and drop off check boxes Shift Enter changes the amounts. The add buttons at the start and end of the list add stops."));
+    }
+
+    [HarmonyPatch(typeof(LogisticsDestUI), nameof(LogisticsDestUI.OnPickUpConfirm))]
+    internal static class Patch_RoutePickUpConfirmed
+    {
+        private static void Postfix(LogisticsDestUI __instance)
+        {
+            var toggle = __instance.PickUpToggle;
+            AccessController.Inst?.Nav.RequestFocus(go => go == toggle.gameObject, speak: true);
+        }
+    }
+
+    [HarmonyPatch(typeof(LogisticsDestUI), nameof(LogisticsDestUI.OnDropOffConfirm))]
+    internal static class Patch_RouteDropOffConfirmed
+    {
+        private static void Postfix(LogisticsDestUI __instance)
+        {
+            var toggle = __instance.DropOffToggle;
+            AccessController.Inst?.Nav.RequestFocus(go => go == toggle.gameObject, speak: true);
+        }
+    }
+
+    [HarmonyPatch(typeof(ShipLogisticsUI), nameof(ShipLogisticsUI.AddEndNode))]
+    internal static class Patch_RouteStopAddedAtTheEnd
+    {
+        private static void Postfix() => Routes.FocusStop(last: true);
+    }
+
+    [HarmonyPatch(typeof(ShipLogisticsUI), nameof(ShipLogisticsUI.AddStartNode))]
+    internal static class Patch_RouteStopAddedAtTheStart
+    {
+        private static void Postfix() => Routes.FocusStop(last: false);
+    }
+
+    [HarmonyPatch(typeof(DockRouteCursorMode), nameof(DockRouteCursorMode.DeleteOrder))]
+    internal static class Patch_RouteStopRemoved
+    {
+        private static void Postfix()
+        {
+            A.Say(Loc.T("Stop removed"), force: true);
+            Routes.FocusStop(last: true);
+        }
     }
 }

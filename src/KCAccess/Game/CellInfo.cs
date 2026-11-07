@@ -548,7 +548,7 @@ namespace KCAccess.Game
             }
         }
 
-        /// <summary>"your transport ship", "merchant ship", "enemy viking ship" …</summary>
+        /// <summary>"your cargo ship", "merchant ship", "enemy viking ship" …</summary>
         internal static string ShipName(ShipBase s)
         {
             string kind;
@@ -561,9 +561,9 @@ namespace KCAccess.Game
                 case ShipBase.ShipType.VikingTroopTransport: kind = Loc.T("viking ship"); break;
                 case ShipBase.ShipType.OgreTroopTransport: kind = Loc.T("ogre ship"); break;
                 case ShipBase.ShipType.SeedShip: kind = Loc.T("exploration ship"); break;
-                default: kind = Loc.T("transport ship"); break;
+                default: kind = Loc.T("cargo ship"); break; // the game calls this one Cargo Ship and the troop ship Transport Ship
             }
-            if (s.type == ShipBase.ShipType.Merchant || s.type == ShipBase.ShipType.PlayerMerchant) return kind;
+            if (s.type == ShipBase.ShipType.Merchant) return kind; // a foreign trader: no kingdom of the map
             bool selected = GameUI.inst != null && s is ISelectable sel && GameUI.inst.IsSelected(sel);
             return UnitText.Owned(s.teamID == 0, s.teamID != 0 && World.inst.RelationBetween(0, s.teamID) == World.Relations.Enemy, kind) + (selected ? SelectedSuffix : string.Empty);
         }

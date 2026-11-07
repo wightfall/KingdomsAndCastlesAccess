@@ -15,7 +15,25 @@ namespace KCAccess.UI
         private static readonly Vector3[] corners = new Vector3[4];
 
         /// <summary>Raw string of a Text or TMP_Text component (null for other components).</summary>
+        /// <summary>
+        /// Texts the game wrote straight into its windows, with no translation in any language. Said in the mod's language.
+        /// </summary>
+        private static readonly HashSet<string> FixedTexts = new HashSet<string>
+        {
+            Loc.N("DLC Available"), Loc.N("Wishlist our next game!"), Loc.N("Price per resource:"), Loc.N("Banners"),
+            Loc.N("There is not enough space in our dock"), Loc.N("Send a ship over to investigate..."),
+            Loc.N("Use an envoy to open foreign docks for trading before a merchant can dock."),
+            Loc.N("No gold with which to pay soldiers."), Loc.N("No Gold With Which To Pay Soldiers"),
+        };
+
         internal static string TextOf(Component c)
+        {
+            string text = ShownText(c);
+            string fixedText = text != null ? text.Trim() : null;
+            return fixedText != null && FixedTexts.Contains(fixedText) ? Loc.T(fixedText) : text;
+        }
+
+        private static string ShownText(Component c)
         {
             if (c is TMP_Text tmp)
             {

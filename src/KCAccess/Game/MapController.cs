@@ -62,6 +62,8 @@ namespace KCAccess.Game
             return st;
         }
 
+        private ShipBase lastShipPicked;
+
         private static bool IsPlacing => GameUI.inst != null && GameUI.inst.CurrPlacementMode != null && GameUI.inst.CurrPlacementMode.IsPlacing();
 
         internal Cell CurrentCell => World.inst.GetCellData(cursor.Pos.X, cursor.Pos.Z);
@@ -1025,8 +1027,10 @@ namespace KCAccess.Game
             if (shipsHere.Count > 0)
             {
                 int idx = 0;
-                for (int i = 0; i < shipsHere.Count; i++) if (ui.IsSelected((ISelectable)shipsHere[i])) idx = i + 1;
+                // A foreign merchant opens its window without staying selected, so the last pick is remembered too.
+                for (int i = 0; i < shipsHere.Count; i++) if (ui.IsSelected((ISelectable)shipsHere[i]) || shipsHere[i] == lastShipPicked) idx = i + 1;
                 var ship = shipsHere[idx % shipsHere.Count];
+                lastShipPicked = ship;
                 ui.ClearSelection();
                 // Troop and exploration ships have the unit panel (who is on board, Settle): the game opens it on a click.
                 if (ui.AddToSelection((ISelectable)ship) && ship is IMoveableUnit movable && ui.DisplayIMovableUI(movable)) ui.ClearCellSelected();
@@ -1109,8 +1113,17 @@ namespace KCAccess.Game
                 if (ui.highlightBuilding != null && ui.highlightBuilding.Life <= 0f) ui.highlightBuilding = null;
             }
             string target = null;
+            // An envoy, settlers and ships that carry people only go there, also to an enemy.
+            bool peaceful = true;
+            foreach (var s in ui.selectedObjs)
+            {
+                var unit = ui.GetUnitFromSelectable(s);
+                var type = unit is UnitSystem.Army army ? army.armyType : UnitSystem.ArmyType.Default;
+                peaceful &= unit is TroopTransportShip || unit is SeedShip || type == UnitSystem.ArmyType.Envoy || type == UnitSystem.ArmyType.Settler;
+            }
             foreach (var h in ui.highlightedObjs)
             {
+                if (peaceful) break;
                 if (h is IMoveableUnit mu && !ui.IsSelected(h) && mu.TeamID() != 0 && World.inst.RelationBetween(0, mu.TeamID()) == World.Relations.Enemy)
                 {
                     target = Loc.F("Attacking {0}", CellInfo.UnitName(mu));
@@ -1119,7 +1132,7 @@ namespace KCAccess.Game
             }
             var b = ui.highlightBuilding;
             if (target == null && b != null && b.TeamID() != 0)
-                target = World.inst.RelationBetween(0, b.TeamID()) == World.Relations.Enemy ? Loc.F("Attacking {0}", CellInfo.BuildingSummary(b, brief: true)) : Loc.F("Going to {0}", CellInfo.BuildingSummary(b, brief: true));
+                target = !peaceful && World.inst.RelationBetween(0, b.TeamID()) == World.Relations.Enemy ? Loc.F("Attacking {0}", CellInfo.BuildingSummary(b, brief: true)) : Loc.F("Going to {0}", CellInfo.BuildingSummary(b, brief: true));
             // Boarding: soldiers go onto a troop ship when the order points at it. The game takes the ship from what the
             // pointer hovers (nothing while the mouse rests over a panel): take your troop ship on the cursor tile.
             // A troop ship with units on board unloads them when sent onto land or a road over water.

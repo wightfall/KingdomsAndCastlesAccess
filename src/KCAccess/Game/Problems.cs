@@ -21,6 +21,13 @@ namespace KCAccess.Game
         private static readonly HashSet<ThoughtBubbleSystem.ThoughtBubble> announced = new HashSet<ThoughtBubbleSystem.ThoughtBubble>();
         private static float nextCheck;
 
+        /// <summary>The game keeps one list of thought bubbles for the whole map; another kingdom's troubles are not yours.</summary>
+        private static bool OnAiKingdom(ThoughtBubbleSystem.ThoughtBubble b)
+        {
+            var c = World.inst.GetCellData(Mathf.FloorToInt(b.pos.x), Mathf.FloorToInt(b.pos.z));
+            return c != null && c.landMassIdx >= 0 && World.IsAILandmass(c.landMassIdx);
+        }
+
         internal static List<Problem> All()
         {
             var list = new List<Problem>();
@@ -29,7 +36,7 @@ namespace KCAccess.Game
             for (int i = 0; i < bubbles.Count; i++)
             {
                 var b = bubbles.data[i];
-                if (b == null || !b.visible) continue;
+                if (b == null || !b.visible || OnAiKingdom(b)) continue;
                 string t = b.thought.ToString();
                 string meaning = Thoughts.Meaning(t);
                 if (meaning == null) continue;
@@ -98,7 +105,7 @@ namespace KCAccess.Game
             for (int i = 0; i < bubbles.Count; i++)
             {
                 var b = bubbles.data[i];
-                if (b == null || !b.visible) continue;
+                if (b == null || !b.visible || OnAiKingdom(b)) continue;
                 string t = b.thought.ToString();
                 if (!Thoughts.IsCritical(t)) continue;
                 live.Add(b);

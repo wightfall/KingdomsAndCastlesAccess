@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using BepInEx;
@@ -201,9 +202,17 @@ namespace KCAccess
                         int x = start.X + dx, z = start.Z + dz;
                         if (x < 0 || z < 0 || x >= World.inst.GridWidth || z >= World.inst.GridHeight) continue;
                         b.transform.position = new Vector3(x, 0f, z);
+                        GameUI.inst.CurrPlacementMode.TryRotateBuildingObjAuto(b, b.transform.position); // as when holding it: a mine faces the rock
                         b.BakeBoundingFootprint();
                         b.RefreshCachedValues();
-                        r = World.inst.CanPlace(b, ignoreLandMassChecks: anywhere);
+                        try
+                        {
+                            r = World.inst.CanPlace(b, ignoreLandMassChecks: anywhere);
+                        }
+                        catch (NullReferenceException)
+                        {
+                            continue; // the game's check fails for a footprint past the edge of the map
+                        }
                         reasons[r] = reasons.TryGetValue(r, out int seen) ? seen + 1 : 1;
                         if (r != PlacementValidationResult.Valid) continue;
                         World.inst.Place(b);
@@ -219,7 +228,7 @@ namespace KCAccess
             return "cannot place " + uniqueName + " near " + start + ":" + why;
         }
 
-        private static string MakeLargeQuarrySpot()
+        private static string MakeLargeQuarrySpot(ResourceType deposit)
         {
             var w = World.inst;
             var start = Game.MapController.Inst.CursorPos;
@@ -229,7 +238,7 @@ namespace KCAccess
                 for (int x = 1; x < w.GridWidth - 1; x++)
                 {
                     var c = w.GetCellData(x, z);
-                    if (c == null || c.Type != ResourceType.Stone) continue;
+                    if (c == null || c.Type != deposit) continue;
                     bool ok = true, covered = true;
                     for (int dz = -1; dz <= 1 && ok; dz++)
                         for (int dx = -1; dx <= 1 && ok; dx++)
@@ -243,7 +252,7 @@ namespace KCAccess
                     double d = Core.Directions.Euclid(start, new Core.GridPos(x, z)) + (covered ? 0 : 1000);
                     if (d < bestD) { bestD = d; best = c; }
                 }
-            if (best == null) return "no stone deposit with room to clear";
+            if (best == null) return "no " + deposit + " with room to clear";
             for (int dz = -1; dz <= 1; dz++)
                 for (int dx = -1; dx <= 1; dx++)
                 {
@@ -257,7 +266,7 @@ namespace KCAccess
                         n.StorePostGenerationType();
                     }
                 }
-            return "cleared around the stone at " + best.x + ", " + best.z + ", cursor spot " + (best.x - 1) + ", " + (best.z - 1) + (bestD >= 1000 ? ", outside road coverage" : string.Empty);
+            return "cleared around the " + deposit + " at " + best.x + ", " + best.z + ", cursor spot " + (best.x - 1) + ", " + (best.z - 1) + (bestD >= 1000 ? ", outside road coverage" : string.Empty);
         }
 
         private static string FindSpot()
@@ -314,22 +323,125 @@ namespace KCAccess
             Plugin.Log.LogInfo("[watch] " + now);
         }
 
-        internal static void PollCommands()
+        private static readonly Queue<string> steps = new Queue<string>();
+        private static float nextStep;
+        private const float StepSeconds = 1.3f;
+
+        /// <summary>
+        /// A list of test steps, kcaccess_commands.txt.steps: one command a line, run one after the other inside the game,
+        /// each logged as [step], so a long test needs no outside program waiting between keys. "wait 5" waits 5 seconds.
+        /// </summary>
+        private static void ReadSteps(string path)
         {
-            if (Plugin.CfgDebugCommands.Value) WatchLooks();
-            if (!Plugin.CfgDebugCommands.Value || Time.realtimeSinceStartup < nextCheck) return;
-            nextCheck = Time.realtimeSinceStartup + 0.25f;
-            string path = CommandPath;
             if (!File.Exists(path)) return;
-            string[] lines;
             try
             {
-                lines = File.ReadAllLines(path);
+                foreach (var line in File.ReadAllLines(path)) if (line.Trim().Length > 0) steps.Enqueue(line.Trim());
                 File.Delete(path);
+                Plugin.Log.LogInfo("[steps] " + steps.Count + " steps");
             }
             catch (IOException)
             {
-                return;
+                // still being written: the next look gets it
+            }
+        }
+
+        private static string[] NextStep()
+        {
+            if (steps.Count == 0 || Time.realtimeSinceStartup < nextStep) return null;
+            string step = steps.Dequeue();
+            bool wait = step.StartsWith("wait ", StringComparison.Ordinal);
+            nextStep = Time.realtimeSinceStartup + (wait ? float.Parse(step.Substring(5), System.Globalization.CultureInfo.InvariantCulture) : StepSeconds);
+            Plugin.Log.LogInfo("[step] " + step);
+            if (steps.Count == 0) Plugin.Log.LogInfo("[steps] last step sent");
+            return wait ? new string[0] : new[] { step };
+        }
+
+        /// <summary>
+        /// While test commands are on, achievements stop here: the game's own code and the mod's announcement run, and the
+        /// Steam account stays as it is, also in a standard game or when loading a save.
+        /// </summary>
+        private sealed class TestAchievements : IPlatformIntegration
+        {
+            internal readonly IPlatformIntegration Real;
+            private readonly HashSet<string> unlocked = new HashSet<string>();
+            internal TestAchievements(IPlatformIntegration real) { Real = real; }
+            public bool UseAchievements() => true;
+            public void Init() { }
+            public void Update() => Real.Update();
+            public void Shutdown() => Real.Shutdown();
+            public string GetPersonaName() => Real.GetPersonaName();
+            public void SetAchievement(string achievement)
+            {
+                unlocked.Add(achievement);
+                Plugin.Log.LogInfo("[dbg] achievement kept from Steam: " + achievement);
+            }
+            public bool GetAchievement(string achievement) => unlocked.Contains(achievement);
+            public void ClearAchievement(string achievement) => unlocked.Remove(achievement);
+            public string GetVersion() => Real.GetVersion();
+            public bool IsDLCInstalled(uint appID) => Real.IsDLCInstalled(appID);
+        }
+
+        private static void KeepAchievementsFromSteam()
+        {
+            if (IntegrationManager.inst == null || IntegrationManager.inst is TestAchievements) return;
+            IntegrationManager.inst = new TestAchievements(IntegrationManager.inst);
+            Plugin.Log.LogInfo("[dbg] achievements are kept from Steam while test commands are on");
+        }
+
+        /// <summary>Debug command achtest: achievements through the game's own Achievements.Try, past its creative mode check.</summary>
+        private static void TestAchievement(string only)
+        {
+            var player = Player.inst;
+            bool creative = player.creativeMode, cheats = player.hasUsedCheats;
+            player.creativeMode = false;
+            player.hasUsedCheats = false;
+            try
+            {
+                var tryIt = HarmonyLib.AccessTools.Method(typeof(Assets.Achievements), "Try");
+                foreach (var id in only != null ? new[] { only } : AllAchievements)
+                {
+                    IntegrationManager.inst.ClearAchievement(id);
+                    tryIt.Invoke(Assets.Achievements.inst, new object[] { id });
+                }
+            }
+            finally
+            {
+                player.creativeMode = creative;
+                player.hasUsedCheats = cheats;
+            }
+        }
+
+        private static readonly string[] AllAchievements =
+        {
+            "first_hamlet", "first_village", "first_town", "first_city", "first_humblekingdom", "first_thrivingkingdom", "first_dignifiedkingdom",
+            "first_magnificentkingdom", "first_kingdomofthegods", "towerofbabel", "first_dragonkill", "first_ogrekill", "allied_ai_kingdom",
+            "destroyed_ai_keep", "claim_kingdom_peacefully", "trade_agreement_with_ai", "give_ai_gift", "declare_war_against_ai", "tame_dragon",
+            "bond_with_dragon", "survive_survival", "tame_many_dragons", "dragon_newborn",
+        };
+
+        internal static void PollCommands()
+        {
+            if (Plugin.CfgDebugCommands.Value) WatchLooks();
+            if (!Plugin.CfgDebugCommands.Value) return;
+            KeepAchievementsFromSteam();
+            string[] lines = NextStep();
+            if (lines == null)
+            {
+                if (Time.realtimeSinceStartup < nextCheck) return;
+                nextCheck = Time.realtimeSinceStartup + 0.25f;
+                string path = CommandPath;
+                ReadSteps(path + ".steps");
+                if (!File.Exists(path)) return;
+                try
+                {
+                    lines = File.ReadAllLines(path);
+                    File.Delete(path);
+                }
+                catch (IOException)
+                {
+                    return;
+                }
             }
             foreach (var raw in lines)
             {
@@ -367,6 +479,14 @@ namespace KCAccess
                                 for (int i = 0; i < lbtn.onClick.GetPersistentEventCount(); i++)
                                     lstr.Append(lbtn.onClick.GetPersistentTarget(i)?.GetType().Name).Append('.').Append(lbtn.onClick.GetPersistentMethodName(i)).Append(' ');
                                 foreach (var c in lbtn.GetComponents<Component>()) lstr.Append('<').Append(c.GetType().Name).Append('>');
+                            }
+                            var ltog = lcur != null ? lcur.Go.GetComponent<Toggle>() : null;
+                            if (ltog != null)
+                            {
+                                lstr.Append(ltog.name).Append(": ");
+                                for (int i = 0; i < ltog.onValueChanged.GetPersistentEventCount(); i++)
+                                    lstr.Append(ltog.onValueChanged.GetPersistentTarget(i)?.GetType().Name).Append('.').Append(ltog.onValueChanged.GetPersistentMethodName(i)).Append(' ');
+                                foreach (var c in ltog.GetComponents<Component>()) lstr.Append('<').Append(c.GetType().Name).Append('>');
                             }
                             Plugin.Log.LogInfo(lstr.ToString());
                             break;
@@ -416,6 +536,46 @@ namespace KCAccess
                             var n2 = AccessController.Inst.Nav;
                             Plugin.Log.LogInfo("[navstate] editing=" + n2.IsEditing + " root=" + (n2.Root != null) + " count=" + n2.Count + " current=" + (n2.Current != null ? n2.Describe(n2.Current) : "null") + " frame=" + Time.frameCount);
                             break;
+                        case "sick":
+                        {
+                            // Developer only: the villagers on the cursor tile fall sick.
+                            var sc = Game.MapController.Inst.CursorPos;
+                            var sv = World.inst.GetVillagersAt(sc.X, sc.Z);
+                            for (int si = 0; sv != null && si < sv.Count; si++) sv.data[si].sick = true;
+                            Plugin.Log.LogInfo("[dbg] sick " + (sv != null ? sv.Count : 0));
+                            break;
+                        }
+                        case "researchdone":
+                            // Developer only: the selected Great Library finishes its research on its next tick.
+                            var rl = GameUI.inst.GetBuildingSelected() != null ? GameUI.inst.GetBuildingSelected().GetComponent<GreatLibrary>() : null;
+                            if (rl != null) rl.researchTime = 100000f;
+                            Plugin.Log.LogInfo("[dbg] research done " + (rl != null));
+                            break;
+                        case "overlay":
+                            // Developer only: opens the Steam overlay as its shortcut does.
+                            // "overlay on|off": what Steam reports, for a computer where the overlay does not open.
+                            if (parts.Length > 1)
+                                HarmonyLib.AccessTools.Method(typeof(SteamOverlay), "OnOverlay").Invoke(null, new object[] { new Steamworks.GameOverlayActivated_t { m_bActive = (byte)(parts[1] == "on" ? 1 : 0) } });
+                            else Steamworks.SteamFriends.ActivateGameOverlay("Friends");
+                            break;
+                        case "hideui":
+                            // Developer only: the game's interface hidden, as its U key would (the mod blocks that key).
+                            GameUI.inst.gameObject.SetActive(false);
+                            break;
+                        case "uistate":
+                        {
+                            // Developer only: what the game itself thinks is open and selected.
+                            var us = GameUI.inst;
+                            Plugin.Log.LogInfo("[dbg] cursor=" + (us.currCursorMode != null ? us.currCursorMode.GetType().Name : "none") + " selected=" + us.selectedObjs.Count
+                                + " building=" + (us.GetBuildingSelected() != null ? us.GetBuildingSelected().UniqueName : "none") + " unitUI=" + us.unitUI.Visible + " shipUI=" + us.shipUI.Visible
+                                + " routeUI=" + us.shipLogisticsUI.Visible + " merchantUI=" + us.merchantUI.Visible + " tileUI=" + us.tileInfoUI.Visible + " workerUI=" + us.workerUI.Visible
+                                + " personUI=" + us.personUI.Visible + " shows=" + us.UIShowing() + " build=" + BuildUI.inst.Visible
+                                + " keys=" + GameState.inst.AlphaNumericHotkeysEnabled + " warn=" + us.demolishWarningUI.gameObject.activeSelf + " levelUp=" + us.levelUpUI.gameObject.activeSelf
+                                + " banner=" + (EffectBanner.inst != null && EffectBanner.inst.Showing()) + " advisor=" + AdvisorUI.inst.IsVisible() + " witch=" + us.witchUI.gameObject.activeSelf
+                                + " placing=" + us.CurrPlacementMode.IsPlacing() + " overlay=" + HappinessUI.inst.overlayOn + " uiActive=" + us.gameObject.activeInHierarchy + " decree=" + us.decreeUI.gameObject.activeInHierarchy
+                                + " diplomacy=" + us.diplomacyUI.gameObject.activeInHierarchy + " keyboardPointer=" + (Game.VirtualPointer.Inst != null && Game.VirtualPointer.Inst.KeyboardActive));
+                            break;
+                        }
                         case "groups":
                             var ui2 = GameUI.inst;
                             Plugin.Log.LogInfo("[groups] " + string.Join(" | ", Game.GameScreens.PanelGroups().ConvertAll(g => g.Key + ":" + g.Title).ToArray())
@@ -744,7 +904,62 @@ namespace KCAccess
                         case "achievements":
                             // Developer only: what each achievement would be called and whether it is unlocked. Unlocks nothing.
                             foreach (var id in new[] { "first_hamlet", "first_city", "towerofbabel", "allied_ai_kingdom", "destroyed_ai_keep", "claim_kingdom_peacefully", "trade_agreement_with_ai", "give_ai_gift", "declare_war_against_ai", "tame_dragon", "bond_with_dragon", "survive_survival", "tame_many_dragons", "dragon_newborn" })
-                                Plugin.Log.LogInfo("[dbg] " + id + " = " + Patch_Achievement.NameOf(id) + ", unlocked " + (IntegrationManager.inst != null && IntegrationManager.inst.GetAchievement(id)));
+                                Plugin.Log.LogInfo("[dbg] " + id + " = " + Patch_Achievement.NameOf(id) + ", unlocked on Steam " + ((IntegrationManager.inst as TestAchievements)?.Real ?? IntegrationManager.inst)?.GetAchievement(id));
+                            break;
+                        case "captions":
+                            Plugin.Log.LogInfo("[dbg] captions on=" + Plugin.CfgCaptions.Value + " lines=" + Game.CaptionOverlay.Lines.Count + " repaints=" + Game.CaptionOverlay.Repaints + " overlays=" + Resources.FindObjectsOfTypeAll<Game.CaptionOverlay>().Length);
+                            break;
+                        case "sharelocal":
+                            // Developer only: "sharelocal <url>" points Kingdom Share at a test server before its window opens.
+                            // The game's own server cannot delete anything, so a real upload would stay online for good.
+                            HarmonyLib.AccessTools.Field(typeof(SaveRepo), "url").SetValue(null, parts[1]);
+                            Plugin.Log.LogInfo("[dbg] share server " + parts[1]);
+                            break;
+                        case "padcount":
+                            // Developer only: "padcount <n> [name]" as if that many gamepads were plugged in.
+                            ControllerInput.AnnounceCount(int.Parse(parts[1]), parts.Length > 2 ? parts[2] : null);
+                            break;
+                        case "fieldstate":
+                        {
+                            // Developer only: what has the keyboard focus, for a text field that takes no typing.
+                            var fes = UnityEngine.EventSystems.EventSystem.current;
+                            var fsel = fes != null ? fes.currentSelectedGameObject : null;
+                            var ftmp = fsel != null ? fsel.GetComponent<TMP_InputField>() : null;
+                            Plugin.Log.LogInfo("[dbg] selected=" + (fsel != null ? PathOf(fsel.transform) : "none") + " module=" + (fes != null && fes.currentInputModule != null ? fes.currentInputModule.GetType().Name : "none") + " appfocus=" + Application.isFocused
+                                + (ftmp != null ? " focused=" + ftmp.isFocused + " interactable=" + ftmp.interactable + " readonly=" + ftmp.readOnly + " validation=" + ftmp.characterValidation + " content=" + ftmp.contentType + " limit=" + ftmp.characterLimit + " text=[" + ftmp.text + "]" : ""));
+                            break;
+                        }
+                        case "gametexts":
+                        {
+                            // Developer only: for every language of the game, how many of its texts are empty, and "gametexts <term>" its
+                            // text of one term in each language.
+                            foreach (var src in I2.Loc.LocalizationManager.Sources)
+                            {
+                                src.LoadAllLanguages(true); // the game keeps only the current language in memory
+                                for (int li = 0; li < src.mLanguages.Count; li++)
+                                {
+                                    int empty = 0;
+                                    var sample = new List<string>();
+                                    foreach (var td in src.mTerms)
+                                    {
+                                        string v = li < td.Languages.Length ? td.Languages[li] : null;
+                                        if (parts.Length > 1 && td.Term == string.Join(" ", parts, 1, parts.Length - 1)) Plugin.Log.LogInfo("[dbg] " + src.mLanguages[li].Name + " " + td.Term + " = " + v);
+                                        if (!string.IsNullOrEmpty(v) || string.IsNullOrEmpty(td.Languages[0])) continue;
+                                        empty++;
+                                        if (sample.Count < 12) sample.Add(td.Term);
+                                    }
+                                    if (parts.Length == 1) Plugin.Log.LogInfo("[dbg] " + src.mLanguages[li].Name + ": " + src.mTerms.Count + " terms, " + empty + " empty: " + string.Join(", ", sample.ToArray()));
+                                }
+                            }
+                            break;
+                        }
+                        case "jump":
+                            // Developer only: "jump <x> <z>" puts the cursor there.
+                            Game.MapController.Inst.JumpTo(new Core.GridPos(int.Parse(parts[1]), int.Parse(parts[2])));
+                            break;
+                        case "achtest":
+                            // Developer only: "achtest [id]" announces achievements as the game grants them; nothing reaches Steam.
+                            TestAchievement(parts.Length > 1 ? parts[1] : null);
                             break;
                         case "hooktest":
                             // Developer only: a hook that throws must not reach the game; an error of the game's own must.
@@ -1039,9 +1254,9 @@ namespace KCAccess
                             Plugin.Log.LogInfo("[dbg] ships " + ShipSystem.inst.ships.Count + ", next merchant in " + ShipSystem.inst.merchantSpawnTimer.ToString("0") + " s");
                             break;
                         case "lqspot":
-                            // Developer only: clears rock and trees around the nearest stone deposit tile inside road
-                            // coverage, so a large quarry fits there (to test the mod's nearest-spot answer).
-                            Plugin.Log.LogInfo("[dbg] lqspot " + MakeLargeQuarrySpot());
+                            // Developer only: "lqspot [iron]" clears rock and trees around the nearest stone (or iron) deposit
+                            // tile inside road coverage, so a large quarry or large iron mine fits there.
+                            Plugin.Log.LogInfo("[dbg] lqspot " + MakeLargeQuarrySpot(parts.Length > 1 && parts[1] == "iron" ? ResourceType.IronDeposit : ResourceType.Stone));
                             break;
                         case "findspot":
                             // Developer only: the nearest spot (up to 60 tiles) where the game accepts the held building,

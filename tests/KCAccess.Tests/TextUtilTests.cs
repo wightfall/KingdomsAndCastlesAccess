@@ -106,6 +106,14 @@ namespace KCAccess.Tests
         }
 
         [Fact]
+        public void Clean_ReadsTheEmptyFractionOfAMineWithoutWorkers()
+        {
+            Assert.Equal("Iron Output: none per year", TextUtil.Clean("Iron Output: - / - per year"));
+            Assert.Equal("10 - 20", TextUtil.Clean("10 - 20"));
+            Assert.Equal("a-/-b", TextUtil.Clean("a-/-b"));
+        }
+
+        [Fact]
         public void Clean_HasNoSpaceBeforeACommaAfterAnIcon()
         {
             Assert.Equal("5 per 1 food, 1 charcoal", TextUtil.Clean("5 per 1 <sprite name=icon_food>, 1 <sprite name=icon_charcoal>"));

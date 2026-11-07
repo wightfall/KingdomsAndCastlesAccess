@@ -76,7 +76,11 @@ namespace KCAccess.Game
             int pop = Population();
             int idle = World.inst.AvailableWorkersOnLandMass(Landmass);
             int beds = Player.inst.TotalResidentialSlotsOnLandMass(Landmass);
-            int homeless = Player.inst.Homeless != null ? Player.inst.Homeless.Count : 0;
+            // The game has one homeless list for the whole map, the AI kingdoms' villagers included.
+            int homeless = 0;
+            var list = Player.inst.Homeless;
+            for (int i = 0; list != null && i < list.Count; i++)
+                if (list.data[i] != null && list.data[i].landMass == Landmass) homeless++;
             string s = Loc.F("Population {0}, {1} idle", pop, idle) + ", " + Loc.P(beds, "{0} bed", "{0} beds");
             if (homeless > 0) s += ", " + Loc.F("{0} homeless", homeless);
             return s;

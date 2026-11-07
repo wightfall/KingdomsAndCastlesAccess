@@ -163,6 +163,10 @@ namespace KCAccess
                 if (src == null || src.mTerms == null) continue;
                 int idx = src.GetLanguageIndex("English", true, false);
                 if (idx < 0) continue;
+                // Only the game's current language is in memory: without this a game in another language has no terms, and
+                // no game text file is used after a restart.
+                bool wasLoaded = src.mLanguages[idx].IsLoaded();
+                src.LoadLanguage(idx, false, false, false, false);
                 foreach (var td in src.mTerms)
                 {
                     if (td == null || string.IsNullOrEmpty(td.Term) || td.Languages == null || idx >= td.Languages.Length) continue;
@@ -171,6 +175,7 @@ namespace KCAccess
                     en[td.Term] = text;
                     list.Add(new GameTerm { Term = td.Term, English = text });
                 }
+                if (!wasLoaded) src.UnloadLanguage(idx);
             }
             if (list.Count == 0) return false;
             terms = list;

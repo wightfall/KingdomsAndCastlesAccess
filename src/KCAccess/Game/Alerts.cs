@@ -79,6 +79,9 @@ namespace KCAccess.Game
             // A merchant's alert opens its trade window, a panel like a selected building's.
             bool trade = best.GetComponentInParent<MerchantShip>() != null;
             A.Say(Loc.F("Responding: {0}", Describe(best)) + (trade ? ". " + Loc.T("F6 opens the trade window.") : string.Empty), force: true);
+            GameUI.inst?.ClearSelection(); // what was selected before keeps its panel open, in the way of the new one
+            // Reopening a route that is already open wipes its stops in the game, and Escape then fails for good: close it first.
+            if (GameUI.inst != null && GameUI.inst.shipLogisticsUI.Visible) GameUI.inst.shipLogisticsUI.SetVisible(false);
             best.Click();
         }
     }

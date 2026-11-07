@@ -179,6 +179,14 @@ namespace KCAccess
             }
         }
 
+        /// <summary>When the save folder cannot be written, Save itself throws and the thread above never starts.</summary>
+        private static void Finalizer(Exception __exception)
+        {
+            if (__exception == null || !(GameState.inst != null && GameState.inst.IsMainMenuMode() && GameState.inst.mainMenuMode.GetState() == MainMenuMode.State.Save && AccessController.Inst != null)) return;
+            A.Cue(KCAccess.Core.Cue.Error);
+            A.Say(KCAccess.Core.Loc.T("Saving failed"));
+        }
+
         private static System.Collections.IEnumerator Confirm(System.Threading.Thread writer)
         {
             float waited = 0f;
@@ -198,6 +206,19 @@ namespace KCAccess
                 A.SayQueued(KCAccess.Core.Loc.T("Game saved"));
             }
         }
+    }
+
+    /// <summary>The map editor shows its brush size only as a number beside the two buttons.</summary>
+    [HarmonyPatch(typeof(MapEdit), nameof(MapEdit.IncreaseRadius))]
+    internal static class Patch_BrushBigger
+    {
+        private static void Postfix(MapEdit __instance) => A.Say(KCAccess.Core.Loc.F("Brush size {0}", Mathf.RoundToInt(__instance.radius + 1f)), force: true);
+    }
+
+    [HarmonyPatch(typeof(MapEdit), nameof(MapEdit.DecreaseRadius))]
+    internal static class Patch_BrushSmaller
+    {
+        private static void Postfix(MapEdit __instance) => A.Say(KCAccess.Core.Loc.F("Brush size {0}", Mathf.RoundToInt(__instance.radius + 1f)), force: true);
     }
 
     [HarmonyPatch(typeof(LoadSave), nameof(LoadSave.AppendToLocalErrorLog))]
@@ -686,6 +707,17 @@ namespace KCAccess
             { "towerofbabel", KCAccess.Core.Loc.N("Tower of Babel") },
             { "first_dragonkill", KCAccess.Core.Loc.N("First dragon slain") },
             { "first_ogrekill", KCAccess.Core.Loc.N("First ogre slain") },
+            { "allied_ai_kingdom", KCAccess.Core.Loc.N("Let's be Friends") },
+            { "destroyed_ai_keep", KCAccess.Core.Loc.N("I'm Not Here to Make Friends") },
+            { "claim_kingdom_peacefully", KCAccess.Core.Loc.N("Ultimate Trust") },
+            { "trade_agreement_with_ai", KCAccess.Core.Loc.N("Bilateral Relations") },
+            { "give_ai_gift", KCAccess.Core.Loc.N("How Thoughtful") },
+            { "declare_war_against_ai", KCAccess.Core.Loc.N("This Means War!") },
+            { "tame_dragon", KCAccess.Core.Loc.N("A Dragon's New Home") },
+            { "bond_with_dragon", KCAccess.Core.Loc.N("My Dragon and Me") },
+            { "survive_survival", KCAccess.Core.Loc.N("Hardcore Survivor") },
+            { "tame_many_dragons", KCAccess.Core.Loc.N("Oodles of Dragons") },
+            { "dragon_newborn", KCAccess.Core.Loc.N("It's So Cute!") },
         };
 
         /// <summary>

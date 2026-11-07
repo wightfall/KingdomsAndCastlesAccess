@@ -376,7 +376,8 @@ focus on the current language; Enter switches language, Escape closes the list.
 * **Research (Great Library):** select the library, F6, Research. Each technology reads its effect and
   gold cost, or "already researched"; Enter starts it ("Research started: Improved Bread Ovens, 845 gold
   paid"), or tells you how much gold is missing. While research runs the window reads progress and years
-  remaining; Accept only closes the window, **Cancel research** stops it and refunds the gold.
+  remaining; Accept only closes the window, **Cancel research** stops it and refunds the gold. The library needs its
+  workers for research to advance; "Research complete: Improved Bread Ovens ..." is said when it is done.
 * **Witch hut:** Enter on its tile. While she sleeps only the door is read (Knock, Leave); then the window
   starts on what she asks for. Send says what is missing when you cannot pay ("You do not have everything she
   asked for: food 19"), a spell says when gold is short, and the viking and dragon spells say they work only
@@ -384,7 +385,7 @@ focus on the current language; Enter switches language, Escape closes the list.
 
 ### Ship and cart routes
 
-Transport ships and transport carts carry goods along a route of stops, which the game edits by dragging
+Cargo ships and transport carts carry goods along a route of stops, which the game edits by dragging
 coloured markers. With the mod:
 
 1. Find your ship or cart (scanner category "Your soldiers and ships"), press **Shift+Enter** on it. Its route
@@ -393,8 +394,10 @@ coloured markers. With the mod:
    a stop can go there.
 3. **F6** into the route panel. Each stop reads "Stop 2 of 3: Northport, Dock, 4 tiles east, pick up wood 20,
    drop off nothing". Press **M** on a stop to move it to the cursor. The add buttons at the start and end of the
-   list add stops, "Remove stop" deletes one, and the pick up / drop off check boxes choose the cargo; on a checked
-   one, **Shift+Enter** opens the amounts again for changes.
+   list add stops, "Remove stop" deletes one, and the pick up / drop off check boxes open the amounts: type them,
+   then choose the confirm button, and the stop reads its cargo. On a checked box, **Shift+Enter** opens the amounts
+   again for changes.
+4. **Destroy Ship** asks for a second Enter within 5 seconds: the game itself does not ask, and it cannot be undone.
 
 ### Water system
 
@@ -433,7 +436,7 @@ On maps with more than one island you can claim new islands:
    repeat it. The outpost claims the island; name it in the kingdom overview (Island name). Messages about an
    island without a name start with "Unnamed island".
 4. **Settlers:** once you have an outpost, the keep's panel can **Train Settlers**. Settlers (or soldiers) go
-   to another island on a **troop ship**: select them with Shift+Enter, put the cursor on your troop ship and
+   to another island on a **troop ship** (Transport Ship in the build menu, Maritime): select them with Shift+Enter, put the cursor on your troop ship and
    press M ("Boarding your troop ship", then "Your settlers boarded your troop ship, 1 of 3 places taken. The
    ship is selected."). Put the cursor on land at the other island and press M ("Unloading at 108, 109"); when
    they are ashore you hear "Your troop ship unloaded your settlers. They are selected." F6 and **Settle** turn
@@ -680,10 +683,14 @@ or wrong placeholders.
 
 ### Translating the game's own texts
 
+The game's update of November 2026 added three texts in English only (the Envoys and Siege Catapults tabs and the Extra
+Large map size). The mod ships them for all 17 languages of the game, as small game text files, so they are read and
+shown in your language too.
+
 The game translates its own texts (menus, windows, tooltips, building names and descriptions, events and
 notifications, place names, the diplomacy dialogue) into its 17 languages. For any other language the mod can
 show and read them as well, from a **game text file**: `Languages\game\<code>.txt`, with the same code as the
-mod's language file (`th.txt` for Thai). **Thai is shipped complete**: 2890 of the game's 2937 texts, the rest
+mod's language file (`th.txt` for Thai). **Thai is shipped complete**: 2893 of the game's 2940 texts, the rest
 being names, credits and font names that stay as they are.
 
 * A game text file is **optional**, and so is every line in it: a text without a translation stays in the
@@ -771,6 +778,10 @@ Every sound can be previewed: Shift+F1, End, then Up through the sounds and pres
   Ctrl+key also triggered the plain key's action. Modifiers are now checked as held.
 * **Ctrl+C silently switched the game into creative mode** during normal play (a developer shortcut
   outside the cheat check). It now only works when cheats are enabled.
+* **The main menu's Discord, Twitter and Twitch buttons did nothing** since the game's update of November 2026: the buttons
+  lost their link to the game's own code. Enter on them now opens the page.
+* **Pressing Ctrl+E on a route that was already open wiped its stops**, and from then on Escape no longer worked until the
+  game was restarted: the game reopens the route over itself. The mod closes the open route first.
 * **No mod of the game loaded with BepInEx installed**, neither local mods nor Steam Workshop subscriptions. The
   game compiles mods against its own `0Harmony.dll` by path and against "0Harmony.dll" by name, which then means
   BepInEx's Harmony: a second assembly called 0Harmony, so the compiler refused every mod (and the game's loader
@@ -862,8 +873,11 @@ Project layout:
 * `PLAN.md` – the implementation plan and progress tracker.
 
 Developer helpers: with `[Debug] CommandFile = true` in the config the mod reads test commands from
-`BepInEx\kcaccess_commands.txt` (`key DownArrow`, `key Return shift`, `nav`, `state`, `place`, `dump`),
-and Ctrl+Shift+F12 writes the live UI hierarchy to `BepInEx\kcaccess_ui_dump.txt`. Commands that set up
+`BepInEx\kcaccess_commands.txt` (`key DownArrow`, `key Return shift`, `nav`, `state`, `place`, `dump`). A file
+`kcaccess_commands.txt.steps` holds a list of commands run one after the other, each logged as `[step]`, with
+`wait <seconds>` between them. While test commands are on, achievements never reach Steam; `achtest [id]` announces
+them as the game grants them, and `TESTPLAN.md` lists everything to test before a release.
+Ctrl+Shift+F12 writes the live UI hierarchy to `BepInEx\kcaccess_ui_dump.txt`. Commands that set up
 situations for testing at the cursor: `devbuild <name> [any] [clear]` (place a finished building), `army
 knight|archer|settler|envoy`, `dragon [mama]`, `nest egg|hatch|mature|happy|bond`, `fire`, `ogre`, `viking
 [elite]`, `plague [cure]`, `weather none|rain|heavy|storm|snow`, `twitch show|connect|vote <name> <n>|chat <name>
@@ -873,7 +887,9 @@ Room), `thieves kill|escape`, `mission start|done|fail` (a request of the first 
 selected mason's target becomes the building at the cursor), `gold <n>`, `probe <name>` (size and state of
 controls), `thieves sink`, `findmethod <name>` (buttons calling a game method), `liveries`, `canvases`,
 `merchant` (a merchant ship sails to your docks), `dockgoods`, `ships`, `merchantspecial [upgrade]`, `findspot`
-(where the game accepts the held building), `lqspot`, `wreck` (the building at the cursor falls into rubble),
+(where the game accepts the held building), `lqspot [iron]`, `jump <x> <z>`, `uistate` (what the game itself has open and selected), `hideui`, `sick` (villagers on the tile),
+`researchdone` (the selected Great Library finishes), `padcount <n> [name]` (as if gamepads were plugged in), `sharelocal <url>` (Kingdom
+Share goes to a test server; the game's server cannot delete an upload), `wreck` (the building at the cursor falls into rubble),
 `witch [greedy|spells]`, `levelup [outpost]`, `survival intro|success`, `demowarn`, `spritelabels <sprite>`,
 `creative <option> on|off` (a creative mode option, for example `creative BuildForFree off`), `villagers <n>`
 (peasants at the cursor, so new workplaces get workers), `pile <resource> <n>` (loose resources at the cursor,

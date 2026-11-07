@@ -38,6 +38,39 @@ namespace KCAccess.Tests
             Assert.True(missing.Count == 0, string.Join(", ", missing));
         }
 
+        /// <summary>
+        /// The game's update of November 2026 added these texts in English only. Every language the mod speaks must have them:
+        /// the game's own 17 languages through their small game text files, Thai through its full one.
+        /// </summary>
+        [Fact]
+        public void EveryLanguageHasTheTextsTheGameLeftInEnglish()
+        {
+            string languages = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(ThisFile()), "..", "..", "src", "KCAccess", "Languages"));
+            var missing = new List<string>();
+            foreach (string path in Directory.GetFiles(languages, "*.txt"))
+            {
+                string code = Path.GetFileNameWithoutExtension(path);
+                if (code == "template") continue;
+                string file = Path.Combine(languages, "game", code + ".txt");
+                if (!File.Exists(file)) { missing.Add(code + ": no game text file"); continue; }
+                var table = LocTable.Parse(File.ReadAllText(file));
+                if (table.LanguageName.Length == 0) missing.Add(code + ": no language name");
+                foreach (string term in new[] { "envoys", "catapults", "AMapSelectExtraLarge" })
+                    if (string.IsNullOrEmpty(table.Raw(term))) missing.Add(code + ": " + term);
+            }
+            Assert.True(missing.Count == 0, string.Join(", ", missing));
+        }
+
+        /// <summary>The game's Cargo Ship and Transport Ship are different ships; the mod once called the first by the second's name.</summary>
+        [Fact]
+        public void TheCargoShipKeepsTheGamesName()
+        {
+            string languages = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(ThisFile()), "..", "..", "src", "KCAccess", "Languages"));
+            string template = File.ReadAllText(Path.Combine(languages, "template.txt"));
+            Assert.Contains("cargo ship =", template);
+            Assert.DoesNotContain("transport ship =", template);
+        }
+
         private static string ThisFile([System.Runtime.CompilerServices.CallerFilePath] string here = "") => here;
 
         [Fact]

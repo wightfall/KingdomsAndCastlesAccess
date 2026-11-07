@@ -117,13 +117,14 @@ namespace KCAccess.Game
         private static Selectable confirmFor;
 
         /// <summary>
-        /// Declaring war or breaking an alliance happens on the first click in the game and cannot be undone: the first
-        /// Enter only asks, a second Enter within 5 seconds does it. True when the press was held back.
+        /// Declaring war, breaking an alliance or destroying a ship happens on the first click in the game and cannot be
+        /// undone: the first Enter only asks, a second Enter within 5 seconds does it. True when the press was held back.
         /// </summary>
         internal static bool HoldBack(Selectable s)
         {
             var panel = GameUI.inst != null ? GameUI.inst.foreignIslandInfoUI : null;
-            if (panel == null || s == null || s != panel.hostilityButton) return false;
+            bool war = panel != null && s != null && s == panel.hostilityButton;
+            if (!war && !Routes.DestroysTheShip(s)) return false;
             if (confirmFor == s && Time.unscaledTime <= confirmUntil)
             {
                 confirmFor = null;
@@ -132,7 +133,8 @@ namespace KCAccess.Game
             confirmFor = s;
             confirmUntil = Time.unscaledTime + 5f;
             A.Cue(Cue.Error);
-            A.Say(Loc.F("{0}? This cannot be undone. Press Enter again within 5 seconds to confirm.", TextUtil.Clean(UIText.TextOf(panel.relationButtonTxt))), force: true);
+            string what = war ? TextUtil.Clean(UIText.TextOf(panel.relationButtonTxt)) : UIText.LabelOf(s);
+            A.Say(Loc.F("{0}? This cannot be undone. Press Enter again within 5 seconds to confirm.", what), force: true);
             return true;
         }
 

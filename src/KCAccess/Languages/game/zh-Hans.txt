@@ -1,0 +1,6 @@
+﻿# Language: 简体中文 (Simplified Chinese)
+# Translations of the game's own texts. The game has this language, but not yet these texts from its update of
+# November 2026, so it would show them in English. The mod adds each English text as a comment in your copy.
+envoys = 外交使节
+catapults = 攻城投石车
+AMapSelectExtraLarge = 特大

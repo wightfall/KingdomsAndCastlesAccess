@@ -365,13 +365,59 @@ namespace KCAccess.Tests
         }
 
         [Fact]
-        public void ThaiIsComplete()
+        public void EveryLanguageIsComplete()
+        {
+            var problems = new List<string>();
+            foreach (var path in Directory.GetFiles(LocExtractor.LanguagesDir, "*.txt"))
+            {
+                string file = Path.GetFileName(path);
+                if (file == "template.txt") continue;
+                var t = LocTable.Parse(File.ReadAllText(path, Encoding.UTF8));
+                problems.AddRange(t.Keys.Where(k => t.Raw(k).Trim().Length == 0).Select(k => file + ": untranslated \"" + k + "\""));
+            }
+            Assert.True(problems.Count == 0, string.Join("\n", problems));
+        }
+
+        [Fact]
+        public void ThaiIsAModOnlyLanguage()
         {
             var t = LocTable.Parse(File.ReadAllText(Path.Combine(LocExtractor.LanguagesDir, "th.txt"), Encoding.UTF8));
-            var empty = t.Keys.Where(k => t.Raw(k).Length == 0).ToList();
-            Assert.True(empty.Count == 0, "Untranslated in th.txt:\n" + string.Join("\n", empty));
             Assert.Equal("", t.GameLanguage);
         }
+
+        /// <summary>Key caps that stay in Latin letters in these languages ("Control Shift 1 to 9" has no word to translate).</summary>
+        private static readonly string[] LatinOnPurpose = { "Mods", "Control Shift 1 to 9", "Control 1 to 9", "Alt 1 to 9" };
+
+        /// <summary>
+        /// English that slipped through as a "translation". Languages with their own alphabet show it at once: a line with
+        /// a Latin word and no letter of the language. Key names are often kept in Latin letters, so the test leaves them out.
+        /// </summary>
+        [Theory]
+        [InlineData("ja", "[\\u3040-\\u30ff\\u4e00-\\u9fff]")]
+        [InlineData("ko", "[\\uac00-\\ud7af]")]
+        [InlineData("ru", "[\\u0400-\\u04ff]")]
+        [InlineData("uk", "[\\u0400-\\u04ff]")]
+        [InlineData("th", "[\\u0e00-\\u0e7f]")]
+        [InlineData("zh-Hans", "[\\u4e00-\\u9fff]")]
+        [InlineData("zh-Hant", "[\\u4e00-\\u9fff]")]
+        public void LanguagesWithTheirOwnAlphabetHaveNoEnglishLines(string code, string letters)
+        {
+            var t = LocTable.Parse(File.ReadAllText(Path.Combine(LocExtractor.LanguagesDir, code + ".txt"), Encoding.UTF8));
+            var english = new List<string>();
+            foreach (var key in t.Keys)
+            {
+                if (LatinOnPurpose.Contains(key) || KeyNames.Contains(key)) continue;
+                string text = System.Text.RegularExpressions.Regex.Replace(t.Raw(key), "\\{[^}]*\\}", string.Empty);
+                if (System.Text.RegularExpressions.Regex.IsMatch(text, "[A-Za-z]{3,}") && !System.Text.RegularExpressions.Regex.IsMatch(text, letters)) english.Add(key + " = " + t.Raw(key));
+            }
+            Assert.True(english.Count == 0, code + ":\n" + string.Join("\n", english));
+        }
+
+        private static readonly string[] KeyNames =
+        {
+            "Alt", "Tab", "Enter", "Delete", "Insert", "Home", "End", "Page Up", "Page Down", "Escape", "Shift", "Backspace", "Shift Enter", "Control",
+            "Control R", "Control Shift Enter", "Numpad Enter", "Numpad {0}", "Space", "Pause",
+        };
 
         [Fact]
         public void ExtractorReadsCallsAndJoinedLiterals()

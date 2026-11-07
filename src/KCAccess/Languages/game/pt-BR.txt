@@ -1,0 +1,6 @@
+﻿# Language: Português do Brasil (Portuguese, Brazil)
+# Translations of the game's own texts. The game has this language, but not yet these texts from its update of
+# November 2026, so it would show them in English. The mod adds each English text as a comment in your copy.
+envoys = Enviados
+catapults = Catapultas de cerco
+AMapSelectExtraLarge = Extra grande

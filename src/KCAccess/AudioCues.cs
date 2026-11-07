@@ -56,6 +56,7 @@ namespace KCAccess
         {
             if (inst == null || !Plugin.CfgCues.Value) return;
             if (!inst.clips.TryGetValue(cue, out var clip)) return;
+            if (Plugin.CfgDebugCommands.Value) Plugin.Log.LogInfo("[cue] " + cue);
             inst.source.pitch = Mathf.Clamp(pitchScale, 0.25f, 3f);
             inst.source.PlayOneShot(clip, Volume(cue));
         }

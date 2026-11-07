@@ -449,6 +449,7 @@ namespace KCAccess
             if (label == "back" || label == "close" || label == "cancel" || label == "no" || label == "x" || label == "resume" || label == "ok") score += 2;
             var confirm = b.GetComponentInParent<Assets.Code.UI.Confirmation>();
             if (confirm != null && confirm.noButton == b) score += 4;
+            if (name == "no" && b.GetComponentInParent<DemolishWarningUI>() != null) score += 4; // Yes and No, with no other hint in any language
             return score;
         }
 

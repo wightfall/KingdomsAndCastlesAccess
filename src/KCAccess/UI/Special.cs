@@ -1095,8 +1095,11 @@ namespace KCAccess.UI
             var region = s.GetComponentInParent<RegionNameUI>();
             if (region != null && s == region.regionNameInput) return Loc.T("Island name");
             if (s.GetComponentInParent<DragonSlotUI>() is DragonSlotUI dragon && s == dragon.nameInput) return Loc.T("Dragon name");
+            if (GameUI.inst != null && GameUI.inst.workerUI != null && s == GameUI.inst.workerUI.titleText) return Loc.T("Building name");
+            if (s.GetComponentInParent<TourismModalUI>() is TourismModalUI share && s == share.L_codeInput) return Loc.T("Code of the kingdom to visit");
             // Amount fields: their text is only the number.
             if (AmountFieldResource(s) is string res) return res;
+            if (s.GetComponentInParent<ResourceLineItemUI>() is ResourceLineItemUI trade && s == trade.orderAmt) return TextUtil.Capitalize(ResourceNames.Name(trade.rtype.ToString()));
             if (s is TMPro.TMP_InputField && OrderRow(s.gameObject, out _, out var type)) return Loc.F("desired amount of {0}", ResourceNames.Name(type.ToString()));
             return null;
         }
@@ -1336,6 +1339,7 @@ namespace KCAccess.UI
                 pendingKeyButton = keyBtn;
                 return true;
             }
+            if ((KInput.Plain(KeyCode.Return) || KInput.Plain(KeyCode.Space)) && SocialLink(item)) return true;
             if ((KInput.Plain(KeyCode.Return) || KInput.Plain(KeyCode.Space)) && item.IsControl && ResearchRow(item.Go, out _, out var up))
             {
                 var b = GameUI.inst.GetBuildingSelected();
@@ -1472,6 +1476,30 @@ namespace KCAccess.UI
         /// <summary>
         /// The witch answers a mission she cannot be paid for, or a spell there is not gold enough for, with a sound only.
         /// </summary>
+        /// <summary>
+        /// The game's update of November 2026 left the main menu's Discord, Twitter and Twitch buttons without anything to call,
+        /// though the game's own methods for them are still there.
+        /// </summary>
+        private static bool SocialLink(UIItem item)
+        {
+            var button = item.Control as Button;
+            var menu = GameState.inst != null ? GameState.inst.mainMenuMode : null;
+            if (button == null || menu == null || !GameState.inst.IsMainMenuMode() || button.onClick.GetPersistentEventCount() > 0) return false;
+            System.Action open;
+            switch (UIText.LabelOf(button))
+            {
+                case "Discord": open = menu.OnClickedDiscord; break;
+                case "Twitter": open = menu.OnClickedTwitter; break;
+                case "Twitch": open = menu.OnClickedTwitch; break;
+                default: return false;
+            }
+            KInput.Consume(KeyCode.Return);
+            KInput.Consume(KeyCode.Space);
+            A.Cue(Cue.Activate);
+            open();
+            return true;
+        }
+
         private static bool WitchKey(UIItem item)
         {
             var ui = GameUI.inst != null ? GameUI.inst.witchUI : null;

@@ -150,6 +150,12 @@ namespace KCAccess
                 n++;
                 name = j.name;
             }
+            AnnounceCount(n, name);
+        }
+
+        /// <summary>Says when a gamepad came or went. Apart from the hardware so that it can be tested without one.</summary>
+        internal static void AnnounceCount(int n, string name)
+        {
             if (n == lastCount) return;
             if (lastCount >= 0 || n > 0)
             {

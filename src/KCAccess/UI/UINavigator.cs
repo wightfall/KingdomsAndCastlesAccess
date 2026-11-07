@@ -76,7 +76,11 @@ namespace KCAccess.UI
             bool changed = root != Root || roots.Count != Roots.Count;
             for (int i = 0; !changed && i < roots.Count; i++) changed = roots[i] != Roots[i];
             EndEdit(false);
-            if (changed) textSnapshot = null;
+            if (changed)
+            {
+                textSnapshot = null;
+                clickedGo = null; // the new screen announces itself
+            }
             Roots.Clear();
             Roots.AddRange(roots);
             Root = root;
@@ -203,10 +207,12 @@ namespace KCAccess.UI
                         focusRequest = null;
                         SetHover(go);
                         if (focusRequestSpeaks) A.SayQueued(Describe(list.Items[i]));
+                        clickedGo = null;
                         break;
                     }
                 }
             }
+            SayWhereTheKeyboardWent();
         }
 
         private List<UIItem> Collect(Transform root)
@@ -220,8 +226,9 @@ namespace KCAccess.UI
             foreach (var item in items)
             {
                 var last = merged.Count > 0 ? merged[merged.Count - 1] : null;
-                if (last != null && !last.IsControl && !item.IsControl && last.Hook == null && item.Hook == null && Mathf.Abs(last.Center.y - item.Center.y) <= 14f
-                    && last.Go.transform.parent == item.Go.transform.parent)
+                // ... and a title with its number under it (the totals below the job priorities).
+                if (last != null && !last.IsControl && !item.IsControl && last.Hook == null && item.Hook == null && last.Go.transform.parent == item.Go.transform.parent
+                    && (Mathf.Abs(last.Center.y - item.Center.y) <= 14f || last.Go.transform.parent.name.StartsWith("SubSectionItem", StringComparison.Ordinal)))
                 {
                     last.Texts.AddRange(item.Texts);
                     continue;
@@ -242,6 +249,13 @@ namespace KCAccess.UI
             // ("1pixelwhite"): Escape does that already.
             merged.RemoveAll(it => it.IsControl && it.Go != null && it.Go.transform.parent != null
                 && it.Go.transform.parent.name == "LanguageSelector" && it.Go.name == "GameObject");
+            // The food pictures in a row of resource amounts are clickable but do nothing (a ship's cargo amounts).
+            merged.RemoveAll(it => it.IsControl && it.Go != null && it.Go.transform.parent != null && it.Go.name.EndsWith("icon", StringComparison.Ordinal)
+                && it.Go.transform.parent.name.StartsWith("resourceamt", StringComparison.Ordinal));
+            // Kingdom share: "Packaging up your kingdom" stays behind the kingdom's summary once it is done.
+            var share = GameState.inst != null && GameState.inst.mainMenuMode != null ? GameState.inst.mainMenuMode.kingdomShareUI : null;
+            if (share != null && share.U_saveLoadOption != null && share.U_saveLoadOption.gameObject.activeSelf)
+                merged.RemoveAll(it => !it.IsControl && it.Go != null && it.Go.name == "LoadingText" && it.Go.transform.IsChildOf(share.transform));
             AddContextToDuplicates(merged);
             return merged;
         }
@@ -662,7 +676,7 @@ namespace KCAccess.UI
             if (!s.interactable)
             {
                 A.Cue(Cue.Error);
-                A.Say(UIText.LabelOf(s) + ", " + Loc.T("unavailable"));
+                A.Say(Describe(item)); // with the reason where the mod knows it; a bar has no label of its own
                 return;
             }
             if (Game.Diplomacy.HoldBack(s)) return; // declaring war or breaking an alliance asks for a second Enter
@@ -674,7 +688,10 @@ namespace KCAccess.UI
                         A.Say(UIText.LabelOf(t) + ", " + Loc.T("already selected"));
                         return;
                     }
-                    t.isOn = !t.isOn;
+                    // A box that listens to the click itself (a ship's pick up and drop off open their amounts that way)
+                    // gets a real click: changing its value would leave the game's own reaction out.
+                    if (t.GetComponents<IPointerClickHandler>().Length > 1) Click(t.gameObject);
+                    else t.isOn = !t.isOn;
                     A.Cue(t.isOn ? Cue.ToggleOn : Cue.ToggleOff);
                     A.Say(UIText.ValueOf(t));
                     return;
@@ -696,12 +713,32 @@ namespace KCAccess.UI
             A.Cue(Cue.Activate);
             SnapshotTexts();
             lastClickGroup = s.transform.parent;
+            clickedGo = s.gameObject;
+            clickedUntil = Time.unscaledTime + 3f;
             Click(s.gameObject);
             nextRefresh = 0f; // the click may open or close parts of the panel
         }
 
         private HashSet<string> textSnapshot;
         private Transform lastClickGroup;
+        private GameObject clickedGo;
+        private float clickedUntil;
+
+        /// <summary>
+        /// The pressed button went away with its click, also a moment later (the end of a conversation): the keyboard is on
+        /// something else now, which could be anything, so it is said.
+        /// </summary>
+        private void SayWhereTheKeyboardWent()
+        {
+            if ((object)clickedGo == null) return;
+            if (Time.unscaledTime > clickedUntil) clickedGo = null;
+            else if (focusRequest == null && list.HasCurrent)
+            {
+                for (int i = 0; i < list.Count; i++) if (list.Items[i].Go == clickedGo) return;
+                clickedGo = null;
+                A.SayQueued(Describe(list.Current));
+            }
+        }
         private float changeCheckAt;
 
         /// <summary>Remember the panel's texts so that changes caused by a click can be spoken.</summary>
