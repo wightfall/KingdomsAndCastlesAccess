@@ -17,7 +17,7 @@ Round in progress: for 1.29.0. Game 124r3s, Steam build 26512598 (the game was u
 - [x] Install or update on an existing install, with the settings kept
 - [x] Install on a game folder without BepInEx
 - [x] Silent: `--quiet`, exit codes, `--mod-language th`, `--start-game` (exit 0 and 3 tried; exit 2 needs a PC without Steam)
-- [ ] Update available window with the notes, Yes and No
+- [x] Update available window with the notes, Yes and No
 - [x] Uninstall, then install again
 - [x] Bundle zip and mod-only zip: contents, extracted over the game, the game starts and speaks
 
