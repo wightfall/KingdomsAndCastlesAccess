@@ -28,12 +28,39 @@ namespace KCAccess.Core
             public Link State;
         }
 
+        /// <summary>What becomes of a water building once it stands (WaterFlow works it out as the game will).</summary>
+        public enum Reach
+        {
+            Water,
+            /// <summary>Linked to a wheel that pumps, but the pressure is used up before it.</summary>
+            TooWeak,
+            /// <summary>Linked to a water wheel, but none of them has all its workers.</summary>
+            NoPump,
+            /// <summary>Not linked to any built water wheel.</summary>
+            NotLinked
+        }
+
+        public static Reach ReachOf(WaterFlow.Node node) =>
+            node.HasWater ? Reach.Water : node.ReachedByPump ? Reach.TooWeak : node.Connected ? Reach.NoPump : Reach.NotLinked;
+
+        public static string ReachText(Reach reach)
+        {
+            switch (reach)
+            {
+                case Reach.Water: return Loc.T("Water will reach it");
+                case Reach.TooWeak: return Loc.T("The water is too weak to reach it here. Connect another water wheel or shorten the pipes");
+                case Reach.NoPump: return Loc.T("No water reaches it yet: no water wheel pumps, a water wheel needs all its workers");
+                default: return Loc.T("No water reaches it yet");
+            }
+        }
+
         /// <summary>
         /// Said on every tile while a water building is held: what it would join there. <paramref name="source"/> is a
         /// water wheel (the start of the chain); <paramref name="nearest"/> ("Aqueduct, 6 tiles north east, ...") is said
-        /// when nothing is next to it.
+        /// when nothing is next to it. <paramref name="reach"/> is what the game will make of it; without it the answer
+        /// is guessed from the neighbours (water next to it means water).
         /// </summary>
-        public static string Placing(IList<Neighbour> touching, bool source, string nearest)
+        public static string Placing(IList<Neighbour> touching, bool source, string nearest, Reach? reach = null)
         {
             if (touching == null || touching.Count == 0)
             {
@@ -49,7 +76,7 @@ namespace KCAccess.Core
                 if (n.State == Link.Water) water = true;
             }
             string text = Loc.F("connects to {0}", string.Join("; ", parts.ToArray()));
-            if (!source) text += ". " + (water ? Loc.T("Water will reach it") : Loc.T("No water reaches it yet"));
+            if (!source) text += ". " + ReachText(reach ?? (water ? Reach.Water : Reach.NotLinked));
             return text;
         }
 

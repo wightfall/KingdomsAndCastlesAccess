@@ -672,7 +672,8 @@ namespace KCAccess.Game
             if (!IsWater(c))
             {
                 parts.Add(c.RoadCoverage > 0 || c.RoadConnectCoverage > 0 ? Loc.T("inside road coverage") : Loc.T("outside road coverage"));
-                if (c.IrrigationCoverage > 0) parts.Add(Loc.T("irrigated"));
+                // Not a second time where the soil is already called "irrigated very fertile".
+                if (c.IrrigationCoverage > 0 && c.GetEffectiveFertility() < 3) parts.Add(Loc.T("irrigated"));
             }
             string left = DepositLeft(c);
             if (left != null) parts.Add(left);

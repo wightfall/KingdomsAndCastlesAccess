@@ -69,6 +69,8 @@ namespace KCAccess.Game
             }
         }
 
+        public virtual void Resume() => A.Say(TextUtil.Sentences(Title, List.HasCurrent ? List.Current.Text : null), force: true);
+
         /// <summary>Spoken after closing; menus opened outside the map override it.</summary>
         protected virtual void OnClosed() => MapController.Inst.OnReturnToMap();
 
@@ -99,6 +101,18 @@ namespace KCAccess.Game
                 var cur = List.Current;
                 if (cur.OnEnter != null) cur.OnEnter();
                 else A.Say(cur.Text, force: true);
+            }
+            else if (KInput.Down(KeyCode.C) && KInput.Ctrl && !KInput.Alt)
+            {
+                KInput.Consume(KeyCode.C);
+                var lines = new System.Collections.Generic.List<string>();
+                if (KInput.Shift)
+                {
+                    lines.Add(ClipText.Heading(Title));
+                    foreach (var e in List.Items) lines.Add(e.Text);
+                }
+                else if (List.HasCurrent) lines.Add(List.Current.Text);
+                UI.UINavigator.CopyToClipboard(string.Join("\r\n", lines.ToArray()));
             }
             else if (KInput.Down(KeyCode.R) && KInput.Ctrl)
             {

@@ -42,6 +42,7 @@ namespace KCAccess.Game
 
         protected override void OnClosed()
         {
+            if (AccessController.Inst.CoveringMenu) return;
             if (fromMap) MapController.Inst.OnReturnToMap();
             else AccessController.Inst.Nav.SpeakCurrent();
         }

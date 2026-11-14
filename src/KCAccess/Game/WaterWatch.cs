@@ -36,13 +36,64 @@ namespace KCAccess.Game
                 var tiles = Footprint(held);
                 var touching = Touching(held, tiles);
                 string nearest = touching.Count == 0 && withNearest ? Nearest(held, tiles) : null;
-                return WaterText.Placing(touching, IsSource(held), nearest);
+                bool source = IsSource(held);
+                WaterText.Reach? reach = touching.Count > 0 && !source ? WaterText.ReachOf(Simulate(held, tiles)) : (WaterText.Reach?)null;
+                return WaterText.Placing(touching, source, nearest, reach);
             }
             catch (System.Exception e)
             {
                 Plugin.Log.LogWarning("Water hint failed: " + e.Message);
                 return null;
             }
+        }
+
+        private static WaterFlow.Kind KindOf(Building b)
+        {
+            if (b.GetComponent<Noria>() != null) return WaterFlow.Kind.Wheel;
+            switch (b.UniqueName)
+            {
+                case "aqueduct": return WaterFlow.Kind.Aqueduct;
+                case "bathhouse": return WaterFlow.Kind.Bathhouse;
+                case "dragonbath": return WaterFlow.Kind.DragonBath;
+                default: return WaterFlow.Kind.Other;
+            }
+        }
+
+        /// <summary>
+        /// The game's water flood (WaterFlow) over the built water buildings plus the held one where it stands, as if it
+        /// were finished there. Returns the held one's node with what would become of it.
+        /// </summary>
+        private static WaterFlow.Node Simulate(Building held, HashSet<GridPos> tiles)
+        {
+            var nodes = new Dictionary<IWaterSystemUser, WaterFlow.Node>();
+            WaterFlow.Node NodeOf(IWaterSystemUser user)
+            {
+                if (nodes.TryGetValue(user, out var known)) return known;
+                var b = ((MonoBehaviour)user).GetComponent<Building>();
+                b.GetBoundingFootprint(out int minX, out int minZ, out int maxX, out int maxZ);
+                var noria = user as Noria;
+                var node = new WaterFlow.Node { Kind = KindOf(b), Pumps = noria != null && noria.ShouldIrrigate(), MinX = minX, MinZ = minZ, MaxX = maxX, MaxZ = maxZ };
+                nodes[user] = node;
+                return node;
+            }
+            held.CalculateBoundingFootprint(out int hMinX, out int hMinZ, out int hMaxX, out int hMaxZ);
+            var heldNode = new WaterFlow.Node { Kind = KindOf(held), MinX = hMinX, MinZ = hMinZ, MaxX = hMaxX, MaxZ = hMaxZ };
+            var wheels = new List<WaterFlow.Node>();
+            var list = Player.inst.GetBuildingList("noria");
+            for (int i = 0; list != null && i < list.Count; i++)
+            {
+                var wheel = list.data[i];
+                var noria = wheel != null ? wheel.GetComponent<Noria>() : null;
+                if (noria != null && wheel != held && wheel.IsBuilt()) wheels.Add(NodeOf(noria));
+            }
+            WaterFlow.Flood(wheels, (x, z) =>
+            {
+                if (tiles.Contains(new GridPos(x, z))) return heldNode;
+                var c = World.inst.GetCellData(x, z);
+                var user = c != null ? c.waterSystem : null;
+                return user != null && !ReferenceEquals(user, held.GetComponent<IWaterSystemUser>()) && user.IsBuilt() ? NodeOf(user) : null;
+            }, World.inst.GridWidth, World.inst.GridHeight);
+            return heldNode;
         }
 
         private static HashSet<GridPos> Footprint(Building b)
@@ -123,9 +174,9 @@ namespace KCAccess.Game
         }
 
         /// <summary>
-        /// Whether pieces side by side link the building to any built water wheel. The game's own IsConnected no longer
-        /// says this: since the November 2026 update its flood skips wheels without all their workers and stops where
-        /// the pressure runs out, so linked pieces beyond that read as not connected.
+        /// Whether pieces side by side link the building to any built water wheel. Game 124r2s did not say this with its
+        /// own IsConnected (its flood skipped wheels without all their workers and stopped where the pressure ran out);
+        /// 124r3s does again, and this stays as the answer that does not depend on the game's bookkeeping.
         /// </summary>
         private static bool Linked(Building target)
         {
@@ -258,15 +309,18 @@ namespace KCAccess.Game
         }
 
         /// <summary>
-        /// The true reason for a selected piece the game calls "Not connected to a Noria" although it is linked to one, or
-        /// null. Since the November 2026 update the game says that of everything its water does not reach.
+        /// The true reason for a dry piece where the game's own line misleads, or null. Game 124r2s called everything its
+        /// water did not reach "Not connected to a Noria"; since 124r3s a linked piece is connected, but while the wheel
+        /// waits for workers the game says "Not enough water power, try connecting another noria".
         /// </summary>
         internal static string LinkedButDry(MonoBehaviour piece)
         {
             var w = piece as IWaterSystemUser;
             var b = piece != null ? piece.GetComponent<Building>() : null;
-            if (w == null || b == null || w.IsConnected || !b.IsBuilt() || !Linked(b)) return null;
-            return WaterText.Built(b.FriendlyName, false, true, false, ChainPumps(b));
+            if (w == null || b == null || w.HasWater || !b.IsBuilt() || !(w.IsConnected || Linked(b))) return null;
+            bool pumps = ChainPumps(b);
+            if (w.IsConnected && pumps) return null; // too weak: the game says so itself
+            return WaterText.Built(b.FriendlyName, false, true, false, pumps);
         }
 
         /// <summary>Whether a water building or fountain works, or null for other buildings.</summary>

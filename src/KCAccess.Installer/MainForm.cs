@@ -473,7 +473,7 @@ namespace KCAccess.Installer
             var loader = MessageBox.Show(this, Loc.T("Also remove BepInEx? Choose No if you use other BepInEx mods."), Loc.T("Uninstall"), MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             try
             {
-                Installer.Uninstall(loader == DialogResult.Yes);
+                Installer.Uninstall(loader == DialogResult.Yes, Application.ExecutablePath);
                 ShowStatus(Loc.T("KCAccess was removed."));
                 MessageBox.Show(this, Loc.T("KCAccess was removed."), Loc.T("Uninstall"), MessageBoxButtons.OK, MessageBoxIcon.Information);
             }

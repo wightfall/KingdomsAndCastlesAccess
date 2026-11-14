@@ -462,6 +462,7 @@ namespace KCAccess.Game
         protected override void OnClosed()
         {
             Plugin.ConfigRef.Save();
+            if (AccessController.Inst.CoveringMenu) return;
             if (fromMap) MapController.Inst.OnReturnToMap();
             else AccessController.Inst.Nav.SpeakCurrent();
         }

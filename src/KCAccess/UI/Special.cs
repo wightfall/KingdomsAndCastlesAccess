@@ -649,7 +649,31 @@ namespace KCAccess.UI
             string villagers = barracks.peopleInSquad > 0
                 ? Loc.P(barracks.peopleInSquad, "{0} villager", "{0} villagers") + (people < barracks.peopleInSquad ? " " + Loc.F("(have {0})", people) : string.Empty)
                 : null;
-            return Loc.F("Each squad costs {0}", TextUtil.Join(", ", villagers, anyResource ? ResourceNames.Cost(names, need, got) : null));
+            // The squads ordered and not trained yet: a small "+2" beside the button.
+            return TextUtil.Join(", ", Loc.F("Each squad costs {0}", TextUtil.Join(", ", villagers, anyResource ? ResourceNames.Cost(names, need, got) : null)), Queue(barracks));
+        }
+
+        private static string Queue(Barracks barracks) =>
+            barracks.pendingTraining > 0 ? Loc.P(barracks.pendingTraining, "{0} squad in the queue", "{0} squads in the queue") : null;
+
+        /// <summary>
+        /// Train and Cancel Pending Training answer with a number beside the button only ("+1"), and the cancel button
+        /// appears or goes: say what was ordered and what the building reports (training, waiting for staff or gold).
+        /// </summary>
+        internal static void TrainingChanged(BarracksUI ui, bool ordered, int before)
+        {
+            var barracks = ui != null ? ui.selectedBarracks : null;
+            if (barracks == null) return;
+            if (barracks.pendingTraining == before)
+            {
+                // The game took no order (the island's troop limit, or nothing was waiting).
+                A.Cue(Cue.Error);
+                A.Say(ordered ? Loc.T("No training ordered") : Loc.T("No training to cancel"), force: true);
+                return;
+            }
+            A.Cue(Cue.Activate);
+            A.Say(TextUtil.Sentences(TextUtil.Join(", ", ordered ? Loc.T("Training ordered") : Loc.T("Training cancelled"), Queue(barracks)),
+                barracks.pendingTraining > 0 ? TextUtil.Clean(barracks.GetStatus()) : null), force: true);
         }
 
         /// <summary>
@@ -736,6 +760,18 @@ namespace KCAccess.UI
         }
 
         /// <summary>Custom spoken description, or null to use the default.</summary>
+        /// <summary>
+        /// Twitch vote panel: whether the chat is connected is a coloured light only (green, red, yellow while the
+        /// channel is looked up), and its hover text is empty. The words are the game's own, from the status line of
+        /// the settings part ("Status: Connected"). Null for other items.
+        /// </summary>
+        internal static string TwitchLight(UIItem item)
+        {
+            var streamer = item != null && item.Go != null && !item.IsControl ? StreamerUI.inst : null;
+            if (streamer == null || streamer.statusConnectionText == null || item.Go.name != "checkbg" || !item.Go.transform.IsChildOf(streamer.transform)) return null;
+            return TextUtil.Join(" ", Game.Twitch.Translate("VoterStatusStatus"), Game.Twitch.Translate(streamer.statusConnectionText.Term));
+        }
+
         internal static string Describe(UIItem item)
         {
             if (item == null || item.Go == null) return null;
@@ -759,7 +795,10 @@ namespace KCAccess.UI
             {
                 var hp = war.hazardPayToggle;
                 return TextUtil.Join(", ", Loc.T("Hazard pay: soldiers are paid 4 times their wages"), Loc.T("check box"), hp.isOn ? Loc.T("checked") : Loc.T("not checked"),
-                    hp.interactable ? null : Loc.T("unavailable: it needs a fully staffed Chamber of War and 50 gold to start"));
+                    // While it starts up the game locks the box (the bar beside it fills): that is not a lack of staff or gold.
+                    hp.interactable ? null
+                    : war.progressBar != null && war.progressBar.gameObject.activeSelf ? Loc.F("Hazard pay starting, {0}", TextUtil.Percent(war.progressBar.value))
+                    : Loc.T("unavailable: it needs a fully staffed Chamber of War and 50 gold to start"));
             }
             if (war != null && war.progressBar != null && item.Control == war.progressBar)
                 return Loc.F("Hazard pay starting, {0}", TextUtil.Percent(war.progressBar.value));
@@ -902,7 +941,7 @@ namespace KCAccess.UI
             if (share != null && item.Go.transform.IsChildOf(share.transform))
             {
                 if (item.Control == share.L_codeInput) return Loc.F("Code of the kingdom to visit, edit, {0}", UIText.ValueOf(share.L_codeInput));
-                if (item.Control == share.U_codeOutput) return Loc.F("Share code of your kingdom: {0}", UIText.ValueOf(share.U_codeOutput));
+                if (item.Control == share.U_codeOutput) return TextUtil.Sentences(Loc.F("Share code of your kingdom: {0}", UIText.ValueOf(share.U_codeOutput)), Loc.T("Control C copies it"));
                 bool pictureOnly = UIText.VisibleTexts(item.Go.transform).Count == 0;
                 if (pictureOnly && item.Control == share.close) return Loc.T("Close, button");
                 if (pictureOnly && item.Control == share.U_refreshCode) return Loc.T("Get a new share code, button");
@@ -941,7 +980,9 @@ namespace KCAccess.UI
                 if (item.Control == seed.nextSeed) return Loc.T("Next map, button");
             }
             if (item.IsControl && item.Go.name == "SeedInput" && !UIText.LabelOf(item.Control).ToLowerInvariant().Contains("seed"))
-                return Loc.F("Map seed, edit, {0}", UIText.ValueOf(item.Control));
+                return UIText.IsReadOnlyField(item.Control)
+                    ? TextUtil.Sentences(Loc.F("Map seed: {0}", UIText.ValueOf(item.Control)), Loc.T("Control C copies it"))
+                    : Loc.F("Map seed, edit, {0}", UIText.ValueOf(item.Control));
             var mrow = item.Go.GetComponentInParent<ResourceLineItemUI>();
             if (mrow != null && item.Control != null && item.Control == mrow.orderAmt) return MerchantRow(mrow);
             if (item.IsControl && OrderRow(item.Go, out var orow, out var otype))

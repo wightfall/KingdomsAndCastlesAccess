@@ -38,7 +38,9 @@ namespace KCAccess.Game
                 if (b.GetComponent<Well>() is Well well) parts.Add(FireProtection(b, well));
                 if (b.GetComponent<Forester>() is Forester forester) parts.Add(Trees(b, forester));
                 if (b.GetComponent<FishingHut>() is FishingHut hut) parts.Add(Fish(b, hut));
-                if (b.GetComponent<Reservoir>() is Reservoir reservoir) parts.Add(Irrigation(b, reservoir));
+                // A finished reservoir without water irrigates nothing: only its problem line is said then.
+                if (b.GetComponent<Reservoir>() is Reservoir reservoir && !(b.IsBuilt() && b.GetComponent<IWaterSystemUser>() is IWaterSystemUser user && !user.HasWater))
+                    parts.Add(Irrigation(b, reservoir));
                 if (b.GetComponent<Windmill>() is Windmill mill) parts.Add(Farms(b, mill));
                 parts.RemoveAll(string.IsNullOrEmpty);
                 return parts.Count > 0 ? TextUtil.Join(", ", parts) : null;

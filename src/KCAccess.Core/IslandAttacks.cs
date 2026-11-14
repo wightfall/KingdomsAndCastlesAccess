@@ -42,12 +42,16 @@ namespace KCAccess.Core
             foreach (int lm in ended) lastSeen.Remove(lm);
         }
 
-        /// <summary>"Longvale, your island", "Stot kingdom", "your island", "foreign kingdom" or "unclaimed island".</summary>
-        public static string Describe(string name, bool mine, bool owned)
+        /// <summary>
+        /// "Longvale, your island", "Stot kingdom", "your island", "foreign kingdom" or "unclaimed island". An island
+        /// another kingdom claimed later has no name of its own (the game names only the island of its first keep):
+        /// "an island of Stot", from the name of the kingdom (<paramref name="kingdom"/>).
+        /// </summary>
+        public static string Describe(string name, bool mine, bool owned, string kingdom = null)
         {
             bool named = TextUtil.HasContent(name);
             if (mine) return named ? Loc.F("{0}, your island", name) : Loc.T("your island");
-            if (owned) return named ? Loc.F("{0} kingdom", name) : Loc.T("foreign kingdom");
+            if (owned) return named ? Loc.F("{0} kingdom", name) : TextUtil.HasContent(kingdom) ? Loc.F("an island of {0}", kingdom) : Loc.T("foreign kingdom");
             return Loc.T("unclaimed island");
         }
     }

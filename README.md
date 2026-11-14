@@ -38,7 +38,7 @@ SAPI and other screen readers automatically.
 * **A game update does not lock you out:** the mod checks itself against the game when it starts, repairs itself
   for the new version and tells you what is limited, see [When the game updates](#when-the-game-updates).
 
-Tested with game version **124r2s** (Steam build 26392486, 6 November 2026).
+Tested with game version **124r3s** (Steam build 26512598, 10 November 2026).
 
 ## Installation
 
@@ -96,7 +96,10 @@ licenses).
 ### Uninstall
 
 Run KCAccess-Updater.exe and choose **Uninstall**, or delete `BepInEx\plugins\KCAccess`. To remove BepInEx completely also delete `winhttp.dll`,
-`doorstop_config.ini`, `.doorstop_version` and the `BepInEx` folder.
+`doorstop_config.ini`, `.doorstop_version` and the `BepInEx` folder. Uninstall removes the mod, its settings, your edited
+language files and `KCAccess-README.md`, and asks whether BepInEx should go too. The setup program also removes
+`KCAccess-Updater.exe` from the game folder; when you uninstall from KCAccess-Updater.exe itself, that one file
+stays (a running program cannot delete itself) and can be deleted by hand.
 
 ## Keys
 
@@ -126,18 +129,26 @@ Press **F1** at any time for help about the current screen: what it is and only 
 | Page Up / Page Down | Change a slider in big steps |
 | Letters | Jump to items starting with that letter (menu screens) |
 | Ctrl+R | Read the whole screen |
+| Ctrl+C | Copy the current item to the Windows clipboard; on a text field or a share code only its text ("Copied: T1003"); on the map the description of the tile under the cursor |
+| Ctrl+Shift+C | Copy the whole screen to the clipboard, one item to a line (for a bug report, or to read it elsewhere); on the map the tile and the survey of the area around it |
 | F5 | Repeat the current item with its position |
 | Escape | Back / close / cancel |
 
 **Long texts** (300 characters or more, or three lines and more): Enter opens them in the **text reader**: Up /
 Down read one line at a time (a long line is split at its sentences), Page Up / Page Down jump between groups
 (paragraphs), Home / End go to the first and last line, letters jump to a line starting with them, Ctrl+R reads
-everything, Escape returns to the text. A very long text (over 2000 characters) is not read whole when you reach it:
+everything, Ctrl+C copies the line and Ctrl+Shift+C the whole text (in every list of the mod: status, notifications,
+key list, mod settings; in the build menu Ctrl+C copies the building with its full description and Ctrl+Shift+C its whole category), Escape returns to the text. A very long text (over 2000 characters) is not read whole when you reach it:
 you hear its first line and how many lines it has ("Long text, 604 lines. Enter reads it line by line").
 
 **Text fields** (kingdom name, map seed): press Enter to start editing, type (each character is
 echoed, Backspace says what was deleted), Enter to confirm, Escape to cancel. Up, Down or F2 read
-the field.
+the field. **Ctrl+V** pastes from the Windows clipboard ("Pasted T1003"): a field just opened is replaced, as
+typing would replace it, otherwise the text goes in at the caret. Line breaks and spaces around a pasted text are
+dropped, an amount field takes only the digits, and a field never takes more than its length allows. **Ctrl+C**
+copies the whole field. A field the game shows but does not let you change (the seed of a running map in the
+pause menu) is called "read-only text": Enter says "This field cannot be changed", Ctrl+C still copies it and
+Ctrl+V leaves it alone.
 
 **Job priority window** (J): each job is one row – "Priority 2, Farmers, 3 workers, 8 job positions";
 with a limit you set, "limited to 5 of 8 job positions" (the number in brackets on screen, which the game
@@ -259,7 +270,8 @@ mode says when an area has no rubble or when rubble could not be rebuilt for lac
 "Vikings are attacking!" and "Dragons are attacking!" banners do not say who is attacked, so each island is
 announced on its own with its direction: "Vikings landed on Halsbeck kingdom, 53 tiles west", "Dragons are
 attacking Longvale, your island", and when they are gone "The vikings on Halsbeck kingdom are gone" or "The
-dragons left Longvale, your island". The game shows no banner at all when an AI kingdom at war lands an army:
+dragons left Longvale, your island". An island an AI kingdom claimed later has no name in the game: it is
+"an island of Halsbeck". The game shows no banner at all when an AI kingdom at war lands an army:
 "An army of Halsbeck landed on Longvale, your island", later "The army of Halsbeck no longer attacks Longvale, your island" (gone, beaten or at peace)
 (envoys and settlers are not counted). Attacks on your islands play the danger sound, those on AI kingdoms the
 news sound; all are in the notification history (L).
@@ -300,7 +312,8 @@ change it in the mod settings (Ctrl+Shift+O, group **Streaming**).
   vote interval, number of options and a check box for every vote option). K has a **Twitch vote** line with
   the vote counts and the time left; Enter on it opens or closes the settings and moves you into them.
   Escape closes them again. After you type your channel name you hear "Connected to the Twitch chat" or
-  that the channel could not be joined.
+  that the channel could not be joined. The panel's connection light, a colour only, is read as "Status:
+  Connected", "Status: Not connected" or "Status: Pending".
 * Every new vote is announced with the numbers viewers type: "New Twitch vote, ends in 2 minutes: 4, Bountiful
   harvest; 5, Plague; 6, Rain". Single votes are not spoken (K has the counts). **Announce when 10 seconds are
   left in a Twitch vote** (on by default) says once per vote how much time is left and which option leads.
@@ -368,7 +381,7 @@ focus on the current language; Enter switches language, Escape closes the list.
   villagers the units became.
 * **Training:** the train buttons of the barracks, archer school, siege workshop, Hall of Diplomacy and the
   keep (settlers) say what one squad costs and what is missing ("Each squad costs 17 villagers (have 5),
-  gold 34, armaments 17 (have 0)"), which the game shows only when hovering.
+  gold 34, armaments 17 (have 0)"), which the game shows only when hovering. Enter on a train button that is unavailable says the same again. Train answers "Training ordered, 2 squads in the queue" with what the building reports, Cancel Pending Training "Training cancelled".
 * **Gifts (Hall of Diplomacy):** Make Gift opens a row of amount fields and starts on the first ("Wheat, edit,
   0"); Enter, type the amount, Enter. Then the second Make Gift. Send an envoy to the hall with M: "Your envoy
   picked up the gift: gold 10". The envoy's panel then shows the gift ("Gold, 10") and Drop Gift; take the
@@ -404,23 +417,29 @@ coloured markers. With the mod:
 A **Noria** (water wheel, build menu Food, on a river bank with its wheel in fresh water) pumps water once all
 its workers are there. **Aqueduct** pieces carry it to **reservoirs** (they irrigate the land around them),
 the **Bath House** and the dragon bath. Pieces only link when they touch side by side, not corner to corner,
-and every piece weakens the water: the water stops at the piece where it runs out, and every piece after that stays
-dry, so a long chain may need a second water wheel. A **Dragon Roost** is part of
+and every piece that gets water takes some of the wheel's pressure (a bath house three times, a dragon bath four
+times as much as a pipe): one wheel fills 24 pipes. The pipes after that stay dry, so a long chain needs a second
+water wheel, which then only pays for what the first did not fill. Since game version 124r3s a reservoir, bath
+house or dragon bath that touches the last pipe with water still gets water. A **Dragon Roost** is part of
 the chain too: a pipe beside one is fed through it. **Fountains** work only on
 land a reservoir with water irrigates. The game shows all this as pipes and water only; the mod says it:
 
 * **While placing** one of them, every tile says what it would connect to and whether it has water, as a farm
   says the soil: "can build, connects to Noria to the north, no water. No water reaches it yet", or "not
-  connected to the water system". **V** adds the nearest water building when nothing is next to it ("nearest
-  water building: Noria, 4 tiles north"). A fountain says "irrigated land, the fountain will work here" or that
+  connected to the water system". The last sentence is worked out as the game will work it out once the piece
+  stands: "Water will reach it", "The water is too weak to reach it here. Connect another water wheel or shorten
+  the pipes", "No water reaches it yet: no water wheel pumps, a water wheel needs all its workers", or "No water
+  reaches it yet" where nothing links it to a wheel. **V** adds the nearest water building when nothing is next to
+  it ("nearest water building: Noria, 4 tiles north"). A fountain says "irrigated land, the fountain will work here" or that
   the land is not irrigated.
 * **When it is finished**, after "Construction finished" you hear whether it works: "Reservoir has water and
   works", "Aqueduct is connected, but no water wheel pumps yet: a water wheel needs all its workers", "… the water
   is too weak to reach it. Connect another water wheel or shorten the pipes", or "… is not connected to a water
   wheel". A line of pieces finishing together is said once ("Aqueduct: 4 of 6 pieces have water").
 * A selected water building or fountain reads the game's red problem line (not connected, water too weak, land
-  must be irrigated) like any other building. Since the game's November 2026 update the game calls everything its
-  water does not reach "not connected", so for pieces that are linked the mod puts the true reason in that line.
+  must be irrigated) like any other building. While a water wheel still waits for its workers, the game (since
+  version 124r3s) says "Not enough water power, try connecting another noria" of every pipe behind it; the mod puts
+  the true reason in that line: no water wheel pumps yet.
 
 ### Islands, exploration ships and settlers
 
@@ -471,7 +490,10 @@ starving); **Release** asks for confirmation, because a released dragon attacks 
 Your dragons resting on the roost (or at a bath, doctor or obstacle course) are named in the tile description
 ("your dragon Smaug, resting") and **Shift+Enter** on the roost selects one; F6 then opens its army panel with
 status, energy, health, happiness, bond and **Return To Roost**. A dragon follows orders only once its bond is
-complete: until then selecting it says so; afterwards **M** sends it to the cursor like soldiers.
+complete (the bond grows while its happiness is 95 or more, and the army panel shows it once it has started):
+until then M says so; afterwards **M** sends it to the cursor like soldiers. A dragon sent to the building it
+rests in stays there, so the mod says "It is resting in this building. Move the cursor off the building, then
+press M".
 
 ### Creative mode
 
@@ -482,7 +504,8 @@ resource stacks are loose resources and are announced like other piles). Picking
 applies it at the cursor, **Escape** turns the brush off. The team buttons choose who spawned units belong
 to (your kingdom or a foreign island) and say the new team when pressed. On the map setup screen the map editor
 brushes work the same way: pick a brush, press Ctrl+M, move the cursor and press Enter to paint; you hear
-what was painted and the brush size ("Painted very fertile land, brush size 2").
+what was painted and the brush size ("Painted very fertile land, brush size 2"). Increase Radius and Decrease
+Radius say the new brush size, Toggle Grid says "shown" or "hidden".
 
 ### Build menu (B)
 
@@ -546,7 +569,9 @@ tile and what blocks the others, and repeats the nearest spot.
 The toolbar's **Share** button (and **Kingdom Share** on the main menu) uploads your kingdom or visits another
 player's. Share Kingdom: your share code is read in the code field; **Take Picture** switches to picture mode
 (said; **Accept Picture** takes the current camera view), then **Upload**, and the code is read in the result.
-Visit Kingdom: type the code in the code field, **Check Code**: you hear "Share code found", then the kingdom's
+**Ctrl+C** on the code copies it to the clipboard, to send to a friend ("Share code of your kingdom: T1003. Control
+C copies it").
+Visit Kingdom: type the code in the code field or paste it with **Ctrl+V**, **Check Code**: you hear "Share code found", then the kingdom's
 summary once it is downloaded, and **Visit** loads it ("Kingdom loaded"). To return to your own kingdom, load your
 save.
 
@@ -554,6 +579,10 @@ save.
 
 On the Load and Save screens, **Delete** on a saved game deletes it. The confirmation starts on
 Cancel; choose "It's toast" to delete. "Save deleted" confirms it.
+
+Every yes-or-no confirmation of the game starts on its **No / Cancel** button (deleting a save, loading over
+unsaved changes, releasing a dragon, demolishing many buildings ...), so a stray Enter never confirms; Up or Down
+moves to the other answer.
 
 ## Playing with a controller
 
@@ -888,7 +917,9 @@ selected mason's target becomes the building at the cursor), `gold <n>`, `probe 
 controls), `thieves sink`, `findmethod <name>` (buttons calling a game method), `liveries`, `canvases`,
 `merchant` (a merchant ship sails to your docks), `dockgoods`, `ships`, `merchantspecial [upgrade]`, `findspot`
 (where the game accepts the held building), `lqspot [iron]`, `jump <x> <z>`, `uistate` (what the game itself has open and selected), `hideui`, `sick` (villagers on the tile),
-`researchdone` (the selected Great Library finishes), `padcount <n> [name]` (as if gamepads were plugged in), `sharelocal <url>` (Kingdom
+`researchdone` (the selected Great Library finishes), `overlay [on|off]` (the Steam overlay, or what Steam reports of it),
+`gametexts [term|dump]` (the game's texts per language; `dump` writes every term to `BepInEx\kcaccess_gameterms.txt` to compare two game
+versions), `findcost` (what one search of every game object costs on this map), `padcount <n> [name]` (as if gamepads were plugged in), `sharelocal <url>` (Kingdom
 Share goes to a test server; the game's server cannot delete an upload), `wreck` (the building at the cursor falls into rubble),
 `witch [greedy|spells]`, `levelup [outpost]`, `survival intro|success`, `demowarn`, `spritelabels <sprite>`,
 `creative <option> on|off` (a creative mode option, for example `creative BuildForFree off`), `villagers <n>`

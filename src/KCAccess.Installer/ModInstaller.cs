@@ -128,12 +128,25 @@ namespace KCAccess.Installer
         }
 
         /// <summary>Removes the mod; optionally BepInEx as well (which also disables any other BepInEx mods).</summary>
-        public void Uninstall(bool removeLoader)
+        /// <param name="removeLoader">Remove BepInEx too.</param>
+        /// <param name="runningExe">
+        /// The program doing the uninstall. The updater copy in the game folder (and the one a self-update left as
+        /// ".old") is removed as well, unless it is this program: Windows keeps a running program locked.
+        /// </param>
+        public void Uninstall(bool removeLoader, string runningExe = null)
         {
             if (Directory.Exists(PluginDir)) Directory.Delete(PluginDir, recursive: true);
             DeleteIfExists(Path.Combine(GameDir, "KCAccess-README.md"));
             string cfg = Path.Combine(GameDir, @"BepInEx\config\kcaccess.screenreader.cfg");
             DeleteIfExists(cfg);
+            foreach (var name in new[] { UpdaterName, UpdaterName + ".old" })
+            {
+                string copy = Path.Combine(GameDir, name);
+                if (runningExe != null && string.Equals(Path.GetFullPath(copy), Path.GetFullPath(runningExe), StringComparison.OrdinalIgnoreCase)) continue;
+                try { DeleteIfExists(copy); }
+                catch (IOException) { }
+                catch (UnauthorizedAccessException) { }
+            }
             if (!removeLoader) return;
             foreach (var f in new[] { "winhttp.dll", "doorstop_config.ini", ".doorstop_version", "changelog.txt" }) DeleteIfExists(Path.Combine(GameDir, f));
             string bep = Path.Combine(GameDir, "BepInEx");

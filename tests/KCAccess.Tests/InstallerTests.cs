@@ -295,6 +295,28 @@ namespace KCAccess.Tests
         }
 
         [Fact]
+        public void UninstallRemovesTheUpdaterCopyButNotTheRunningProgram()
+        {
+            using (var tmp = new TempDir())
+            {
+                string game = FakeGame(tmp);
+                var inst = new ModInstaller(game);
+                inst.Install(MakeZip(withLoader: true));
+                string updater = Path.Combine(game, ModInstaller.UpdaterName);
+                File.WriteAllText(updater, "x");
+                File.WriteAllText(updater + ".old", "x");
+                // Uninstalling from the updater itself: it stays, the leftover of a self-update goes.
+                inst.Uninstall(removeLoader: false, runningExe: updater);
+                Assert.True(File.Exists(updater));
+                Assert.False(File.Exists(updater + ".old"));
+                // Uninstalling from the setup program somewhere else: nothing of the mod is left in the game folder.
+                inst.Uninstall(removeLoader: true, runningExe: Path.Combine(tmp.Path, "KCAccess-Setup.exe"));
+                Assert.False(File.Exists(updater));
+                Assert.True(File.Exists(Path.Combine(game, SteamLibrary.GameExe)));
+            }
+        }
+
+        [Fact]
         public void ReplaceFileOverwritesTarget()
         {
             using (var tmp = new TempDir())

@@ -50,31 +50,32 @@ namespace KCAccess.Game
             // Confirmations shown on top of anything in play mode.
             foreach (var c in Confirmations())
             {
-                if (c != null && UIText.IsVisible(c.gameObject)) return new ScreenInfo { Id = "Confirm", Title = ScreenDetector.ConfirmTitle(c), Root = c.transform, Modal = true };
+                if (c != null && UIText.IsVisible(c.gameObject)) return new ScreenInfo { Id = "Confirm", Title = ScreenDetector.ConfirmTitle(c), Root = c.transform, Modal = true, InitialFocus = ScreenDetector.SafeButton(c) };
             }
             return null;
         }
 
         private static Assets.Code.UI.Confirmation[] confirmations;
-        private static float confirmationsChecked = float.MinValue;
 
         /// <summary>
         /// The game's confirmation windows, shown or hidden. They are a dozen objects that stay in the scene. Searching all
-        /// the game's objects for them 10 times a second took a third of the frame time on a large map on a slow PC.
+        /// the game's objects for them 10 times a second took a third of the frame time on a large map on a slow PC, and
+        /// one search every 30 seconds still held an Extra Large map for a fifth of a second each time. So the list is
+        /// searched once, again when a new game replaced the windows, and when one is shown that is not in it (the game
+        /// shows every confirmation through ShowConfirmation, see ConfirmationShown).
         /// </summary>
         private static Assets.Code.UI.Confirmation[] Confirmations()
         {
-            bool gone = confirmations == null || Time.unscaledTime - confirmationsChecked > 30f;
+            bool gone = confirmations == null;
             for (int i = 0; !gone && i < confirmations.Length; i++) gone = confirmations[i] == null; // a new game replaced them
-            if (gone)
-            {
-                confirmations = Resources.FindObjectsOfTypeAll<Assets.Code.UI.Confirmation>();
-                confirmationsChecked = Time.unscaledTime;
-            }
+            if (gone) confirmations = FindConfirmations();
             return confirmations;
         }
 
-        /// <summary>A window that was made after the last search is found as soon as it is shown, not 30 seconds later.</summary>
+        /// <summary>The search itself (debug command findcost times it).</summary>
+        internal static Assets.Code.UI.Confirmation[] FindConfirmations() => Resources.FindObjectsOfTypeAll<Assets.Code.UI.Confirmation>();
+
+        /// <summary>A window that was made after the last search is found as soon as it is shown.</summary>
         internal static void ConfirmationShown(Assets.Code.UI.Confirmation shown)
         {
             if (confirmations != null && System.Array.IndexOf(confirmations, shown) < 0) confirmations = null;
@@ -114,6 +115,9 @@ namespace KCAccess.Game
             }
             return null;
         }
+
+        private static GameObject headerCanvas;
+        private static float nextHeaderSearch;
 
         /// <summary>Non-modal panel groups available right now, in F6 order.</summary>
         internal static List<ScreenInfo> PanelGroups()
@@ -170,8 +174,13 @@ namespace KCAccess.Game
             var toolbar = new List<Transform>();
             if (SpeedControlUI.inst != null) AddIfVisible(toolbar, SpeedControlUI.inst);
             if (ui.cursorModeButtonContainer != null) AddIfVisible(toolbar, ui.cursorModeButtonContainer);
-            var header = GameObject.Find("HeaderUICanvas");
-            if (header != null) AddIfVisible(toolbar, header.transform);
+            // GameObject.Find walks the whole scene, several times a second on a map with thousands of objects.
+            if (headerCanvas == null && Time.unscaledTime >= nextHeaderSearch)
+            {
+                headerCanvas = GameObject.Find("HeaderUICanvas");
+                nextHeaderSearch = Time.unscaledTime + 5f;
+            }
+            if (headerCanvas != null) AddIfVisible(toolbar, headerCanvas.transform);
             if (toolbar.Count > 0) groups.Add(Group("Toolbar", Loc.T("Toolbar"), toolbar));
             return groups;
         }

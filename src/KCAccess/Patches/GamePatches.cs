@@ -215,10 +215,34 @@ namespace KCAccess
         private static void Postfix(MapEdit __instance) => A.Say(KCAccess.Core.Loc.F("Brush size {0}", Mathf.RoundToInt(__instance.radius + 1f)), force: true);
     }
 
+    /// <summary>Map editor: Toggle Grid only draws or hides lines over the map. Say which.</summary>
+    [HarmonyPatch(typeof(MapEdit), nameof(MapEdit.ToggleGrid))]
+    internal static class Patch_MapEditGrid
+    {
+        private static void Postfix(MapEdit __instance) => A.Say(KCAccess.Core.Loc.T(__instance.showGrid ? "shown" : "hidden"), force: true);
+    }
+
     [HarmonyPatch(typeof(MapEdit), nameof(MapEdit.DecreaseRadius))]
     internal static class Patch_BrushSmaller
     {
         private static void Postfix(MapEdit __instance) => A.Say(KCAccess.Core.Loc.F("Brush size {0}", Mathf.RoundToInt(__instance.radius + 1f)), force: true);
+    }
+
+    /// <summary>See Special.TrainingChanged.</summary>
+    [HarmonyPatch(typeof(BarracksUI), nameof(BarracksUI.OnTrain))]
+    internal static class Patch_TrainOrdered
+    {
+        private static void Prefix(BarracksUI __instance, out int __state) => __state = __instance.selectedBarracks != null ? __instance.selectedBarracks.pendingTraining : -1;
+
+        private static void Postfix(BarracksUI __instance, int __state) => UI.Special.TrainingChanged(__instance, true, __state);
+    }
+
+    [HarmonyPatch(typeof(BarracksUI), nameof(BarracksUI.OnCancel))]
+    internal static class Patch_TrainCancelled
+    {
+        private static void Prefix(BarracksUI __instance, out int __state) => __state = __instance.selectedBarracks != null ? __instance.selectedBarracks.pendingTraining : -1;
+
+        private static void Postfix(BarracksUI __instance, int __state) => UI.Special.TrainingChanged(__instance, false, __state);
     }
 
     [HarmonyPatch(typeof(LoadSave), nameof(LoadSave.AppendToLocalErrorLog))]

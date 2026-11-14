@@ -275,6 +275,12 @@ namespace KCAccess
             if (held == null) return "nothing held";
             var start = Game.MapController.Inst.CursorPos;
             var oldPos = held.transform.position;
+            // A held building has no island of its own yet (landMassIdx -1: the game reads it from the tile under it).
+            // RefreshCachedValues fixes one, and a keep placed after that took the island it was held over before:
+            // the game then failed in Keep.OnBuildingPlacement and the kingdom was broken. Put all three back.
+            int oldLandMass = held.landMassIdx;
+            var oldCachedPos = held.cachedPos;
+            var oldCachedCell = held.cachedCell;
             var reasons = new System.Collections.Generic.Dictionary<PlacementValidationResult, int>();
             string found = null;
             // A footprint past the map edge makes CanPlace throw (a large quarry's middle tile has no cell there).
@@ -295,7 +301,9 @@ namespace KCAccess
                     }
             held.transform.position = oldPos;
             held.BakeBoundingFootprint();
-            held.RefreshCachedValues();
+            held.landMassIdx = oldLandMass;
+            held.cachedPos = oldCachedPos;
+            held.cachedCell = oldCachedCell;
             var why = new StringBuilder();
             foreach (var kv in reasons) why.Append(' ').Append(kv.Key).Append('=').Append(kv.Value);
             return (found ?? "none") + " from " + start + ":" + why;
@@ -558,6 +566,17 @@ namespace KCAccess
                                 HarmonyLib.AccessTools.Method(typeof(SteamOverlay), "OnOverlay").Invoke(null, new object[] { new Steamworks.GameOverlayActivated_t { m_bActive = (byte)(parts[1] == "on" ? 1 : 0) } });
                             else Steamworks.SteamFriends.ActivateGameOverlay("Friends");
                             break;
+                        case "findcost":
+                        {
+                            // Developer only: what one search of every game object costs here (the mod avoids them).
+                            var fw = System.Diagnostics.Stopwatch.StartNew();
+                            int found = Game.GameScreens.FindConfirmations().Length;
+                            double all = fw.Elapsed.TotalMilliseconds;
+                            fw.Restart();
+                            var byName = GameObject.Find("HeaderUICanvas");
+                            Plugin.Log.LogInfo("[dbg] findcost: confirmations " + found + " in " + all.ToString("0.0") + " ms, find by name " + fw.Elapsed.TotalMilliseconds.ToString("0.0") + " ms (" + (byName != null) + ")");
+                            break;
+                        }
                         case "hideui":
                             // Developer only: the game's interface hidden, as its U key would (the mod blocks that key).
                             GameUI.inst.gameObject.SetActive(false);
@@ -933,6 +952,18 @@ namespace KCAccess
                         {
                             // Developer only: for every language of the game, how many of its texts are empty, and "gametexts <term>" its
                             // text of one term in each language.
+                            if (parts.Length > 1 && parts[1] == "dump")
+                            {
+                                // "gametexts dump": every term with its English text to BepInEx/kcaccess_gameterms.txt, to compare
+                                // two versions of the game.
+                                var dump = new StringBuilder();
+                                foreach (var dsrc in I2.Loc.LocalizationManager.Sources)
+                                    foreach (var td in dsrc.mTerms)
+                                        dump.Append(td.Term).Append('\t').Append((td.Languages.Length > 0 ? td.Languages[0] ?? string.Empty : string.Empty).Replace("\r", string.Empty).Replace("\n", "\\n")).Append('\n');
+                                System.IO.File.WriteAllText(System.IO.Path.Combine(BepInEx.Paths.BepInExRootPath, "kcaccess_gameterms.txt"), dump.ToString(), Encoding.UTF8);
+                                Plugin.Log.LogInfo("[dbg] game terms written");
+                                break;
+                            }
                             foreach (var src in I2.Loc.LocalizationManager.Sources)
                             {
                                 src.LoadAllLanguages(true); // the game keeps only the current language in memory
@@ -1279,6 +1310,27 @@ namespace KCAccess
                         case "menu":
                             GameState.inst.playingMode.OnClickedMenu();
                             break;
+                        case "focus":
+                        {
+                            // Developer only: "focus <text>" puts the keyboard on the first item of the screen whose spoken text
+                            // contains the text, as the arrow keys would, and says it. Saves a test many Down presses.
+                            var fnav = AccessController.Inst.Nav;
+                            string want = string.Join(" ", parts, 1, parts.Length - 1);
+                            UI.UIItem hit = null;
+                            // The whole text first ("New" is not "News"), then its start, then anywhere.
+                            for (int pass = 0; pass < 3 && hit == null; pass++)
+                                foreach (var it in fnav.AllItems)
+                                {
+                                    string d = fnav.Describe(it);
+                                    bool match = pass == 0 ? string.Equals(d, want, StringComparison.OrdinalIgnoreCase)
+                                        : pass == 1 ? d.StartsWith(want + ",", StringComparison.OrdinalIgnoreCase) || d.StartsWith(want + ":", StringComparison.OrdinalIgnoreCase)
+                                        : d.IndexOf(want, StringComparison.OrdinalIgnoreCase) >= 0;
+                                    if (match) { hit = it; break; }
+                                }
+                            if (hit != null) fnav.RequestFocus(g => g == hit.Go, speak: true);
+                            Plugin.Log.LogInfo("[dbg] focus " + (hit != null ? "found: " + fnav.Describe(hit) : "NOT FOUND: " + want));
+                            break;
+                        }
                         case "nav":
                             var nav = AccessController.Inst.Nav;
                             Plugin.Log.LogInfo("[nav] root=" + (nav.Root != null ? PathOf(nav.Root) : "null") + " count=" + nav.Count);

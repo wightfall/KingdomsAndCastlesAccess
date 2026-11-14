@@ -70,6 +70,18 @@ namespace KCAccess.Tests
         {
             Assert.Equal(expected, IslandAttacks.Describe(name, mine, owned));
         }
+
+        [Theory]
+        [InlineData(null, false, true, "Stot", "an island of Stot")]
+        [InlineData("", false, true, "Stot", "an island of Stot")]
+        [InlineData("Stot", false, true, "Stot", "Stot kingdom")]
+        [InlineData(null, false, true, "", "foreign kingdom")]
+        [InlineData(null, true, true, "Stot", "your island")]
+        [InlineData(null, false, false, "Stot", "unclaimed island")]
+        public void AnIslandWithoutANameIsNamedAfterItsKingdom(string name, bool mine, bool owned, string kingdom, string expected)
+        {
+            Assert.Equal(expected, IslandAttacks.Describe(name, mine, owned, kingdom));
+        }
     }
 
     public class KingdomNewsTests

@@ -503,8 +503,16 @@ namespace KCAccess.UI
             || (UnitUI.inst != null && sl == UnitUI.inst.unitAttackProgressSlider)
             || (GameUI.inst != null && GameUI.inst.researchUI != null && sl == GameUI.inst.researchUI.researchProgress);
 
+        /// <summary>
+        /// A text field the game only shows a value in (the map seed on the settings screen, your share code): it takes
+        /// the focus and a selection, so that a mouse can copy from it, but no typing.
+        /// </summary>
+        internal static bool IsReadOnlyField(Selectable s) =>
+            (s is InputField inf && inf.readOnly) || (s is TMP_InputField tinf && tinf.readOnly);
+
         internal static string RoleOf(Selectable s)
         {
+            if (IsReadOnlyField(s)) return Loc.T("read-only text");
             switch (s)
             {
                 case Toggle t: return t.group != null ? Loc.T("radio button") : Loc.T("check box");

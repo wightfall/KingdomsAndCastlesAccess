@@ -15,7 +15,7 @@ namespace KCAccess
     {
         public const string Guid = "kcaccess.screenreader";
         public const string Name = "KCAccess";
-        public const string Version = "1.28.2";
+        public const string Version = "1.29.0";
 
         internal static Plugin Instance;
 

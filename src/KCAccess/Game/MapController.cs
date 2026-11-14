@@ -417,6 +417,15 @@ namespace KCAccess.Game
 
         private bool HandleInfoKeys()
         {
+            if (KInput.Down(KeyCode.C) && KInput.Ctrl && !KInput.Alt)
+            {
+                // As everywhere else: Ctrl+C copies what the cursor is on (the tile description), Ctrl+Shift+C the
+                // tile and the survey of the area around it. The key did nothing on the map.
+                KInput.Consume(KeyCode.C);
+                string tile = CellInfo.Full(CurrentCell);
+                UI.UINavigator.CopyToClipboard(KInput.Shift ? tile + "\r\n" + CellInfo.Survey(cursor.Pos, 6).Format() : tile);
+                return true;
+            }
             if (KInput.Pressed("TileInfo"))
             {
                 A.Say(CellInfo.Full(CurrentCell), force: true);
@@ -723,6 +732,13 @@ namespace KCAccess.Game
                 SpeakValidity(always: true);
                 return;
             }
+            if (KInput.Pressed("Validity"))
+            {
+                // The key answers only while a building is held: say so instead of nothing.
+                A.Cue(Cue.Error);
+                A.Say(Loc.T("No building is being placed"), force: true);
+                return;
+            }
             if (KInput.Pressed("StackMore") || KInput.Pressed("StackLess"))
             {
                 string said = Stacker.Setting.Change(KInput.Pressed("StackMore") ? 1 : -1);
@@ -1003,7 +1019,7 @@ namespace KCAccess.Game
                 // A dragon follows orders only once it has bonded with the kingdom (DragonPuppet.MoveTo / Dragon).
                 var dragonSlot = unit is DragonPuppet dp ? dp.dSlot : unit is Dragon dr ? dr.currSlot : null;
                 string how = dragonSlot != null && !dragonSlot.isBonded
-                    ? Loc.T("It does not follow orders until it has bonded with your kingdom (its bond in the army panel). F6 opens the army panel.")
+                    ? Loc.T("It does not follow orders until it has bonded with your kingdom. The bond grows while its happiness is 95 or more. F6 opens the army panel, which shows the bond once it has started.")
                     : KeyHelp.Resolve(Loc.T("Move the cursor and press {MoveSoldiers} to send them there. F6 opens the army panel."));
                 A.Say((add ? Loc.P(selected, "Added {1}, {0} unit selected", "Added {1}, {0} units selected", what) : Loc.F("Selected {0}", what)) + ". " + how);
                 return;
@@ -1102,6 +1118,21 @@ namespace KCAccess.Game
                     : Loc.T("No soldiers selected. Use Shift Enter on soldiers to select them."));
                 return;
             }
+            // A dragon that has not bonded ignores the order (DragonPuppet.MoveTo): do not say it is on its way.
+            bool obeys = false, unbonded = false;
+            foreach (var s in ui.selectedObjs)
+            {
+                var u = ui.GetUnitFromSelectable(s);
+                var slot = u is DragonPuppet dp ? dp.dSlot : u is Dragon dr ? dr.currSlot : null;
+                if (slot != null && !slot.isBonded) unbonded = true;
+                else if (u != null) obeys = true;
+            }
+            if (unbonded && !obeys)
+            {
+                A.Cue(Cue.Error);
+                A.Say(Loc.T("It does not follow orders until it has bonded with your kingdom. The bond grows while its happiness is 95 or more. F6 opens the army panel, which shows the bond once it has started."), force: true);
+                return;
+            }
             var cell = CurrentCell;
             // The game takes the attack or visit target (an enemy building, a keep for an envoy) from what the pointer
             // hovers, but hovers no building while the real mouse rests over a panel; then M only walked there.
@@ -1111,6 +1142,26 @@ namespace KCAccess.Game
                 if (cell.OccupyingStructure.Count > 0 && cell.OccupyingStructure[0].IsVisibleForFog()) ui.highlightBuilding = cell.OccupyingStructure[0];
                 else if (cell.SubStructure.Count > 0 && cell.TopSubStructure.IsVisibleForFog()) ui.highlightBuilding = cell.TopSubStructure;
                 if (ui.highlightBuilding != null && ui.highlightBuilding.Life <= 0f) ui.highlightBuilding = null;
+            }
+            // A dragon sent to the building it rests in stays there (DragonPuppet.MoveTo returns without a word), and
+            // a roost covers several tiles: do not say it is on its way.
+            if (ui.highlightBuilding != null)
+            {
+                bool anyOther = false, docked = false;
+                foreach (var s in ui.selectedObjs)
+                {
+                    var u = ui.GetUnitFromSelectable(s);
+                    var dock = u is DragonPuppet puppet && puppet.dSlot != null ? puppet.dSlot.currDockBuilding : null;
+                    var home = dock is DragonNest nest ? nest.b : dock is DragonBuilding place ? place.b : null;
+                    if (home != null && home == ui.highlightBuilding) docked = true;
+                    else if (u != null) anyOther = true;
+                }
+                if (docked && !anyOther)
+                {
+                    A.Cue(Cue.Error);
+                    A.Say(KeyHelp.Resolve(Loc.T("It is resting in this building. Move the cursor off the building, then press {MoveSoldiers}.")), force: true);
+                    return;
+                }
             }
             string target = null;
             // An envoy, settlers and ships that carry people only go there, also to an enemy.
@@ -1494,7 +1545,9 @@ namespace KCAccess.Game
                 string reach = always ? Reach.Text(held) : null;
                 // Water buildings and fountains: what they connect to here, on every tile as a farm's soil (V adds the
                 // nearest water building when nothing is next to it).
-                string water = WaterWatch.PlacingHint(held, withNearest: always);
+                // Not while a line is being planned: the hint looks at the end tile alone and would call it "not
+                // connected" though the line itself joins it to the chain; the built message says what the line got.
+                string water = GameUI.inst.CurrPlacementMode.PlacementCount() > 1 ? null : WaterWatch.PlacingHint(held, withNearest: always);
                 if (always) A.Say(TextUtil.Join(", ", Loc.T("Can build here"), level, range, reach, water), force: true);
                 else if (changed) A.SayQueued(TextUtil.Join(", ", Loc.T("can build"), level, water));
                 else if (level != null || water != null) A.SayQueued(TextUtil.Join(", ", level, water));

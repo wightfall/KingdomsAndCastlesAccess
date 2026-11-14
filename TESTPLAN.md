@@ -9,7 +9,7 @@ of that release. Clear all ticks when a new round of testing starts. Each line f
 How to test is in the README under "Building from source" (debug commands) and in PLAN.md. Remember that the speech
 log lists every line sent, also one that later speech cut off: check the order and the priority, not only the text.
 
-Last round: 1.28.2. Game 124r2s, Steam build 26392486.
+Round in progress: for 1.29.0. Game 124r3s, Steam build 26512598 (the game was updated on 10 November 2026).
 
 ## Setup program
 - [x] Window: status box, language list, both check boxes, all buttons (setup runs elevated: roles read through MSAA, keys sent as window messages)
@@ -17,7 +17,7 @@ Last round: 1.28.2. Game 124r2s, Steam build 26392486.
 - [x] Install or update on an existing install, with the settings kept
 - [x] Install on a game folder without BepInEx
 - [x] Silent: `--quiet`, exit codes, `--mod-language th`, `--start-game` (exit 0 and 3 tried; exit 2 needs a PC without Steam)
-- [x] Update available window with the notes, Yes and No
+- [ ] Update available window with the notes, Yes and No
 - [x] Uninstall, then install again
 - [x] Bundle zip and mod-only zip: contents, extracted over the game, the game starts and speaks
 
@@ -39,6 +39,10 @@ Last round: 1.28.2. Game 124r2s, Steam build 26392486.
 - [x] Very long text says "Long text, N lines"
 - [x] Text fields: Enter edits, typing echoes, Backspace, Enter confirms, Escape cancels, Up, Down, F2 read
 - [x] Job priority: rows, Space, Shift+Up, Shift+Down, Left, Right, limits, builders, closed buildings
+
+- [x] Ctrl+C on a button, a text, a text field and the share code; Ctrl+Shift+C copies the screen; checked in the Windows clipboard
+- [x] Ctrl+C and Ctrl+Shift+C in the mod's lists: status, notifications, key list, mod settings, text reader
+- [x] Ctrl+V in a text field: a fresh field is replaced, after typing it goes in at the caret, spaces and line breaks dropped, an amount field takes digits only, the length limit holds, an empty clipboard is said; Ctrl+C copies the field; with real keys nothing is pasted twice
 
 ## Map keys
 - [x] Arrows, Shift+Arrows, Ctrl+Arrows
@@ -111,6 +115,10 @@ Last round: 1.28.2. Game 124r2s, Steam build 26392486.
 - [x] Built messages: works, no wheel pumps, too weak, not connected, a line of pieces said once
 - [x] Panel problem lines; Dragon Roost as part of the chain; bath house
 
+- [x] Forecast while placing: water will reach it, too weak here, no water wheel pumps, not linked; it matches what the built piece gets
+- [x] Game 124r3s: a reservoir beside the last pipe with water works, one beside the first dry pipe does not
+- [x] A wheel without all its workers: dry pieces say "no water wheel pumps yet" on Enter and in the panel, not the game's "Not enough water power"
+
 ## Islands
 - [x] Islands category, ship in reach, Settle, Outpost placing, outpost built, naming, unnamed island messages
 - [x] Train Settlers, boarding, unloading, Settle turns them into villagers, troop ship panel
@@ -141,7 +149,7 @@ Last round: 1.28.2. Game 124r2s, Steam build 26392486.
 
 ## Extra Large
 - [x] Generate, AI kingdoms, explore, keep, scan, walk, save, load
-- [x] A long game: many years with a built city, no errors, speed stays fine (Extra Large: years 1 to 20, 39 buildings, about 50 people; run just after publishing 1.28.2, when the first tick turned out to rest on a medium map)
+- [x] A long game: many years with a built city, no errors, speed stays fine
 
 ## Kingdom share
 The game's server cannot delete an upload, so these run against the private test server (`tools/share-test-server.py`, `sharelocal`); nothing goes online.
@@ -178,6 +186,9 @@ Simulated with `pad` and `padcount`: every press goes through the real mapping a
 ## When the game updates
 - [x] On the tested game nothing extra; on a changed game: repair, notice, Lost count, once only
 - [x] A broken part keeps the rest running; a hook error is kept from the game; plain list for unknown screens
+
+- [x] On a new game version of this round: decompiled and compared with the last one, every change looked at, the mod's self-check reports nothing adapted or missing
+- [x] Speed: `timing` on a built city and on an Extra Large map, no part of the mod stands out; `findcost` shows what the mod no longer does every 30 seconds
 
 ## Troubleshooting
 - [x] Steam overlay opened and Back in the game; keys after the overlay (Steam did not open it on the test PC: Steam's report simulated with `overlay on|off`)

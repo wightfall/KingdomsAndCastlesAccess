@@ -46,6 +46,12 @@ namespace KCAccess.UI
         public List<Transform> Roots { get; } = new List<Transform>();
         public string Title { get; private set; }
 
+        /// <summary>The same screen under a new name: the mod language changed while it was open (Ctrl+R read the old title).</summary>
+        internal void Retitle(string title)
+        {
+            if (!string.IsNullOrEmpty(title)) Title = title;
+        }
+
         /// <summary>Extra filter set by screens, e.g. to hide decorative buttons.</summary>
         public Func<GameObject, bool> Exclude;
 
@@ -170,6 +176,12 @@ namespace KCAccess.UI
         private Func<GameObject, bool> focusRequest;
         private bool focusRequestSpeaks;
         private float focusRequestUntil;
+        /// <summary>
+        /// How often the request was looked for among the items. On a slow computer a window can take longer to appear
+        /// than the request's three seconds (an envoy's replies were then never focused or said): it is given up only
+        /// after it was really looked for a number of times as well.
+        /// </summary>
+        private int focusRequestTries;
 
         /// <summary>Move focus to the first item matching the predicate as soon as it appears (within 3 seconds).</summary>
         /// <param name="match">The item to move to, as soon as it is in the list.</param>
@@ -182,6 +194,7 @@ namespace KCAccess.UI
             focusRequest = match;
             focusRequestSpeaks = speak;
             focusRequestUntil = Time.unscaledTime + 3f;
+            focusRequestTries = 0;
             nextRefresh = 0f;
             // The new focus speaks for the click; texts that appeared with it are not read on top.
             textSnapshot = null;
@@ -190,7 +203,7 @@ namespace KCAccess.UI
         public void Refresh(bool force = false)
         {
             if (Root == null) return;
-            if (focusRequest != null && Time.unscaledTime > focusRequestUntil) focusRequest = null;
+            if (focusRequest != null && Time.unscaledTime > focusRequestUntil && focusRequestTries >= 12) focusRequest = null;
             if (!force && Time.unscaledTime < nextRefresh) return;
             nextRefresh = Time.unscaledTime + (focusRequest != null ? 0.05f : 0.25f);
             var all = new List<UIItem>();
@@ -198,6 +211,7 @@ namespace KCAccess.UI
             list.SetItems(all, keepFocus: true);
             if (focusRequest != null)
             {
+                focusRequestTries++;
                 for (int i = 0; i < list.Count; i++)
                 {
                     var go = list.Items[i].Go;
@@ -388,7 +402,7 @@ namespace KCAccess.UI
         public string Describe(UIItem item)
         {
             if (item == null) return string.Empty;
-            if (item.Hook != null) return UIText.TooltipOf(item.Go) ?? string.Empty;
+            if (item.Hook != null) return Special.TwitchLight(item) ?? UIText.TooltipOf(item.Go) ?? string.Empty;
             string special = Special.Describe(item);
             if (special != null) return special;
             if (!item.IsControl)
@@ -569,7 +583,7 @@ namespace KCAccess.UI
                         break;
                     case InputField _:
                     case TMP_InputField _:
-                        f.TextFields = true;
+                        if (!UIText.IsReadOnlyField(item.Control)) f.TextFields = true;
                         break;
                 }
             }
@@ -592,8 +606,46 @@ namespace KCAccess.UI
             A.Say(TextUtil.Sentences(desc, tip, list.PositionText), force: true);
         }
 
+        /// <summary>Control C: the current item to the clipboard. A field or a share code gives its bare text.</summary>
+        public void CopyCurrent()
+        {
+            var cur = Current;
+            string text = string.Empty;
+            if (cur != null)
+            {
+                if (cur.Control is InputField inf) text = inf.contentType == InputField.ContentType.Password ? string.Empty : inf.text;
+                else if (cur.Control is TMP_InputField tinf) text = tinf.contentType == TMP_InputField.ContentType.Password ? string.Empty : tinf.text;
+                else text = Describe(cur);
+            }
+            CopyToClipboard(text);
+        }
+
+        /// <summary>Control Shift C: everything on the screen, one item to a line.</summary>
+        public void CopyAll()
+        {
+            var parts = AllTexts();
+            CopyToClipboard(string.Join("\r\n", parts.ToArray()));
+        }
+
+        /// <summary>What Enter or a paste says on a field that only shows a value; the copy hint once only.</summary>
+        internal static string ReadOnlyNote(string described)
+        {
+            string hint = Loc.T("Control C copies it");
+            return TextUtil.Sentences(described, Loc.T("This field cannot be changed"), described != null && described.Contains(hint) ? null : hint);
+        }
+
+        internal static void CopyToClipboard(string text)
+        {
+            text = text ?? string.Empty;
+            if (text.Length > 0) GUIUtility.systemCopyBuffer = text;
+            A.Cue(text.Length > 0 ? Cue.Activate : Cue.Error);
+            A.Say(ClipText.Announce(text), force: true);
+        }
+
         /// <summary>Read every item of the panel in order.</summary>
-        public void ReadAll()
+        public void ReadAll() => A.Say(TextUtil.Sentences(AllTexts().ToArray()), force: true);
+
+        private List<string> AllTexts()
         {
             Refresh(force: true);
             string Plain(string t) => TextUtil.Clean(t).TrimEnd('.', '!', '?', ':');
@@ -609,7 +661,7 @@ namespace KCAccess.UI
             // "Survival Success!") says it in its place, not twice.
             if (!string.IsNullOrEmpty(Title) && !parts.Exists(p => string.Equals(Plain(p), Plain(Title), System.StringComparison.OrdinalIgnoreCase)))
                 parts.Insert(0, Title);
-            A.Say(TextUtil.Sentences(parts.ToArray()), force: true);
+            return parts;
         }
 
         /// <summary>Focus the first control whose label contains the text (used by screens).</summary>
@@ -676,7 +728,12 @@ namespace KCAccess.UI
             if (!s.interactable)
             {
                 A.Cue(Cue.Error);
-                A.Say(Describe(item)); // with the reason where the mod knows it; a bar has no label of its own
+                // With the reason where the mod knows it (a bar has no label of its own), and the hover text, which is
+                // where a train button says what a squad costs and what is missing.
+                string why = Describe(item);
+                string hover = Special.ExtraTooltip(item) ?? UIText.TooltipOf(item.Go);
+                if (hover != null && !why.Contains(hover)) why = TextUtil.Sentences(why, hover);
+                A.Say(why, force: true);
                 return;
             }
             if (Game.Diplomacy.HoldBack(s)) return; // declaring war or breaking an alliance asks for a second Enter
@@ -697,6 +754,13 @@ namespace KCAccess.UI
                     return;
                 case InputField _:
                 case TMP_InputField _:
+                    if (UIText.IsReadOnlyField(s))
+                    {
+                        // Typing would do nothing, in silence.
+                        A.Cue(Cue.Edge);
+                        A.Say(ReadOnlyNote(Describe(item)), force: true);
+                        return;
+                    }
                     BeginEdit(s);
                     return;
                 case Dropdown d:
@@ -886,7 +950,8 @@ namespace KCAccess.UI
             A.Cue(Cue.Open);
             string label = Special.FieldName(s) ?? UIText.LabelOf(s);
             if (label.IndexOf("Input Field", StringComparison.OrdinalIgnoreCase) >= 0 || label == UIText.Unlabelled) label = Loc.T("text");
-            A.Say(Loc.F("Editing {0}. {1}. Type, then press Enter to confirm or Escape to cancel.", label, editSession.Text.Length > 0 ? editSession.Text : UIText.Blank));
+            A.Say(Loc.F("Editing {0}. {1}. Type, then press Enter to confirm or Escape to cancel.", label, editSession.Text.Length > 0 ? editSession.Text : UIText.Blank)
+                + (Plugin.CfgHints.Value ? " " + Loc.T("Control V pastes.") : string.Empty));
         }
 
         /// <summary>
@@ -895,7 +960,7 @@ namespace KCAccess.UI
         /// </summary>
         internal bool AdoptFocusedField(Selectable s)
         {
-            if (s == null || editSession != null || Root == null) return false;
+            if (s == null || editSession != null || Root == null || UIText.IsReadOnlyField(s)) return false;
             bool inside = false;
             foreach (var r in Roots) if (r != null && s.transform.IsChildOf(r)) inside = true;
             if (!inside) return false;
@@ -951,6 +1016,82 @@ namespace KCAccess.UI
             }
         }
 
+        private int selStart, selEnd, holdFrames;
+        private string holdText, holdCopy;
+
+        private bool Password => (field is InputField inf && inf.contentType == InputField.ContentType.Password)
+            || (field is TMP_InputField tinf && tinf.contentType == TMP_InputField.ContentType.Password);
+
+        private bool DigitsOnly => (field is InputField inf && inf.contentType == InputField.ContentType.IntegerNumber)
+            || (field is TMP_InputField tinf && tinf.contentType == TMP_InputField.ContentType.IntegerNumber);
+
+        private int Limit => field is InputField inf ? inf.characterLimit : field is TMP_InputField tinf ? tinf.characterLimit : 0;
+
+        private void ReadSelection()
+        {
+            if (field is InputField inf) { selStart = inf.selectionAnchorPosition; selEnd = inf.selectionFocusPosition; }
+            else if (field is TMP_InputField tinf) { selStart = tinf.selectionStringAnchorPosition; selEnd = tinf.selectionStringFocusPosition; }
+        }
+
+        private void SetCaret(int at)
+        {
+            if (field is InputField inf) { inf.caretPosition = at; inf.selectionAnchorPosition = at; inf.selectionFocusPosition = at; }
+            else if (field is TMP_InputField tinf) { tinf.stringPosition = at; tinf.selectionStringAnchorPosition = at; tinf.selectionStringFocusPosition = at; }
+        }
+
+        /// <summary>
+        /// Control V and Control C. Unity's fields handle these keys themselves, before or after the mod depending on
+        /// the frame, and their copy empties the clipboard when nothing is selected: so the mod works from the text
+        /// and selection of the frame before, and holds its result for a few frames.
+        /// </summary>
+        private bool Clipboard()
+        {
+            if (holdFrames > 0)
+            {
+                holdFrames--;
+                if (holdText != null && Text != holdText) { Text = holdText; SetCaret(selEnd); }
+                if (holdCopy != null && GUIUtility.systemCopyBuffer != holdCopy) GUIUtility.systemCopyBuffer = holdCopy;
+                if (holdFrames == 0) { holdText = null; holdCopy = null; }
+            }
+            if (!KInput.Ctrl || KInput.Alt || KInput.Shift) return false;
+            if (KInput.Down(KeyCode.V) && UIText.IsReadOnlyField(field))
+            {
+                // No session starts on such a field; should one be adopted all the same, it stays as the game has it.
+                KInput.Consume(KeyCode.V);
+                A.Cue(Cue.Error);
+                A.Say(UINavigator.ReadOnlyNote(null), force: true);
+                return true;
+            }
+            if (KInput.Down(KeyCode.V))
+            {
+                KInput.Consume(KeyCode.V);
+                string clip = holdCopy ?? GUIUtility.systemCopyBuffer;
+                string text = ClipText.Insert(lastText, selStart, selEnd, clip, Limit, DigitsOnly, out string pasted, out int caret);
+                Text = text;
+                SetCaret(caret);
+                selStart = selEnd = caret;
+                lastText = holdText = text;
+                holdFrames = 3;
+                A.Cue(pasted.Length > 0 ? Cue.Activate : Cue.Error);
+                A.Say(ClipText.AnnouncePaste(pasted, text, string.IsNullOrEmpty(clip)), force: true);
+                return true;
+            }
+            if (KInput.Down(KeyCode.C))
+            {
+                KInput.Consume(KeyCode.C);
+                string copy = Password ? string.Empty : lastText;
+                if (copy.Length > 0)
+                {
+                    GUIUtility.systemCopyBuffer = holdCopy = copy;
+                    holdFrames = 3;
+                }
+                A.Cue(copy.Length > 0 ? Cue.Activate : Cue.Error);
+                A.Say(ClipText.Announce(copy), force: true);
+                return true;
+            }
+            return false;
+        }
+
         /// <summary>Returns true while the session wants all keys.</summary>
         public bool Update(UINavigator nav)
         {
@@ -959,6 +1100,8 @@ namespace KCAccess.UI
                 nav.EndEdit(true);
                 return false;
             }
+            if (Time.frameCount != startFrame && Clipboard()) return true;
+            if (holdFrames == 0) ReadSelection();
             string now = Text;
             if (now != lastText)
             {

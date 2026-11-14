@@ -31,6 +31,15 @@ namespace KCAccess
 
         /// <summary>A mod-owned modal menu (build menu, log browser, status list).</summary>
         internal IModalMenu ActiveMenu;
+        /// <summary>
+        /// The mod's list that was open when the key list or the mod settings were opened over it (the build menu, the
+        /// kingdom status, a text in the reader): it comes back when they close. It used to be dropped, which left the
+        /// game's build panel on screen with nothing reading it (", empty").
+        /// </summary>
+        private IModalMenu underMenu;
+
+        /// <summary>True while a list waits under the key list or the mod settings: it speaks for itself when it comes back.</summary>
+        internal bool CoveringMenu => underMenu != null && underMenu.IsOpen;
 
         internal bool PanelFocus => panel != null;
 
@@ -152,9 +161,22 @@ namespace KCAccess
             }
             Safe.Run("stream file", () => Game.StreamStatusFile.Tick(Inst.wasPlaying));
 
+            if (ActiveMenu == null) underMenu = null;
             if (ActiveMenu != null)
             {
-                if (!ActiveMenu.IsOpen) ActiveMenu = null;
+                if (!ActiveMenu.IsOpen)
+                {
+                    ActiveMenu = null;
+                    var back = underMenu;
+                    underMenu = null;
+                    if (back != null && back.IsOpen)
+                    {
+                        ActiveMenu = back;
+                        InputGate.BlockGameKeys = true;
+                        Safe.Run("menu", () => back.Resume());
+                        return;
+                    }
+                }
                 else if (playing && NewGameWindow())
                 {
                     // A game window (a new level, an effect banner such as a Twitch vote result, a confirmation) opened
@@ -300,6 +322,13 @@ namespace KCAccess
                 Nav.ReadAll();
                 return;
             }
+            if (KInput.Down(KeyCode.C) && KInput.Ctrl && !KInput.Alt)
+            {
+                KInput.Consume(KeyCode.C); // not the game's chop key
+                if (KInput.Shift) Nav.CopyAll();
+                else Nav.CopyCurrent();
+                return;
+            }
             if (KInput.Plain(KeyCode.F5))
             {
                 Nav.SpeakCurrent();
@@ -394,6 +423,7 @@ namespace KCAccess
             if (next.SameAs(modal))
             {
                 modal.Title = next.Title; // the mod language may have changed since the screen opened
+                if (Nav.Root == next.Root) Nav.Retitle(next.Title);
                 if (Nav.Root == null) Nav.SetRoot(next.Root, next.Title, announce: false); // recover a cleared navigator
                 return;
             }
@@ -553,6 +583,13 @@ namespace KCAccess
 
         private bool OnMapNow => modal == null && panel == null && ActiveMenu == null && GameState.inst != null && GameState.inst.IsPlayMode();
 
+        /// <summary>Opens the key list or the mod settings, keeping the list they cover (see <see cref="underMenu"/>).</summary>
+        private void OpenOver(IModalMenu menu)
+        {
+            if (ActiveMenu != null && ActiveMenu.IsOpen && !(ActiveMenu is Game.KeysMenu) && !(ActiveMenu is Game.ModSettingsMenu)) underMenu = ActiveMenu;
+            ActiveMenu = menu;
+        }
+
         private bool GlobalKeys()
         {
             if (KInput.Down(KeyCode.F12) && KInput.Ctrl && KInput.Shift)
@@ -563,12 +600,12 @@ namespace KCAccess
             if (KInput.Pressed("KeyList"))
             {
                 KInput.Consume(KeyCode.F1);
-                if (!(ActiveMenu is Game.KeysMenu)) ActiveMenu = new Game.KeysMenu(OnMapNow);
+                if (!(ActiveMenu is Game.KeysMenu)) OpenOver(new Game.KeysMenu(OnMapNow));
                 return true;
             }
             if (KInput.Pressed("Settings"))
             {
-                if (!(ActiveMenu is Game.ModSettingsMenu)) ActiveMenu = new Game.ModSettingsMenu(OnMapNow);
+                if (!(ActiveMenu is Game.ModSettingsMenu)) OpenOver(new Game.ModSettingsMenu(OnMapNow));
                 return true;
             }
             if (KInput.Plain(KeyCode.F1))
@@ -633,5 +670,8 @@ namespace KCAccess
         bool IsOpen { get; }
         string HelpId { get; }
         void HandleInput();
+
+        /// <summary>Back in front after the key list or the mod settings closed over it: says where the player is again.</summary>
+        void Resume();
     }
 }

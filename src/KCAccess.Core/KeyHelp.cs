@@ -98,6 +98,8 @@ namespace KCAccess.Core
                 K(Loc.N("Page Up and Page Down"), Loc.N("change a slider in big steps")),
                 K(Loc.N("Letters"), Loc.N("jump to an item starting with that letter, on menu screens")),
                 K(Loc.N("Control R"), Loc.N("read the whole screen")),
+                K(Loc.N("Control C"), Loc.N("copy the current item to the clipboard, for example a share code")),
+                K(Loc.N("Control Shift C"), Loc.N("copy the whole screen to the clipboard")),
                 K("F5", Loc.N("repeat the current item")),
                 K(Loc.N("Delete"), Loc.N("on a saved game: delete it")),
                 K(Loc.N("F6 and Shift F6"), Loc.N("inside the game: next or previous panel")),
@@ -106,6 +108,8 @@ namespace KCAccess.Core
                 K(Loc.N("Letters and digits"), Loc.N("type, each character is spoken")),
                 K(Loc.N("Backspace"), Loc.N("delete, says what was deleted")),
                 K(Loc.N("F2, Up or Down"), Loc.N("read the field")),
+                K(Loc.N("Control V"), Loc.N("paste from the clipboard")),
+                K(Loc.N("Control C"), Loc.N("copy the field to the clipboard")),
                 K(Loc.N("Enter"), Loc.N("confirm")),
                 K(Loc.N("Escape"), Loc.N("cancel"))),
             new KeySection(Loc.N("Map: moving and looking"),
@@ -203,6 +207,7 @@ namespace KCAccess.Core
             if (f.TypeAhead && f.Items > 3) p.Add(Loc.T("letters jump to an item starting with that letter"));
             if (f.SaveSlots) p.Add(Loc.T("Delete deletes the saved game under the cursor"));
             if (f.Items > 1) p.Add(Loc.T("Control R reads the whole screen"));
+            p.Add(Loc.T("Control C copies the current item"));
             p.Add(Loc.T("F5 repeats the current item"));
             if (f.InPanel) p.Add(Loc.T("F6 and Shift F6 move to the next or previous panel, Escape returns to the map"));
             else if (f.CanGoBack) p.Add(Loc.T("Escape goes back"));

@@ -37,6 +37,11 @@ namespace KCAccess.Game
 
         public string HelpId => "BuildMenu";
 
+        public void Resume()
+        {
+            if (started && open) OpenTab(tabIndex, announceCategory: true, intro: Loc.T("Build menu.") + " ");
+        }
+
         private BuildTab CurrentTab => tabIndex >= 0 && tabIndex < tabs.Count ? tabs[tabIndex] : null;
 
         private static bool IsSubTab(string title) => title == "Cemetery" || title == "Statue" || title == "Park";
@@ -145,6 +150,19 @@ namespace KCAccess.Game
                 KInput.Consume(KeyCode.Return);
                 KInput.Consume(KeyCode.Space);
                 Pick();
+            }
+            else if (KInput.Down(KeyCode.C) && KInput.Ctrl && !KInput.Alt)
+            {
+                // As in the mod's other lists: Ctrl+C copies the building with its full description, Ctrl+Shift+C the category.
+                KInput.Consume(KeyCode.C);
+                var lines = new List<string>();
+                if (KInput.Shift)
+                {
+                    lines.Add(ClipText.Heading(CategoryName(CurrentTab)));
+                    foreach (var item in items.Items) lines.Add(Describe(item, brief: false));
+                }
+                else if (items.HasCurrent) lines.Add(Describe(items.Current, brief: false));
+                UI.UINavigator.CopyToClipboard(string.Join("\r\n", lines.ToArray()));
             }
             else
             {

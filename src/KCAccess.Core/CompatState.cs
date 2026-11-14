@@ -9,10 +9,10 @@ namespace KCAccess.Core
     public static class CompatState
     {
         /// <summary>
-        /// The Assembly-CSharp.dll this release was built and tested with (its module id, Steam build 26392486 of 6 November
+        /// The Assembly-CSharp.dll this release was built and tested with (its module id, Steam build 26512598 of 10 November
         /// 2026). A unit test compares it with the installed game, so a release cannot go out without testing a new build.
         /// </summary>
-        public const string TestedGameBuild = "ccb70ad5-c846-4e07-ad58-84e177e92cab";
+        public const string TestedGameBuild = "1d731f8f-6e41-42f0-b6d3-18fb0294a40d";
 
         /// <summary>The installed game's build, or null when it could not be read.</summary>
         public static string GameBuild;

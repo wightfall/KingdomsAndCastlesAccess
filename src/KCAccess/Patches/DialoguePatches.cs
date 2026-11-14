@@ -21,7 +21,28 @@ namespace KCAccess
         /// pauses the game a moment later, on a slow computer seconds later, and what they say must wait or the line is cut
         /// off unheard.
         /// </summary>
-        internal static bool ConversationSpeaking => Time.unscaledTime - lastLineAt < 1.5f || DialogueManager.isConversationActive;
+        internal static bool ConversationSpeaking => Time.unscaledTime - lastLineAt < 1.5f || (DialogueManager.isConversationActive && WindowOpen());
+
+        /// <summary>
+        /// A window that holds conversations is on screen. Escape in the middle of an envoy's message closes the window
+        /// while the dialogue system stays at the closing line, waiting for a "Farewell" nobody can give any more: the
+        /// conversation counted as speaking for the rest of the session, and every panel said only its name.
+        /// </summary>
+        internal static bool WindowOpen()
+        {
+            try
+            {
+                var ui = GameUI.inst;
+                if (ui == null) return true;
+                return (ui.diplomacyUI != null && ui.diplomacyUI.gameObject.activeInHierarchy)
+                    || (AdvisorUI.inst != null && AdvisorUI.inst.IsVisible())
+                    || (ui.witchUI != null && ui.witchUI.gameObject.activeSelf);
+            }
+            catch (Exception)
+            {
+                return true;
+            }
+        }
 
         private static void Postfix(Subtitle subtitle)
         {
@@ -60,6 +81,8 @@ namespace KCAccess
             try
             {
                 if (responses == null || responses.Length == 0) return;
+                // Escape closed the window during the message: the replies that follow have nowhere to be chosen.
+                if (!Patch_DialogueSubtitle.WindowOpen()) return;
                 int enabled = 0;
                 foreach (var r in responses) if (r != null && r.enabled) enabled++;
                 A.SayQueued(Loc.P(enabled, "{0} reply", "{0} replies") + ". " + Loc.T("Up and Down choose, Enter answers."));

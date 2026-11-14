@@ -24,7 +24,7 @@ namespace KCAccess
         }
 
         private static readonly List<Watched> keys = new List<Watched>();
-        private static readonly Dictionary<int, bool> wasDown = new Dictionary<int, bool>();
+        private static readonly bool[] wasDown = new bool[256];
         private static readonly Dictionary<int, int> pending = new Dictionary<int, int>();
         /// <summary>Keys Unity reported down during the last few frames (from the mod's own key log of the frame).</summary>
         private static readonly HashSet<KeyCode> seenByUnity = new HashSet<KeyCode>();
@@ -86,7 +86,7 @@ namespace KCAccess
                 seenByUnity.Clear();
                 seenFrame = Time.frameCount;
             }
-            foreach (var w in keys) if (Input.GetKeyDown(w.Key)) seenByUnity.Add(w.Key);
+            if (Input.anyKeyDown) foreach (var w in keys) if (Input.GetKeyDown(w.Key)) seenByUnity.Add(w.Key);
             foreach (var w in keys)
             {
                 // Only the "held now" bit: the "pressed since last poll" bit is shared between programs and
@@ -101,8 +101,10 @@ namespace KCAccess
                     available = false;
                     return;
                 }
-                wasDown.TryGetValue(w.Vk, out bool before);
+                bool before = wasDown[w.Vk];
                 wasDown[w.Vk] = down;
+                // Nothing changed and nothing is waiting: by far the usual case, 57 keys every frame.
+                if (down == before && pending.Count == 0) continue;
                 bool unitySees = Input.GetKey(w.Key) || Input.GetKeyDown(w.Key) || Input.GetKeyUp(w.Key);
                 if (down && !before && !unitySees) pending[w.Vk] = Time.frameCount;
                 if (!pending.TryGetValue(w.Vk, out int since)) continue;

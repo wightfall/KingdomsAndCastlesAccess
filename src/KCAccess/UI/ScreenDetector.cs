@@ -92,7 +92,13 @@ namespace KCAccess.UI
             if (state == MainMenuMode.State.Failure || state == MainMenuMode.State.KeepDestroyed || state == MainMenuMode.State.LoadError || state == MainMenuMode.State.ChooseDifficulty || state == MainMenuMode.State.ChooseMode) info.ReadAllOnOpen = true;
             if (confirm != null && confirm.transform != info.Root)
             {
-                info = new ScreenInfo { Id = "Confirm", Title = ConfirmTitle(confirm), Root = confirm.transform, TypeAhead = true };
+                info = new ScreenInfo { Id = "Confirm", Title = ConfirmTitle(confirm), Root = confirm.transform, TypeAhead = true, InitialFocus = SafeButton(confirm) };
+            }
+            else if (state == MainMenuMode.State.SettingsMenu && UnsavedSettingsPrompt(root) is GameObject prompt)
+            {
+                // Cancel or Escape with changed settings: "Do you want to save your settings before exiting?" appears inside
+                // the settings screen, with Save, Discard and Back. It is no Confirmation and has no state of its own.
+                info = new ScreenInfo { Id = "Confirm", Title = info.Title, Root = prompt.transform, ReadAllOnOpen = true };
             }
             else if (mm.chooseBannerUI != null && mm.chooseBannerUI.activeInHierarchy && mm.chooseBannerUI.GetComponent<ChooseBannerUI>() is ChooseBannerUI chooser
                 && (state != MainMenuMode.State.BannerSelect || (chooser.uploadBannerUI != null && chooser.uploadBannerUI.gameObject.activeInHierarchy)))
@@ -117,6 +123,12 @@ namespace KCAccess.UI
             }
             if (info.Root == null) return null;
             return info;
+        }
+
+        private static GameObject UnsavedSettingsPrompt(GameObject settings)
+        {
+            var menu = settings != null ? settings.GetComponentInChildren<SettingsMenuUI>(true) ?? settings.GetComponentInParent<SettingsMenuUI>() : null;
+            return menu != null && menu.ConsoleConfirmUI != null && menu.ConsoleConfirmUI.activeInHierarchy ? menu.ConsoleConfirmUI : null;
         }
 
         /// <summary>The language picker under the screen whose list is open, or null.</summary>
@@ -165,6 +177,20 @@ namespace KCAccess.UI
                 if (c.transform != root && UIText.IsVisible(c.gameObject)) return c;
             }
             return null;
+        }
+
+        /// <summary>
+        /// The name of the No / Cancel button of a yes-or-no confirmation, where the keyboard starts: "Permanently delete
+        /// saved game?" opened on its Yes button whenever the window took longer to appear than the focus request that
+        /// was meant to move to Cancel lived (a slow computer), and Enter deleted the save. Null for a window with one
+        /// button only, or where the two cannot be told apart by name.
+        /// </summary>
+        internal static string SafeButton(Confirmation c)
+        {
+            if (c == null || c.noButton == null || c.yesButton == null || c.noButton == c.yesButton) return null;
+            if (!c.noButton.gameObject.activeInHierarchy || !c.yesButton.gameObject.activeInHierarchy) return null;
+            string no = c.noButton.gameObject.name;
+            return no != c.yesButton.gameObject.name ? no : null;
         }
 
         internal static string ConfirmTitle(Confirmation c)

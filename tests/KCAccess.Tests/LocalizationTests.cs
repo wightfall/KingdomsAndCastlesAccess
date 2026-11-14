@@ -416,7 +416,7 @@ namespace KCAccess.Tests
         private static readonly string[] KeyNames =
         {
             "Alt", "Tab", "Enter", "Delete", "Insert", "Home", "End", "Page Up", "Page Down", "Escape", "Shift", "Backspace", "Shift Enter", "Control",
-            "Control R", "Control Shift Enter", "Numpad Enter", "Numpad {0}", "Space", "Pause",
+            "Control R", "Control C", "Control V", "Control Shift C", "Control Shift Enter", "Numpad Enter", "Numpad {0}", "Space", "Pause",
         };
 
         [Fact]
