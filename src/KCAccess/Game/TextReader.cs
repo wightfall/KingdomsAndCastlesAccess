@@ -58,6 +58,21 @@ namespace KCAccess.Game
 
         protected override void OnClosed() => onClosed?.Invoke();
 
+        /// <summary>This reader shows the list of what is new (<see cref="WhatsNewReader"/>).</summary>
+        internal bool IsWhatsNew { get; private set; }
+
+        /// <summary>What is new in this version of the mod; closing returns to where it was opened.</summary>
+        internal static TextReader WhatsNewReader(bool fromMap)
+        {
+            var lines = LongText.Lines(KeyHelp.Resolve(WhatsNew.Text(Plugin.Version)));
+            return new TextReader(WhatsNew.Title(Plugin.Version), () => lines, () =>
+            {
+                if (AccessController.Inst.CoveringMenu) return; // the list it was opened over speaks for itself
+                if (fromMap) MapController.Inst.OnReturnToMap();
+                else AccessController.Inst.Nav.SpeakCurrent();
+            }, countGroups: false) { IsWhatsNew = true };
+        }
+
         /// <summary>Opens a long text item of a screen or panel; the focus stays on it.</summary>
         internal static bool OpenText(string caption, string raw)
         {

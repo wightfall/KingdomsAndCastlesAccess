@@ -109,6 +109,48 @@ namespace KCAccess.Core
             }
         }
 
+        /// <summary>
+        /// The controller press that does what the mod action <paramref name="bindingId"/> does ("A", "hold LT and B"),
+        /// for help texts while a controller is in use. The plain layer is preferred, then LT, RT and both triggers.
+        /// Null when no button does it (the help then names the keyboard key).
+        /// </summary>
+        public static string NameOf(string bindingId, bool onMap = true)
+        {
+            if (string.IsNullOrEmpty(bindingId)) return null;
+            var layers = new[] { new[] { false, false }, new[] { true, false }, new[] { false, true }, new[] { true, true } };
+            foreach (var layer in layers)
+            {
+                foreach (PadButton b in System.Enum.GetValues(typeof(PadButton)))
+                {
+                    var action = Map(b, layer[0], layer[1], onMap);
+                    if (!action.HasValue || action.Value.Binding != bindingId) continue;
+                    string button = ButtonName(b);
+                    if (layer[0] && layer[1]) return Loc.F("hold both triggers and press {0}", button);
+                    if (layer[0]) return Loc.F("hold LT and press {0}", button);
+                    if (layer[1]) return Loc.F("hold RT and press {0}", button);
+                    return button;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>A button's spoken name.</summary>
+        public static string ButtonName(PadButton b)
+        {
+            switch (b)
+            {
+                case PadButton.Back: return Loc.T("Back button");
+                case PadButton.Start: return Loc.T("Start button");
+                case PadButton.L3: return Loc.T("left stick click");
+                case PadButton.R3: return Loc.T("right stick click");
+                case PadButton.Up: return Loc.T("D-pad up");
+                case PadButton.Down: return Loc.T("D-pad down");
+                case PadButton.Left: return Loc.T("D-pad left");
+                case PadButton.Right: return Loc.T("D-pad right");
+                default: return b.ToString();
+            }
+        }
+
         /// <summary>The layout as key-list lines (Shift+F1 and README).</summary>
         public static readonly List<KeyLine> Lines = new List<KeyLine>
         {

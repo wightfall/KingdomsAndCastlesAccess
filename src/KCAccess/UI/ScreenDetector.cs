@@ -89,6 +89,8 @@ namespace KCAccess.UI
             var confirm = FindActiveConfirmation(info.Root);
             if (confirm == null && mm.confirm != null && mm.confirm.gameObject.activeInHierarchy) confirm = mm.confirm;
             if (state == MainMenuMode.State.Menu) info.InitialFocus = "New";
+            // Three buttons (Back to Game, Save & Quit, Quit), no Confirmation: start on the one that changes nothing.
+            if (state == MainMenuMode.State.QuitConfirm || state == MainMenuMode.State.ExitConfirm) info.InitialFocus = "Cancel";
             if (state == MainMenuMode.State.Failure || state == MainMenuMode.State.KeepDestroyed || state == MainMenuMode.State.LoadError || state == MainMenuMode.State.ChooseDifficulty || state == MainMenuMode.State.ChooseMode) info.ReadAllOnOpen = true;
             if (confirm != null && confirm.transform != info.Root)
             {

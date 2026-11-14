@@ -317,6 +317,32 @@ namespace KCAccess.Tests
         }
 
         [Fact]
+        public void EditedLanguageFilesAreFoundAndCanBeKept()
+        {
+            using (var tmp = new TempDir())
+            {
+                string game = FakeGame(tmp);
+                var inst = new ModInstaller(game);
+                inst.Install(MakeZip(withLoader: true));
+                string languages = Path.Combine(inst.PluginDir, "Languages");
+                Directory.CreateDirectory(Path.Combine(languages, "default", ".base"));
+                File.WriteAllText(Path.Combine(languages, "default", ".base", "de.txt"), "Hello = Hallo\nBye = Tschüss\n");
+                // An old text that neither shipped file has any more is a leftover, not an edit.
+                File.WriteAllText(Path.Combine(languages, "de.txt"), "Hello = Hallo\nBye = Tschüss\nOld text = Alter Text\n");
+                Directory.CreateDirectory(Path.Combine(languages, "default"));
+                File.WriteAllText(Path.Combine(languages, "default", "fr.txt"), "Hello = Bonjour\n");
+                File.WriteAllText(Path.Combine(languages, "fr.txt"), "Hello = Salut\n");
+                Assert.Equal(new[] { "fr.txt" }, inst.EditedLanguageFiles().ToArray());
+                // Unchanged files do not count; a changed one is kept when asked, with BepInEx removed around it.
+                inst.Uninstall(removeLoader: true, keepLanguages: true);
+                Assert.True(File.Exists(Path.Combine(languages, "fr.txt")));
+                Assert.False(File.Exists(Path.Combine(game, "winhttp.dll")));
+                Assert.False(Directory.Exists(Path.Combine(game, "BepInEx", "core")));
+                Assert.False(File.Exists(Path.Combine(inst.PluginDir, "KCAccess.dll")));
+            }
+        }
+
+        [Fact]
         public void ReplaceFileOverwritesTarget()
         {
             using (var tmp = new TempDir())

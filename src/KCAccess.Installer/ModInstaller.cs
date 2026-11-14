@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -128,14 +129,63 @@ namespace KCAccess.Installer
         }
 
         /// <summary>Removes the mod; optionally BepInEx as well (which also disables any other BepInEx mods).</summary>
+        /// <summary>
+        /// The player's language files with translations they changed: compared with the shipped file each was last
+        /// merged with (Languages/default/.base, or the shipped default when there is no record), the same for the
+        /// game texts in Languages/game. Names relative to Languages ("de.txt", "game\th.txt").
+        /// </summary>
+        public List<string> EditedLanguageFiles()
+        {
+            var edited = new List<string>();
+            string languages = Path.Combine(PluginDir, "Languages");
+            foreach (var dir in new[] { languages, Path.Combine(languages, "game") })
+            {
+                if (!Directory.Exists(dir)) continue;
+                foreach (var file in Directory.GetFiles(dir, "*.txt"))
+                {
+                    string name = Path.GetFileName(file);
+                    if (string.Equals(name, "template.txt", StringComparison.OrdinalIgnoreCase)) continue;
+                    // A translation is the player's own when it differs from what the mod shipped: both the file it
+                    // was last merged with (default/.base) and the current shipped file. Lines neither has (texts an
+                    // older version used) are leftovers, not edits.
+                    string recorded = Path.Combine(dir, "default", ".base", name);
+                    string current = Path.Combine(dir, "default", name);
+                    if (!File.Exists(recorded) && !File.Exists(current)) continue;
+                    try
+                    {
+                        var mine = KCAccess.Core.LocTable.Parse(File.ReadAllText(file));
+                        var before = File.Exists(recorded) ? KCAccess.Core.LocTable.Parse(File.ReadAllText(recorded)) : null;
+                        var now = File.Exists(current) ? KCAccess.Core.LocTable.Parse(File.ReadAllText(current)) : null;
+                        foreach (var key in mine.Keys)
+                        {
+                            string value = mine.Raw(key) ?? string.Empty;
+                            if (value.Length == 0) continue;
+                            bool known = (before != null && before.Has(key)) || (now != null && now.Has(key));
+                            if (!known) continue;
+                            if (value != ((before != null ? before.Raw(key) : null) ?? string.Empty) && value != ((now != null ? now.Raw(key) : null) ?? string.Empty))
+                            {
+                                edited.Add(dir == languages ? name : Path.Combine("game", name));
+                                break;
+                            }
+                        }
+                    }
+                    catch (IOException) { }
+                }
+            }
+            return edited;
+        }
+
         /// <param name="removeLoader">Remove BepInEx too.</param>
+        /// <param name="keepLanguages">Keep BepInEx/plugins/KCAccess/Languages, so a later install uses the player's texts again.</param>
         /// <param name="runningExe">
         /// The program doing the uninstall. The updater copy in the game folder (and the one a self-update left as
         /// ".old") is removed as well, unless it is this program: Windows keeps a running program locked.
         /// </param>
-        public void Uninstall(bool removeLoader, string runningExe = null)
+        public void Uninstall(bool removeLoader, string runningExe = null, bool keepLanguages = false)
         {
-            if (Directory.Exists(PluginDir)) Directory.Delete(PluginDir, recursive: true);
+            string keep = keepLanguages ? Path.Combine(PluginDir, "Languages") : null;
+            if (keep != null && !Directory.Exists(keep)) keep = null;
+            DeleteTree(PluginDir, keep);
             DeleteIfExists(Path.Combine(GameDir, "KCAccess-README.md"));
             string cfg = Path.Combine(GameDir, @"BepInEx\config\kcaccess.screenreader.cfg");
             DeleteIfExists(cfg);
@@ -149,8 +199,23 @@ namespace KCAccess.Installer
             }
             if (!removeLoader) return;
             foreach (var f in new[] { "winhttp.dll", "doorstop_config.ini", ".doorstop_version", "changelog.txt" }) DeleteIfExists(Path.Combine(GameDir, f));
-            string bep = Path.Combine(GameDir, "BepInEx");
-            if (Directory.Exists(bep)) Directory.Delete(bep, recursive: true);
+            DeleteTree(Path.Combine(GameDir, "BepInEx"), keep);
+        }
+
+        /// <summary>Deletes a folder with everything in it, except the folder <paramref name="keep"/> (and its parents).</summary>
+        private static void DeleteTree(string dir, string keep)
+        {
+            if (!Directory.Exists(dir)) return;
+            string full = Path.GetFullPath(dir).TrimEnd(Path.DirectorySeparatorChar);
+            string kept = keep != null ? Path.GetFullPath(keep).TrimEnd(Path.DirectorySeparatorChar) : null;
+            if (kept == null || !(kept + Path.DirectorySeparatorChar).StartsWith(full + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+            {
+                Directory.Delete(dir, recursive: true);
+                return;
+            }
+            if (string.Equals(full, kept, StringComparison.OrdinalIgnoreCase)) return;
+            foreach (var f in Directory.GetFiles(dir)) File.Delete(f);
+            foreach (var d in Directory.GetDirectories(dir)) DeleteTree(d, keep);
         }
 
         private static void DeleteIfExists(string path)

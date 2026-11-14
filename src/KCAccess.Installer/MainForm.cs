@@ -468,12 +468,18 @@ namespace KCAccess.Installer
                 MessageBox.Show(this, Loc.T("Please close Kingdoms and Castles first."), Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            var r = MessageBox.Show(this, Loc.T("Remove KCAccess from the game? Your edited language files are removed too."), Loc.T("Uninstall"), MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            var r = MessageBox.Show(this, Loc.T("Remove KCAccess from the game?"), Loc.T("Uninstall"), MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (r != DialogResult.Yes) return;
+            // Translators' work is not thrown away without asking.
+            bool keepLanguages = false;
+            var edited = Installer.EditedLanguageFiles();
+            if (edited.Count > 0)
+                keepLanguages = MessageBox.Show(this, Loc.F("You changed texts in these language files: {0}. Keep them, so that a later install of KCAccess uses them again?", string.Join(", ", edited.ToArray())),
+                    Loc.T("Uninstall"), MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
             var loader = MessageBox.Show(this, Loc.T("Also remove BepInEx? Choose No if you use other BepInEx mods."), Loc.T("Uninstall"), MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             try
             {
-                Installer.Uninstall(loader == DialogResult.Yes, Application.ExecutablePath);
+                Installer.Uninstall(loader == DialogResult.Yes, Application.ExecutablePath, keepLanguages);
                 ShowStatus(Loc.T("KCAccess was removed."));
                 MessageBox.Show(this, Loc.T("KCAccess was removed."), Loc.T("Uninstall"), MessageBoxButtons.OK, MessageBoxIcon.Information);
             }

@@ -28,6 +28,23 @@ namespace KCAccess
 
         internal static bool Enabled => Plugin.CfgController != null && Plugin.CfgController.Value;
 
+        private static float lastPadPress = -100f, lastKeyboardPress = -100f;
+
+        /// <summary>
+        /// A gamepad is in use: its last press is newer than the last key typed on the keyboard. Help texts then name
+        /// the controller buttons (<see cref="ControllerMap.NameOf"/>).
+        /// </summary>
+        internal static bool UsingPad => Enabled && lastPadPress > lastKeyboardPress;
+
+        /// <summary>Where the pad works now, for the buttons that differ between the map and menus.</summary>
+        internal static bool OnMap => AccessController.Inst != null && AccessController.Inst.OnMapForPad;
+
+        /// <summary>A key was typed on the keyboard (not one the pad delivered a moment ago).</summary>
+        internal static void KeyboardPressed()
+        {
+            if (Time.unscaledTime - lastPadPress > 0.5f) lastKeyboardPress = Time.unscaledTime;
+        }
+
         internal static void Tick(bool onMap)
         {
             if (!Enabled || failed) return;
@@ -119,6 +136,7 @@ namespace KCAccess
 
         private static void Fire(PadButton b, bool lt, bool rt, bool onMap)
         {
+            lastPadPress = Time.unscaledTime;
             var action = KCAccess.Core.ControllerMap.Map(b, lt, rt, onMap);
             string layer = lt && rt ? "both triggers + " : lt ? "LT + " : rt ? "RT + " : string.Empty;
             if (!action.HasValue)

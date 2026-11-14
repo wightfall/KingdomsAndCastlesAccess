@@ -59,6 +59,8 @@ namespace KCAccess.Game
             Toggle(Loc.N("Detailed tile descriptions while moving (fertility and road coverage)"), Plugin.CfgVerboseCells);
             Toggle(Loc.N("Speak cursor coordinates after each tile"), Plugin.CfgCoordinates);
             Toggle(Loc.N("Hints for new players"), Plugin.CfgHints);
+            Toggle(Loc.N("Guided game: say the next step until a new kingdom has its basic buildings"), Plugin.CfgGuidedGame);
+            Toggle(Loc.N("After an update of the mod, say which key reads what is new"), Plugin.CfgAnnounceWhatsNew);
             Toggle(Loc.N("Say what buildings are for, in the build menu and when you select one"), Plugin.CfgBuildingPurpose);
             Toggle(Loc.N("Announce what the selected building makes or loses, for example +5 stone"), Plugin.CfgProduction);
             Toggle(Loc.N("Say the position in menus and lists, for example 3 of 19"), Plugin.CfgPositions);

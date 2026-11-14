@@ -15,7 +15,7 @@ namespace KCAccess
     {
         public const string Guid = "kcaccess.screenreader";
         public const string Name = "KCAccess";
-        public const string Version = "1.29.0";
+        public const string Version = "1.29.1";
 
         internal static Plugin Instance;
 
@@ -47,6 +47,8 @@ namespace KCAccess
         internal static ConfigEntry<int> CfgWalkSpeed;
         internal static ConfigEntry<bool> CfgHints;
         internal static ConfigEntry<bool> CfgPositions;
+        internal static ConfigEntry<bool> CfgGuidedGame;
+        internal static ConfigEntry<bool> CfgAnnounceWhatsNew;
         internal static ConfigEntry<bool> CfgController;
         internal static ConfigEntry<bool> CfgTwitchCountdown;
         internal static ConfigEntry<bool> CfgTwitchChat;
@@ -99,6 +101,8 @@ namespace KCAccess
             CfgHints = Config.Bind("Speech", "Hints", true, "Speak short hints for new players (for example how to use a target after choosing it).");
             CfgBuildingPurpose = Config.Bind("Speech", "BuildingPurpose", true, "Say what a building is for (the game's description of it) while moving through the build menu and when you select a building.");
             CfgProduction = Config.Bind("Speech", "AnnounceProduction", true, "Speak the numbers the game shows over the selected building when it makes or loses something, for example +5 stone from a quarry.");
+            CfgGuidedGame = Config.Bind("Speech", "GuidedGame", true, "Guided game: in a kingdom that is still missing the basic buildings (houses, farms, granary, stockpile, wood, stone, charcoal, well, tavern or chapel), say the next step when one is done; K lists the current step.");
+            CfgAnnounceWhatsNew = Config.Bind("Speech", "AnnounceWhatsNew", true, "After the mod was updated, say once at the first screen which key reads what is new.");
             CfgPositions = Config.Bind("Speech", "SayPositions", false, "In every menu, list and panel, say the position after each item, for example \"New, 3 of 19\".");
             CfgController = Config.Bind("Keyboard", "ControllerSupport", true, "Play with a gamepad (Xbox, PlayStation and most others): buttons do the same as the mod's keys. Turn off to use the game's own controller mode instead.");
             CfgTwitchCountdown = Config.Bind("Streaming", "AnnounceTwitchCountdown", true, "With the game's Twitch chat voting connected: say once when 10 seconds are left in a vote, with the leading option.");
@@ -106,7 +110,8 @@ namespace KCAccess
             CfgCaptions = Config.Bind("Streaming", "SpeechCaptions", false, "Show the last spoken lines as captions at the bottom of the screen, for people watching your stream.");
             CfgStreamFile = Config.Bind("Streaming", "StatusFile", false, "Every 2 seconds write BepInEx/kcaccess_stream.txt (kingdom, year, population, gold, last notification) for an OBS text source.");
             Keys.Load(CfgBindings.Value);
-            KeyHelp.KeyNameOf = Keys.Spoken; // help texts name the player's own keys
+            // Help texts name the player's own keys, or the controller button while a gamepad is in use.
+            KeyHelp.KeyNameOf = id => (ControllerInput.UsingPad ? ControllerMap.NameOf(id, ControllerInput.OnMap) : null) ?? Keys.Spoken(id);
             CfgLogKeys = Config.Bind("Debug", "KeyLog", true, "Write every key press (key name only), with the modifier state seen by the game and by Windows, to the BepInEx log (for keyboard bug reports).");
             CfgLogSpeech = Config.Bind("Speech", "LogSpeech", true, "Write everything spoken to the BepInEx log (useful for bug reports).");
             CfgLanguage = Config.Bind("Language", "Language", "auto", "Language the mod speaks: auto follows the game's language (English when there is no file for it), en is English, any other value is the name of a file in BepInEx/plugins/KCAccess/Languages without .txt, for example th. Easier to change in the game: Ctrl+Shift+O.");

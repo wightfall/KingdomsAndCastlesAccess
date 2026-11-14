@@ -77,7 +77,14 @@ namespace KCAccess.Core
 
         /// <summary>Replaces {BindingId} with the key currently bound to it.</summary>
         public static string Resolve(string text) =>
-            text == null ? null : System.Text.RegularExpressions.Regex.Replace(text, @"\{(\w+)\}", m => KeyNameOf(m.Groups[1].Value));
+            text == null ? null : System.Text.RegularExpressions.Regex.Replace(text, @"\{(\w+)\}", m =>
+            {
+                string key = KeyNameOf(m.Groups[1].Value);
+                // A name that starts a sentence ("hold RT and press A opens the build menu") starts with a capital.
+                string before = text.Substring(0, m.Index).TrimEnd(' ');
+                bool start = before.Length == 0 || before.EndsWith(".") || before.EndsWith(":") || before.EndsWith("!") || before.EndsWith("?");
+                return start ? Capitalize(key) : key;
+            });
 
         public static readonly List<KeySection> Sections = new List<KeySection>
         {
@@ -88,7 +95,8 @@ namespace KCAccess.Core
                 K("{Mute}", Loc.N("sound cues on or off")),
                 K("{Settings}", Loc.N("mod settings: options, sound volume and changing these keys")),
                 K("{Reset}", Loc.N("reset the mod if speech stops responding")),
-                K("{Report}", Loc.N("keyboard report for bug reports"))),
+                K("{Report}", Loc.N("keyboard report for bug reports")),
+                K("{WhatsNew}", Loc.N("what is new in this version of KCAccess"))),
             new KeySection(Loc.N("Menus, dialogs and panels"),
                 K(Loc.N("Up and Down arrows"), Loc.N("move through everything on the screen")),
                 K(Loc.N("Tab and Shift Tab"), Loc.N("move between controls only")),
@@ -125,7 +133,9 @@ namespace KCAccess.Core
                 K("{Date}", Loc.N("year, season, weather and speed")),
                 K("{Status}", Loc.N("kingdom status")),
                 K("{Log}", Loc.N("notification history")),
-                K("{LastNotification}", Loc.N("repeat the last notification"))),
+                K("{LastNotification}", Loc.N("repeat the last notification")),
+                K(Loc.N("Control C"), Loc.N("copy the description of the tile")),
+                K(Loc.N("Control Shift C"), Loc.N("copy the tile and the survey of the area"))),
             new KeySection(Loc.N("Map: finding and going places"),
                 K(Loc.N("{PrevCategory} and {NextCategory}"), Loc.N("choose a scan category")),
                 K(Loc.N("{PrevItem} and {NextItem}"), Loc.N("choose the previous or next thing of that category as your target")),
@@ -238,6 +248,7 @@ namespace KCAccess.Core
             p.Add(s.MenuMap ? Loc.T("Exploring the generated map before the game starts") : Loc.T("Kingdom map"));
             p.Add(Loc.T("Arrow keys move one tile, Shift arrows 5 tiles, Control arrows jump to where the terrain changes. {TileInfo} describes the tile, {Survey} surveys the area, {Coordinates} gives the coordinates"));
             p.Add(Loc.T("{PrevCategory} and {NextCategory} choose a scan category, {PrevItem} and {NextItem} choose the previous or next thing in it as your target"));
+            p.Add(Loc.T("Control C copies the description of the tile, Control Shift C adds the survey of the area.").TrimEnd('.'));
             if (s.HasTarget) p.Add(Loc.T("{JumpTarget} jumps to the target, {WhereTarget} says where it is, {Walk} walks there, {WalkStraight} walks in a straight line, {Beacon} turns the beacon on or off"));
             if (s.MenuMap)
             {

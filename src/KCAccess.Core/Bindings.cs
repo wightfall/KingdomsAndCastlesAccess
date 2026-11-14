@@ -134,6 +134,7 @@ namespace KCAccess.Core
             new BindingDef("Redetect", Loc.N("Search for the screen reader again"), "Ctrl+Shift+F5", BindingScope.Global),
             new BindingDef("Reset", Loc.N("Reset the mod"), "Ctrl+Shift+F10", BindingScope.Global),
             new BindingDef("Report", Loc.N("Keyboard report"), "Ctrl+Shift+F11", BindingScope.Global),
+            new BindingDef("WhatsNew", Loc.N("What is new in this version of KCAccess"), "Ctrl+Shift+W", BindingScope.Global),
             new BindingDef("TileInfo", Loc.N("Describe the tile"), "I", BindingScope.Map),
             new BindingDef("BuildingDetails", Loc.N("Details of the selected building"), "Shift+I", BindingScope.Map),
             new BindingDef("Survey", Loc.N("Survey the area"), "O", BindingScope.Map),
@@ -276,6 +277,9 @@ namespace KCAccess.Core
             Add("F6", Loc.N("moving between panels"));
             Add("Shift+F6", Loc.N("moving between panels"));
             Add("Ctrl+R", Loc.N("reading the whole screen"));
+            Add("Ctrl+C", Loc.N("copying to the clipboard"));
+            Add("Ctrl+Shift+C", Loc.N("copying the whole screen to the clipboard"));
+            Add("Ctrl+V", Loc.N("pasting into a text field"));
             Add("Ctrl+M", Loc.N("exploring the map from the map setup screen"));
             Add("Backspace", Loc.N("deleting while typing"));
             Add("Ctrl+Shift+F12", Loc.N("writing the screen's layout to a file for bug reports"));

@@ -18,8 +18,8 @@ namespace KCAccess.Core
             { "SettingsMenu", Loc.N("Settings. Tabs at the top switch between graphics, audio, controls and gameplay options.") },
             { "Save", Loc.N("Save game. Choose an existing slot to overwrite it, or choose the new save option. You will be asked to confirm.") },
             { "Load", Loc.N("Load game. Saved games are listed newest first with kingdom name, year and date. Press Enter to load, confirm with Yes.") },
-            { "QuitConfirm", Loc.N("Do you want to save before leaving? Choose yes to save first or no to leave without saving.") },
-            { "ExitConfirm", Loc.N("Do you want to save before exiting the game?") },
+            { "QuitConfirm", Loc.N("Leave for the main menu? Back to Game returns to your kingdom, Save and Quit saves first, Quit leaves without saving. The keyboard starts on Back to Game.") },
+            { "ExitConfirm", Loc.N("Exit the game? Back to Game returns to your kingdom, Save and Quit saves first, Quit exits without saving. The keyboard starts on Back to Game.") },
             { "LoadError", Loc.N("The save could not be loaded.") },
             { "Credits", Loc.N("Credits, read as a list. Up and Down read one line at a time, Page Up and Page Down jump between the titles, Escape returns to the main menu.") },
             { "TextReader", Loc.N("Text reader. Up and Down read one line at a time, Page Up and Page Down jump between groups (paragraphs, or the titles in the credits), Home and End go to the first and last line, letters jump to a line starting with them, Control R reads everything. Escape returns.") },
@@ -69,16 +69,29 @@ namespace KCAccess.Core
         };
 
         /// <summary>Help added later to a screen, spoken after its text (keeps the earlier text's translations).</summary>
-        private static readonly Dictionary<string, string> More = new Dictionary<string, string>
+        /// <summary>Said in every list of the mod (initialised before <see cref="More"/>, which uses it).</summary>
+        private static readonly string CopyList = Loc.N("Control C copies the current line, Control Shift C the whole list.");
+
+        private static readonly Dictionary<string, string[]> More = new Dictionary<string, string[]>
         {
-            { "ModSettings", Loc.N("Every sound cue has its own volume line: Left and Right change it in steps of 10 percent, Enter plays the sound, Delete sets it back to 100 percent. The line after the sounds resets every sound volume.") },
+            { "ModSettings", new[] { Loc.N("Every sound cue has its own volume line: Left and Right change it in steps of 10 percent, Enter plays the sound, Delete sets it back to 100 percent. The line after the sounds resets every sound volume."), CopyList } },
+            { "Log", new[] { CopyList } },
+            { "Keys", new[] { CopyList } },
+            { "Status", new[] { CopyList } },
+            { "TextReader", new[] { Loc.N("Control C copies the current line, Control Shift C the whole text.") } },
+            { "BuildMenu", new[] { Loc.N("Control C copies the building with its full description, Control Shift C the whole category.") } },
+            { "Map", new[] { Loc.N("Control C copies the description of the tile, Control Shift C adds the survey of the area.") } },
         };
 
         public static string For(string screenId)
         {
             // Texts name rebindable keys as {BindingId}: always speak the player's current keys.
             if (screenId != null && Screens.TryGetValue(screenId, out var text))
-                return KeyHelp.Resolve(Loc.T(text) + (More.TryGetValue(screenId, out var more) ? " " + Loc.T(more) : string.Empty));
+            {
+                string all = Loc.T(text);
+                if (More.TryGetValue(screenId, out var more)) foreach (var m in more) all += " " + Loc.T(m);
+                return KeyHelp.Resolve(all);
+            }
             return Loc.T(Screens["Dialog"]);
         }
 

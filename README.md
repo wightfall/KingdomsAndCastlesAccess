@@ -96,8 +96,10 @@ licenses).
 ### Uninstall
 
 Run KCAccess-Updater.exe and choose **Uninstall**, or delete `BepInEx\plugins\KCAccess`. To remove BepInEx completely also delete `winhttp.dll`,
-`doorstop_config.ini`, `.doorstop_version` and the `BepInEx` folder. Uninstall removes the mod, its settings, your edited
-language files and `KCAccess-README.md`, and asks whether BepInEx should go too. The setup program also removes
+`doorstop_config.ini`, `.doorstop_version` and the `BepInEx` folder. Uninstall removes the mod, its settings and
+`KCAccess-README.md`, and asks whether BepInEx should go too. When you changed texts in a language file, it
+first names those files and asks whether to keep them; kept files stay in `BepInEx\plugins\KCAccess\Languages`
+and a later install uses them again. The setup program also removes
 `KCAccess-Updater.exe` from the game folder; when you uninstall from KCAccess-Updater.exe itself, that one file
 stays (a running program cannot delete itself) and can be deleted by hand.
 
@@ -114,6 +116,7 @@ Press **F1** at any time for help about the current screen: what it is and only 
 | Ctrl+Shift+F5 | Search for the screen reader again (if you started it after the game) |
 | Ctrl+Shift+F10 | Reset the mod and reconnect the screen reader if it ever stops speaking or responding (no need to quit the game) |
 | Ctrl+Shift+F11 | Keyboard report: what owns the keyboard, held modifiers, keyboard layout (also written to the log) |
+| Ctrl+Shift+W | What is new in this version of KCAccess, read in the text reader (in the mod's language) |
 | Ctrl+Shift+M | Sound cues on / off |
 | Ctrl+Shift+O | Mod settings: options, sound volume, walking speed and changing the mod's keys |
 
@@ -182,7 +185,7 @@ replaces the mouse drag), Left / Right change the limit, from 0 up to the job po
 | End | Jump to the selected building |
 | Ctrl+Shift+1 … 9 | Store a bookmark at the cursor (saved per kingdom) |
 | Ctrl+1 … 9 | Jump to a bookmark |
-| Page Up / Page Down | Choose a scan category: your buildings, construction sites, your soldiers and ships (also siege catapults, your dragons and transport carts), alerts, problems (hungry, starving, plague, unpaid wages, homeless, rats, unburied dead, buildings that cannot work), loose resources lying on the ground, threats (enemy armies and ships, viking siege catapults, wild dragons, ogres, fires, hunting wolves, wolf dens), stone, iron, open fertile land, forests, fresh water, fishing grounds, foreign kingdoms, islands (every island with its owner, size and whether it is explored), special places |
+| Page Up / Page Down | Choose a scan category: your buildings, construction sites, your soldiers and ships (also siege catapults, your dragons and transport carts), alerts, problems (hungry, starving, plague, unpaid wages, homeless, rats, unburied dead, buildings that cannot work), loose resources lying on the ground, threats (enemy armies and ships, viking siege catapults, wild dragons, ogres, fires, hunting wolves, wolf dens), stone, iron, open fertile land, forests, fresh water, fishing grounds, foreign kingdoms (their keeps and, on explored land, their docks), islands (every island with its owner, size and whether it is explored), special places |
 | [ and ] | Choose the previous / next item of that category as the navigation target, nearest first (the list refreshes itself) |
 | N | Auto-walk the cursor to the target along a route villagers can walk (ends next to it if the target itself is blocked) |
 | Ctrl+N | Walk to the target in a straight line, over water and buildings |
@@ -547,6 +550,17 @@ tile and what blocks the others, and repeats the nearest spot.
 4. Accept starts the game. Press B, pick the Keep (first item in Castle), move to clear land near
    trees, stone and fertile soil (press O to survey the area), and press Enter.
 
+### Guided game
+
+In a kingdom that is still missing the basic buildings, the mod says the next step whenever one is done:
+keep, roads (a new kingdom has no road coverage, so even the tiles beside the keep need a road first), two
+houses, 4 farm tiles, a granary, a stockpile, a forester, a quarry, a charcoal maker, a well, and a tavern or
+chapel ("Guided game: Roads done. Step 3 of 11: build two houses near the keep. The Hovel is in the Town
+category ..."). Each step names the category and the keys. **K** lists the current step. Steps are worked out
+from what is finished, so nothing is saved: a loaded kingdom hears where it stands, a kingdom that has
+everything hears nothing, and a demolished building simply opens its step again. The end is "Guided game
+complete". **Mod settings, Speech, Guided game** turns it off.
+
 ### The first years (tested walkthrough)
 
 1. **Roads:** B, Town, Road. Shift+Enter next to the keep, move, Enter builds the line. Tiles with trees,
@@ -582,7 +596,8 @@ Cancel; choose "It's toast" to delete. "Save deleted" confirms it.
 
 Every yes-or-no confirmation of the game starts on its **No / Cancel** button (deleting a save, loading over
 unsaved changes, releasing a dragon, demolishing many buildings ...), so a stray Enter never confirms; Up or Down
-moves to the other answer.
+moves to the other answer. The pause menu's quit question (Back to Game, Save & Quit, Quit) starts on **Back to
+Game**.
 
 ## Playing with a controller
 
@@ -609,6 +624,9 @@ key's action. The layout is also in the Shift+F1 key list (group "Controller"). 
 The game's own console-controller mode is kept off while this is on; turn "Controller support" off in the mod
 settings to use the game's mode instead.
 
+While you play with the controller, F1, hints and the guided game name the buttons instead of the keys ("hold
+LT and press A walks there"); as soon as you type on the keyboard they name the keys again.
+
 ## Mod settings (Ctrl+Shift+O)
 
 Everything about the mod can be changed in the game, from any screen. Up and Down move, Page Up and
@@ -621,7 +639,10 @@ Page Down jump between the groups (you hear when you reach the first or last gro
 * **Speech:** announce notifications, announce seasons and new years, say which of your islands is attacked,
   announce attacks on other kingdoms, announce other events seen in other kingdoms (see
   [Problems, fish, plague and weather](#problems-fish-plague-and-weather)), detailed tile descriptions while
-  moving, speak coordinates after each tile, hints for new players, **say what buildings are for** in the
+  moving, speak coordinates after each tile, hints for new players, **guided game** (on by default, see
+[Guided game](#guided-game)), **after an update of the mod, say which key reads what is new** (on by default:
+once, at the first screen after an update, "KCAccess was updated to version 1.29.1. Control Shift W reads what
+is new"), **say what buildings are for** in the
   build menu and when you select one (on by default), **announce what the selected building makes or loses**
   ("+5 stone"; on by default), and **say the position in menus and lists** ("Load, 4 of 19"; off by default,
   F5 always says it).
@@ -785,6 +806,8 @@ Every sound can be previewed: Shift+F1, End, then Up through the sounds and pres
 | Speech / AnnounceOtherKingdomEvents | true | Say fires on the AI kingdoms' explored land, islands they claim, and wars, peace and alliances between two AI kingdoms (those with you are always said) |
 | Speech / AnnounceSeasons | true | Speak the start of every summer, winter and new year (and heavy rain / thunderstorms) |
 | Speech / Hints | true | Short hints for new players |
+| Speech / GuidedGame | true | Guided game: say the next step until a new kingdom has its basic buildings; K lists the current step |
+| Speech / AnnounceWhatsNew | true | After an update of the mod, say once which key reads what is new |
 | Speech / BuildingPurpose | true | Say what a building is for (the game's description) in the build menu and when you select it |
 | Speech / AnnounceProduction | true | Speak the numbers the game shows over the selected building when it makes or loses something ("+5 stone") |
 | Language / Language | auto | Language the mod speaks: `auto` follows the game, `en` English, or a file name in `Languages` such as `th` |
@@ -850,7 +873,9 @@ starting with `[compat]`: please attach it to a bug report after a game update.
   `KingdomsAndCastles.exe`. Anti-virus programs sometimes quarantine it.
 * **The mouse takes over:** moving the mouse gives control back to the mouse pointer; any cursor key
   returns to keyboard control.
-* Please attach `BepInEx\LogOutput.log` to bug reports.
+* Please attach `BepInEx\LogOutput.log` to bug reports. To describe a screen that reads wrongly, press
+  **Ctrl+Shift+C** on it and paste the copied screen into the report. Every bug found so far has been fixed,
+  but that only means none is known: reports are welcome on the GitHub issues page.
 
 ### Keyboard problems (keys like Escape, Space, 1 2 3 or L do nothing)
 

@@ -281,7 +281,14 @@ namespace KCAccess.Game
                             var c = keeps.data[0].GetCell();
                             found.Add(new Item { Label = Loc.F("{0} keep", name) + (CellInfo.Explored(c) ? string.Empty : ", " + Loc.T("unexplored")), Pos = new GridPos(c.x, c.z) });
                         }
-                        else
+                        var docks = Player.inst.GetBuildingListForLandMass(lm, World.dockHash);
+                        for (int d = 0; docks != null && d < docks.Count; d++)
+                        {
+                            var dock = docks.data[d];
+                            var dc = dock != null && dock.IsBuilt() ? dock.GetCell() : null;
+                            if (dc != null && CellInfo.Explored(dc)) found.Add(new Item { Label = Loc.F("{0} dock", name), Pos = new GridPos(dc.x, dc.z) });
+                        }
+                        if (keeps != null && keeps.Count > 0) continue;
                         {
                             var centre = LandmassCentre(lm);
                             if (centre.HasValue) found.Add(new Item { Label = Loc.F("{0} island, no keep yet", name), Pos = centre.Value });

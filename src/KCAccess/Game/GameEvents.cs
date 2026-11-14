@@ -53,6 +53,7 @@ namespace KCAccess.Game
                 PileWatch.Reset();
                 ThiefWatch.Reset();
                 MissionWatch.Reset();
+                GuidedGameWatch.Reset();
                 Twitch.Reset();
                 MapController.Inst.OnEnterPlayMode();
             }

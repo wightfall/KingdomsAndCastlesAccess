@@ -91,6 +91,8 @@ namespace KCAccess
             Safe.Run("controller", () => { if (!OverlayOpen && !Inst.Nav.IsEditing) ControllerInput.Tick(Inst.OnMapForPad); });
             Safe.Run("keys", () => KInput.BeginFrame());
             if (Plugin.CfgDebugCommands.Value) Safe.Run("test commands", () => { Diagnostics.PollCommands(); Safe.MeasureTick(); });
+            // Help texts name keyboard keys again as soon as the keyboard is used (not only when key logging is on).
+            if (Input.anyKeyDown && !Input.GetMouseButtonDown(0) && !Input.GetMouseButtonDown(1)) ControllerInput.KeyboardPressed();
             if (Plugin.CfgLogKeys.Value) Safe.Run("key log", () => Diagnostics.LogKeys());
             Safe.Run("language", () => ModLanguage.Tick());
             Safe.Run("game texts", () => GameTextTranslation.Tick());
@@ -157,6 +159,7 @@ namespace KCAccess
                 Safe.Run("game events", () => Game.GameEvents.Tick());
                 Safe.Run("alerts", () => Game.Alerts.Tick());
                 Safe.Run("problems", () => Game.Problems.Tick());
+                Safe.Run("guided game", () => Game.GuidedGameWatch.Tick());
                 Safe.Run("twitch", () => Game.Twitch.Tick());
             }
             Safe.Run("stream file", () => Game.StreamStatusFile.Tick(Inst.wasPlaying));
@@ -208,6 +211,7 @@ namespace KCAccess
                 return;
             }
             TellAboutGameUpdate();
+            TellWhatsNew();
             // Exploring the map belongs to the map setup screen only: any other screen or a confirmation on top of it
             // (back to the main menu, an error) must get the keyboard, not the map cursor.
             if (!playing && Game.MapController.Inst.MenuMapMode && (modal == null || modal.Id != "NewMap"))
@@ -273,6 +277,29 @@ namespace KCAccess
         }
 
         private bool toldAboutGameUpdate;
+        private bool toldWhatsNew;
+
+        /// <summary>
+        /// Once per session, at the first screen: after the mod was updated, which key reads what is new. The version
+        /// is remembered in BepInEx/cache, so a first install and later starts say nothing.
+        /// </summary>
+        private void TellWhatsNew()
+        {
+            if (toldWhatsNew || (modal == null && Time.realtimeSinceStartup < 30f)) return;
+            toldWhatsNew = true;
+            try
+            {
+                string file = System.IO.Path.Combine(BepInEx.Paths.CachePath, "kcaccess_version.txt");
+                string remembered = System.IO.File.Exists(file) ? System.IO.File.ReadAllText(file) : null;
+                if (Plugin.CfgAnnounceWhatsNew.Value && WhatsNew.ShouldAnnounce(remembered, Plugin.Version))
+                    A.SayQueued(KeyHelp.Resolve(Loc.F("KCAccess was updated to version {0}.", Plugin.Version) + " " + Loc.T("{WhatsNew} reads what is new.")));
+                System.IO.File.WriteAllText(file, Plugin.Version);
+            }
+            catch (System.Exception e)
+            {
+                Plugin.Log.LogWarning("Could not remember the mod version: " + e.Message);
+            }
+        }
         private float genericNext;
 
         /// <summary>Once per session, when the first screen has been said: the game is not the build this release knows.</summary>
@@ -312,6 +339,7 @@ namespace KCAccess
                 }
             }
             TellAboutGameUpdate();
+            TellWhatsNew();
             if (modal != null) Safe.Run("navigation", () => Inst.HandleNavigatorKeys());
         }
 
@@ -617,6 +645,11 @@ namespace KCAccess
             if (KInput.Pressed("Reset"))
             {
                 ResetAccessibility();
+                return true;
+            }
+            if (KInput.Pressed("WhatsNew"))
+            {
+                if (!(ActiveMenu is Game.TextReader reader && reader.IsWhatsNew)) OpenOver(Game.TextReader.WhatsNewReader(OnMapNow));
                 return true;
             }
             if (KInput.Pressed("Report"))

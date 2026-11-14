@@ -732,6 +732,13 @@ namespace KCAccess.Game
                 SpeakValidity(always: true);
                 return;
             }
+            if (KInput.Down(KeyCode.V) && KInput.Ctrl && !KInput.Alt)
+            {
+                KInput.Consume(KeyCode.V);
+                A.Cue(Cue.Error);
+                A.Say(Loc.T("Control V pastes into a text field; there is none on the map"), force: true);
+                return;
+            }
             if (KInput.Pressed("Validity"))
             {
                 // The key answers only while a building is held: say so instead of nothing.

@@ -3,6 +3,9 @@ A merchant ship has arrived.
 Announce other events seen in other kingdoms (fires, new islands)
 Choose rival AI kingdoms and their difficulty.
 Credits are playing. Choose Back to return.
+Do you want to save before exiting the game?
+Do you want to save before leaving? Choose yes to save first or no to leave without saving.
+Each squad costs {0}
 Gold {0}
 Happiness {0}, button, shows what affects happiness
 Language list. Up and Down choose, Enter switches the game to that language. Languages marked screen reader only change only what the mod says.
@@ -11,8 +14,10 @@ Opinion of you: {0}, the best there is
 Opinion of you: {0}, {1} percent of the way to {2}
 Placing a building. Move with the arrow keys, the building follows the cursor and you hear whether the spot is valid. Enter places it. R rotates. {Validity} reads why the spot is invalid. For roads, walls and fields press Shift Enter to mark a start point, move to the end point, then press Enter to build the whole line or area. Escape cancels placement.
 Press Enter on gold, food, a material, happiness or health for the detailed report. F6 from the map reaches the kingdom overview panel with the tax buttons.
+Remove KCAccess from the game? Your edited language files are removed too.
 Research finished: {0}
 The army of {0} left {1}.
+The buttons are Back to Game, Save and Quit, and Quit without saving. The keyboard starts on Back to Game.
 This setup contains KCAccess {0} and you have {1}. Install it now?
 allowed {0} of {1}
 favorable

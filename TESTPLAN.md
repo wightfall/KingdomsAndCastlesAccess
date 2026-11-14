@@ -9,7 +9,21 @@ of that release. Clear all ticks when a new round of testing starts. Each line f
 How to test is in the README under "Building from source" (debug commands) and in PLAN.md. Remember that the speech
 log lists every line sent, also one that later speech cut off: check the order and the priority, not only the text.
 
-Round in progress: for 1.29.0. Game 124r3s, Steam build 26512598 (the game was updated on 10 November 2026).
+Round in progress: for 1.29.1, on game 124r3s, Steam build 26512598. 1.29.1 adds the changes below to 1.29.0, whose full
+round (every line further down) was finished on 14 November 2026 on the same game. For 1.29.1 the section below was tried
+on the 1.29.1 code, plus a regression pass on the release build of the areas the changes touch.
+
+## Changes in 1.29.1
+- [x] Guided game: a new kingdom from keep through roads, houses, farms, granary, stockpile, forester, quarry, charcoal, well and tavern to "complete"; several steps at once; K line; loaded kingdom hears its step; setting off
+- [x] What's new: announced once after an update (silent on the next start and on a first install), Ctrl+Shift+W reader and its F1, closing returns where it was opened, setting
+- [x] Controller hints: F1 from the pad names buttons (capitalised at a sentence start), a keyboard key brings the key names back
+- [x] Pause menu quit question starts on Back to Game, Enter returns to the kingdom, F1 names the three buttons
+- [x] Train buttons say "Costs", Ctrl+V on the map answers, route panel without the duplicate caption
+- [x] F1 names Ctrl+C / Ctrl+Shift+C in the status list, notifications, key list, mod settings, text reader, build menu and on the map
+- [x] Ctrl+C, Ctrl+Shift+C and Ctrl+V refused as mod keys; Mod settings shows the two new settings and the new key
+- [x] Scanner Foreign kingdoms lists a foreign dock
+- [x] Self-repair notice with one missing thing uses the singular
+- [x] Setup Uninstall: only edited language files named, Yes keeps them (reinstall uses them), No removes them, the updater copy is removed
 
 ## Setup program
 - [x] Window: status box, language list, both check boxes, all buttons (setup runs elevated: roles read through MSAA, keys sent as window messages)

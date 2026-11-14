@@ -41,6 +41,7 @@ namespace KCAccess.Core
         public static string Notice()
         {
             if (!UntestedGame) return null;
+            if (Lost == 1) return Loc.T("Kingdoms and Castles was updated after this version of KCAccess came out. KCAccess adapted itself so you can keep playing, but 1 thing it reads from the game is not available until KCAccess is updated. To look for a new version, run KCAccess-Updater.exe in the game folder.");
             if (Lost > 0) return Loc.F("Kingdoms and Castles was updated after this version of KCAccess came out. KCAccess adapted itself so you can keep playing, but {0} things it reads from the game are not available until KCAccess is updated. To look for a new version, run KCAccess-Updater.exe in the game folder.", Lost);
             if (ToldBefore) return null;
             if (Repaired) return Loc.T("Kingdoms and Castles was updated after this version of KCAccess came out. KCAccess adapted itself and everything should keep working, but some screens may read differently until KCAccess is updated. To look for a new version, run KCAccess-Updater.exe in the game folder.");

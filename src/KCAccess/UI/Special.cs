@@ -358,6 +358,9 @@ namespace KCAccess.UI
             if ((go.name == "current" || go.name == "desired") && go.GetComponent<TMPro.TMP_Text>() != null && go.GetComponentInParent<ResourceOrderFormUI>() != null) return true;
             // Cargo amount rows (route stops, envoy gifts): the resource icon is a button that only focuses the field next to it.
             if (go.name == "icon" && go.GetComponent<Button>() != null && go.transform.parent != null && go.transform.parent.GetComponent<HoverHide>() != null) return true;
+            // Route panels: the caption beside the run interval slider ("as fast as possible Run this route:"); the
+            // slider says the same as "Run this route: as fast as possible".
+            if (go.name == "EveryXYears" && go.transform.parent != null && go.transform.parent.GetComponentInChildren<Slider>(true) != null) return true;
             // The fire risk bar is a picture with "Low" and "High" at its ends; the title row speaks the risk instead.
             var fire = go.GetComponentInParent<FireRiskUI>();
             if (fire != null && go.transform != fire.transform && go.name != "SummaryTitle") return true;
@@ -650,7 +653,7 @@ namespace KCAccess.UI
                 ? Loc.P(barracks.peopleInSquad, "{0} villager", "{0} villagers") + (people < barracks.peopleInSquad ? " " + Loc.F("(have {0})", people) : string.Empty)
                 : null;
             // The squads ordered and not trained yet: a small "+2" beside the button.
-            return TextUtil.Join(", ", Loc.F("Each squad costs {0}", TextUtil.Join(", ", villagers, anyResource ? ResourceNames.Cost(names, need, got) : null)), Queue(barracks));
+            return TextUtil.Join(", ", Loc.F("Costs {0}", TextUtil.Join(", ", villagers, anyResource ? ResourceNames.Cost(names, need, got) : null)), Queue(barracks));
         }
 
         private static string Queue(Barracks barracks) =>

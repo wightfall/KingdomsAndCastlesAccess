@@ -225,6 +225,7 @@ namespace KCAccess.Game
             Add(Status.TaxLine);
             Add(Status.ThreatLine);
             Add(Problems.SummaryLine);
+            if (GuidedGameWatch.StatusLine() != null) Add(() => GuidedGameWatch.StatusLine() ?? GuidedGame.Describe(GuidedGame.Count));
             if (Status.EffectsLine() != null) Add(() => Status.EffectsLine() ?? Loc.T("No active effects"));
             if (Twitch.Enabled) Add(Twitch.StatusLine, () => { Close(announce: false); Twitch.OpenSettings(); });
             Add(() => Loc.T("Press Enter on gold, food, a material, happiness, health or building integrity for the detailed report. F6 from the map reaches the kingdom overview panel with the tax buttons and the buttons for the happiness, health and building integrity maps."));
